@@ -39,6 +39,7 @@ class TpgTrainer:
 
         # set the variables
         self.actions = actions
+        self.randSeed = randSeed
         self.teamPopSizeInit = teamPopSizeInit
         self.gap = gap
         self.pLearnerDelete = pLearnerDelete
@@ -85,30 +86,22 @@ class TpgTrainer:
 
             team = Team() # create new team
             # add/create first learner
-            learner = Learner(action=ac1, maxProgSize=self.maxProgramSize)
+            learner = Learner(ac1, self.maxProgramSize, randSeed=self.randSeed)
             team.addLearner(learner)
             self.learners.append(learner)
             # add/create seconds learner
-            learner = Learner(action=ac2, maxProgSize=self.maxProgramSize)
+            learner = Learner(ac2, self.maxProgramSize, randSeed=self.randSeed)
             team.addLearner(learner)
             self.learners.append(learner)
 
             learnerMax = random.randint(0, self.maxTeamSize - 2)
             for i in range(learnerMax):
                 learner = Learner(
-                    action=self.actions[random.randint(0,len(self.actions)),
-                    maxProgSize=self.maxProgramSize)
+                    self.actions[random.randint(0,len(self.actions)),
+                    self.maxProgramSize, randSeed=self.randSeed)
                 team.addLearner(learner)
                 self.learners.append(learner)
 
             # add into population
             self.teams.append(team)
             self.rootTeams.append(team)
-
-    """
-    So that any child class can get a random value from the same random Object
-    for keeping consistency in generation for reproducibility.
-    """
-    @staticmethod
-    def getRandInt(min, max):
-        return random.randint(a, b)

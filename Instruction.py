@@ -1,0 +1,5 @@
+"""
+An Instruction
+"""
+class Instruction:
+    
