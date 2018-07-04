@@ -66,7 +66,7 @@ class TpgTrainer:
             self.learners = []
             self.curGen = 0
             initPops()
-        else:
+        else: # or carry on from object
             self.teams = popInit.teams
             self.rootTeams = popInit.rootTeams
             self.learners = popInit.learners
@@ -85,15 +85,18 @@ class TpgTrainer:
             ac2 = tmpActions[random.randint(0,len(tmpActions))]
 
             team = Team() # create new team
+
             # add/create first learner
             learner = Learner(ac1, self.maxProgramSize, randSeed=self.randSeed)
             team.addLearner(learner)
             self.learners.append(learner)
+
             # add/create seconds learner
             learner = Learner(ac2, self.maxProgramSize, randSeed=self.randSeed)
             team.addLearner(learner)
             self.learners.append(learner)
 
+            # add other random learners
             learnerMax = random.randint(0, self.maxTeamSize - 2)
             for i in range(learnerMax):
                 learner = Learner(

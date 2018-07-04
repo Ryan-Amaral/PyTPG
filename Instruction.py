@@ -3,10 +3,15 @@ An Instruction
 """
 class Instruction:
 
-    import bitarray
+    from bitarray import bitarray
     import random
 
-    instructionSize = 16 + 3 + 3 + 1
+    # bits correspond to: mode + op + dest + src
+    instructionSize = 1 + 3 + 3 + 16
+    modeSlice = slice(0,1)
+    opSlice = slice(1,4)
+    destSlice = slice(4,7)
+    srcSlice = slice(7,23)
 
     def __init__(self, randInit=True, randSeed=0):
 
@@ -15,4 +20,8 @@ class Instruction:
         else:
             random.seed(randSeed)
 
-        # create
+        if randInit: # random bits
+            self.instruction = bitarray([random.choice([True,False])
+                    for i in range(instructionSize)])
+        else: # all 0's
+            self.instruction = bitarray([0]*instructionSize)
