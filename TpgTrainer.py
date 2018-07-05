@@ -108,3 +108,28 @@ class TpgTrainer:
             # add into population
             self.teams.append(team)
             self.rootTeams.append(team)
+
+    """
+    To be called once all teams finish their runs of the current generation.
+    Selects, creates, and preps the population for the next generation.
+    """
+    def evolve(self):
+        pass
+
+    """
+
+    """
+    def select(self):
+        pass
+
+    """
+
+    """
+    def mutate(self):
+        pass
+
+    """
+    
+    """
+    def nextEpoch(self):
+        pass
