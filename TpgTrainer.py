@@ -114,22 +114,64 @@ class TpgTrainer:
     Selects, creates, and preps the population for the next generation.
     """
     def evolve(self):
+        self.select()
+        self.generateNewTeams()
+        self.nextEpoch()
         pass
 
     """
-
+    Selects the individuals to keep for next generation, deletes others. The
+    amount deleted will be filled in through generating new teams.
     """
     def select(self):
         pass
 
     """
-
+    Generates new teams from existing teams (in the root population).
     """
-    def mutate(self):
+    def generateNewTeams(self):
         pass
 
     """
-    
+    Mutates a team and it's learners.
+    """
+    def mutate(self, team):
+        isTeamChanged = False # flag to track when team actually changes
+        tmpLearners = list(team.learners)
+        random.shuffle(tmpLearners)
+        # delete some learners maybe
+        for learner in tmpLearners:
+            if len(team.learners) <= 2:
+                break # must have atleast 2 learners
+            if team.countAtomicActions() == 1 and learner.action.isAtomic():
+                continue # never delete the sole atomic action
+            # delete the learner
+            if random.uniform(0,1) < self.pLearnerDelete:
+                team.removeLearner(learner):
+                isTeamChanged = True
+
+        # Modify learners
+        for learner in tmpLearners:
+            if len(team.learners) == self.maxTeamSize:
+                break; # limit team size
+            # maybe add a learner
+            if random.uniform(0,1) < self.pLearnerAdd:
+                isLearnerChanged = False
+                lrnr = Learner(learner=learner, makeNew=True,
+                        birthGen=self.curGen)
+                # does and tells if did actually mutate program of learner
+                isLearnerChanged = lrnr.mutateProgram(self.pProgramDelete,
+                    self.pProgramAdd, self.pProgramSwap, self.pProgramMutate,
+                    self.maxProgramSize)
+                # maybe mutate the action of the learner
+                if random.uniform(0,1) < self.pMutateAction:
+
+
+
+        return isTeamChanged
+
+    """
+    A sort of clean up method to prepare for a new epoch of learning.
     """
     def nextEpoch(self):
         pass
