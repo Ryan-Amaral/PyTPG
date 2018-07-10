@@ -150,8 +150,16 @@ class TpgTrainer:
                 team.removeLearner(learner):
                 isTeamChanged = True
 
-        # Modify learners
-        for learner in tmpLearners:
+        # mutate the learners
+        isTeamChanged = mutateLearners or isTeamChanged
+
+        return isTeamChanged
+
+    """
+    Mutates the learners of a team.
+    """
+    def mutateLearners(self, team, learners):
+        for learner in learners:
             if len(team.learners) == self.maxTeamSize:
                 break; # limit team size
             # maybe add a learner
@@ -163,10 +171,23 @@ class TpgTrainer:
                 isLearnerChanged = lrnr.mutateProgram(self.pProgramDelete,
                     self.pProgramAdd, self.pProgramSwap, self.pProgramMutate,
                     self.maxProgramSize)
+
                 # maybe mutate the action of the learner
                 if random.uniform(0,1) < self.pMutateAction:
-
-
+                    action = None
+                    if random.uniform(0,1) < self.pActionIsTeam:
+                        action = Action(random.choice(self.teams))
+                    else:
+                        action = Action(random.choice(self.actions))
+                    # try to mutate the learners action, and record whether
+                    # learner changed at all
+                    isLearnerChanged = lrnr.mutateAction(action) or
+                                                                isLearnerChanged
+                # apply changes
+                if isLearnerChanged:
+                    team.addLearner(lrnr)
+                    self.learners.append(lrnr)
+                    isTeamChanged = True
 
         return isTeamChanged
 
