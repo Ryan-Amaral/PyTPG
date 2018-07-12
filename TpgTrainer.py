@@ -112,9 +112,11 @@ class TpgTrainer:
     """
     To be called once all teams finish their runs of the current generation.
     Selects, creates, and preps the population for the next generation.
+    Args:
+        fitShare: Whether to use fitness sharing, uses single outcome otherwise
     """
-    def evolve(self):
-        self.select()
+    def evolve(self, fitShare=True):
+        self.select(fitShare=fitShare)
         self.generateNewTeams()
         self.nextEpoch()
         pass
@@ -122,9 +124,20 @@ class TpgTrainer:
     """
     Selects the individuals to keep for next generation, deletes others. The
     amount deleted will be filled in through generating new teams.
+    Args:
+        fitShare: Whether to use fitness sharing, uses single outcome otherwise
     """
-    def select(self):
-        pass
+    def select(self, fitShare=True):
+        delTeams = [] # list of teams to delete
+        numKeep = self.gap * len(self.rootTeams) # number of roots to keep
+
+        tasks = self.rootTeams[0].outcomes.keys()
+        outcomes = {}
+        # get outcomes of all teams
+        for team in self.rootTeams:
+            outcomes[team] = [0]*len(tasks)
+            for t in range(len(tasks)):
+                outcomes[team][t] = team.outcomes[tasks[t]]
 
     """
     Generates new teams from existing teams (in the root population).
