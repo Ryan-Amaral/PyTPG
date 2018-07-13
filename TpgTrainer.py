@@ -114,19 +114,24 @@ class TpgTrainer:
     To be called once all teams finish their runs of the current generation.
     Selects, creates, and preps the population for the next generation.
     Args:
-        fitShare: Whether to use fitness sharing, uses single outcome otherwise
+        fitShare    : Whether to use fitness sharing, uses single outcome
+            otherwise.
+        outcomesKeep: List of outcomes to keep for next generation, so unaltered
+            teams won't have to be evaluated on the same trial again, for
+            efficiency. This does require some work to be implemented on the
+            client side.
     """
-    def evolve(self, fitShare=True):
+    def evolve(self, fitShare=True, outcomesKeep=[]):
         self.select(fitShare=fitShare)
         self.generateNewTeams()
-        self.nextEpoch()
+        self.nextEpoch(outcomesKeep=outcomesKeep)
         pass
 
     """
     Selects the individuals to keep for next generation, deletes others. The
     amount deleted will be filled in through generating new teams.
     Args:
-        fitShare: Whether to use fitness sharing, uses single outcome otherwise
+        fitShare: Whether to use fitness sharing, uses single outcome otherwise.
     """
     def select(self, fitShare=True):
         delTeams = [] # list of teams to delete
@@ -213,9 +218,11 @@ class TpgTrainer:
                 # maybe mutate the action of the learner
                 if random.uniform(0,1) < self.pMutateAction:
                     action = None
-                    if random.uniform(0,1) < self.pActionIsTeam:
-                        action = Action(random.choice(self.teams))
-                    else:
+                    if random.uniform(0,1) < self.pActionIsTeam: # team action
+                        actionTeam = random.choice(self.teams)
+                        action = Action(actionTeam)
+                        actionTeam.learnerRefCount += 1
+                    else: # atomic action
                         action = Action(random.choice(self.actions))
                     # try to mutate the learners action, and record whether
                     # learner changed at all
@@ -231,6 +238,32 @@ class TpgTrainer:
 
     """
     A sort of clean up method to prepare for a new epoch of learning.
+    Args:
+        outcomesKeep: List of outcomes to keep for next generation, so unaltered
+            teams won't have to be evaluated on the same trial again, for
+            efficiency. This does require some work to be implemented on the
+            client side.
     """
-    def nextEpoch(self):
-        pass
+    def nextEpoch(self, outcomesKeep=[]):
+        # decide new root teams
+        self.rootTeams.clear()
+        for team in self.teams:
+            # keep some outcomes for efficiency
+            team.outcomes = {key:val for key, val in team.outcomes.iteritems()
+                            if key in outcomesKeep}
+            if team.learnerRefCount == 0:
+                rootTeams.append(team) # root teams must have no references
+
+        # remove unused learners
+        tmpLearners = list(self.learners)
+        for learner in tmpLearners:
+            if learner.teamRefCount == 0:
+                self.learners.remove(learner)
+                # dereference if action is team
+                if not learner.action.isAtomic:
+                    learner.action.team.learnerRefCount -= 1
+
+        # maybe do something about teamqueue here, don't know how I'm
+        # implementing that yet
+
+        self.curGen += 1
