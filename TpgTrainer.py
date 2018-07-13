@@ -173,7 +173,40 @@ class TpgTrainer:
     Generates new teams from existing teams (in the root population).
     """
     def generateNewTeams(self):
-        pass
+        parents = list(self.rootTeams) # parents are all original root teams
+        # add teams until maxed size
+        while len(self.teams) < self.teamPopSizeInit:
+            # choose 2 random teams as parents
+            par1 = random.choice(parents)
+            par2 = random.choice([par for par in parents if par is not par1])
+
+            # get learners
+            par1Lrns = set(par1.learners)
+            par2Lrns = set(par2.learners)
+
+            # make 2 children at a time
+            child1 = Team(birthGen=self.curGen)
+            child2 = Team(birthGen=self.curGen)
+
+            # new children get intersection of parents learners
+            for learner in par1Lrns.intersection(par2Lrns):
+                child1.addLearner(learner)
+                child2.addLearner(learner)
+
+            # learners unique to a parent goes to one child or other, with one
+            # child having higher priority for a learner
+            for learner in par1Lrns.symmetric_difference(par2Lrns):
+                superChild = None
+                subChild = None
+                if random.choice([True,False]) == True:
+                    superChild = child1
+                    subChild = child2
+                else:
+                    superChild = child2
+                    subChild = child1
+
+                # apply learner to child if can,
+                # if not, give to other child if can
 
     """
     Mutates a team and it's learners.
