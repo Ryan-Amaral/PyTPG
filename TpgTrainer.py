@@ -8,7 +8,8 @@ class TpgTrainer:
 
     import random
     import time
-    import pickle
+    from operator import itemgetter
+    from __future__ import division
 
     """
     Initializes the Training procedure, potentially picking up from a
@@ -131,13 +132,37 @@ class TpgTrainer:
         delTeams = [] # list of teams to delete
         numKeep = self.gap * len(self.rootTeams) # number of roots to keep
 
+        teamScoresMap = {}
         tasks = self.rootTeams[0].outcomes.keys()
-        outcomes = {}
-        # get outcomes of all teams
+        taskTotalScores = [0]*len(tasks) # store overall score per task
+        # get outcomes of all teams outcome[team][tasknum]
         for team in self.rootTeams:
-            outcomes[team] = [0]*len(tasks)
+            teamScoresMap[team] = [0]*len(tasks)
             for t in range(len(tasks)):
-                outcomes[team][t] = team.outcomes[tasks[t]]
+                teamScoresMap[team][t] = team.outcomes[tasks[t]]
+                taskTotalScores[t] += team.outcomes[tasks[t]] #add to task total
+
+        scores = []
+        if fitShare: # fitness share across all outcomes
+            for team in teamScoresMap.keys():
+                teamRelTaskScore = 0 # teams final fitness shared score
+                for taskNum in range(len(tasks)):
+                    teamRelTaskScore += teamScoresMap[team][taskNum] /
+                                                taskTotalScores[taskNum]
+                scores.append((team, teamRelTaskScore))
+        else: # just take first outcome
+            for team in teamScoresMap.keys():
+                scores.append((team, teamScoresMap[team][0]))
+
+        scores.sort(key=itemgetter(1), reverse=True) # scores descending
+        delTeams = scores[numKeep:] # teams to get rid of
+
+        # properly delete the teams
+        for team in delTeams:
+            team.erase()
+            self.teams.remove(team)
+            self.rootTeams.remove(team)
+
 
     """
     Generates new teams from existing teams (in the root population).
