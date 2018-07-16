@@ -152,8 +152,8 @@ class TpgTrainer:
             for team in teamScoresMap.keys():
                 teamRelTaskScore = 0 # teams final fitness shared score
                 for taskNum in range(len(tasks)):
-                    teamRelTaskScore += teamScoresMap[team][taskNum] /
-                                                taskTotalScores[taskNum]
+                    teamRelTaskScore += (teamScoresMap[team][taskNum] /
+                                                taskTotalScores[taskNum])
                 scores.append((team, teamRelTaskScore))
         else: # just take first outcome
             for team in teamScoresMap.keys():
@@ -207,9 +207,42 @@ class TpgTrainer:
 
                 # apply learner to child if can,
                 # if not, give to other child if can
+                if (len(superChild.learners) < self.maxTeamSize and
+                        (len(superChild.learners) < 2 or
+                            len(subChild.learners) >= 2)):
+                    superChild.addLearner(learner)
+                else:
+                    subChild.addLearner(learner)
+
+            mutate(child1) # attempt a mutation
+            if (set(child1.learners) == set(par1.learners) or
+                    set(child1.learners) == set(par2.learners)):
+                while !mutate(child1): # attempt mutation untill it works
+                    continue
+
+            mutate(child2) # attempt a mutation
+            if (set(child2.learners) == set(par1.learners) or
+                    set(child2.learners) == set(par2.learners)):
+                while !mutate(child2): # attempt mutation untill it works
+                    continue
+
+            # increase references in childrens learners
+            for learner in child1.learners:
+                learner.teamRefCount += 1
+            for learner in child2.learners:
+                learner.teamRefCount += 1
+
+            # add children to team populations
+            self.teams.append(child1)
+            self.teams.append(child2)
+            self.rootTeams.append(child1)
+            self.rootTeams.append(child2)
 
     """
     Mutates a team and it's learners.
+    args:
+        team: The team to mutate.
+    return: Whether the team was successfully mutated.
     """
     def mutate(self, team):
         isTeamChanged = False # flag to track when team actually changes
@@ -259,8 +292,8 @@ class TpgTrainer:
                         action = Action(random.choice(self.actions))
                     # try to mutate the learners action, and record whether
                     # learner changed at all
-                    isLearnerChanged = lrnr.mutateAction(action) or
-                                                                isLearnerChanged
+                    isLearnerChanged = (lrnr.mutateAction(action) or
+                                                            isLearnerChanged)
                 # apply changes
                 if isLearnerChanged:
                     team.addLearner(lrnr)
