@@ -74,6 +74,22 @@ class TpgTrainer:
             self.curGen = popInit.gen
 
         self.teamQueue = list(self.rootTeams)
+        self.tasks = [] # list of tasks done per all individuals
+
+    """
+    Chooses an action to perform from the team based on the input space.
+    Restricts actions to those deemed valid by providing validActions.
+    Args:
+        team        : The team to perform the action from.
+        observation : The observation space, usually a multidimensional double
+            array. If None, action will be essentially random.
+        validActions: Should be some subset of all actions that were initially
+            provided to TPG, incase sub-environments have different action
+            spaces. If None, the outputted action is not checked.
+    Returns: A long that represents the action to perform.
+    """
+    def act(self, team, observation=None, validActions=None):
+        pass
 
     """
     Creates the initial population of teams and learners, on initialization of
@@ -127,7 +143,6 @@ class TpgTrainer:
         self.select(fitShare=fitShare)
         self.generateNewTeams()
         self.nextEpoch(outcomesKeep=outcomesKeep)
-        pass
 
     """
     Selects the individuals to keep for next generation, deletes others. The
@@ -140,7 +155,12 @@ class TpgTrainer:
         numKeep = self.gap * len(self.rootTeams) # number of roots to keep
 
         teamScoresMap = {}
+        # all tasks from team with most labels
         tasks = self.rootTeams[0].outcomes.keys()
+        for i in range(1,len(self.rootTeams)):
+            if len(self.rootTeams[i]) > len(tasks):
+                tasks = self.rootTeams[i].outcomes.keys()
+
         taskTotalScores = [0]*len(tasks) # store overall score per task
         # get outcomes of all teams outcome[team][tasknum]
         for team in self.rootTeams:
@@ -236,9 +256,9 @@ class TpgTrainer:
 
     """
     Mutates a team and it's learners.
-    args:
+    Args:
         team: The team to mutate.
-    return: Whether the team was successfully mutated.
+    Returns: Whether the team was successfully mutated.
     """
     def mutate(self, team):
         isTeamChanged = False # flag to track when team actually changes
@@ -256,12 +276,17 @@ class TpgTrainer:
                 isTeamChanged = True
 
         # mutate the learners
-        isTeamChanged = mutateLearners or isTeamChanged
+        isTeamChanged = mutateLearners(team, tmpLearners) or isTeamChanged
 
         return isTeamChanged
 
     """
     Mutates the learners of a team.
+    Args:
+        team    : The team to mutate the learners of.
+        learners: All of the learners of the team before mutation.
+    Return:
+        Whether the team ended up actually being mutated.
     """
     def mutateLearners(self, team, learners):
         for learner in learners:
@@ -327,5 +352,7 @@ class TpgTrainer:
 
         self.teamQueue = list(self.rootTeams)
         random.shuffle(self.teamQueue)
+
+        self.tasks.clear()
 
         self.curGen += 1
