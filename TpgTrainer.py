@@ -15,9 +15,9 @@ class TpgTrainer:
     Initializes the Training procedure, potentially picking up from a
     previously left off point.
     Args:
-        actions        : List of longs, the actions available in the env.
+        actions        : (Lng[]) The actions available in the env.
         randSeed       :
-        teamPopSizeInit: Initial Team population size.
+        teamPopSizeInit: (Lng) Initial Team population size.
         gap            : Proportion of agents to replace per gen.
         pLearnerDelete :
         pLearnerAdd    :
@@ -80,16 +80,29 @@ class TpgTrainer:
     Chooses an action to perform from the team based on the input space.
     Restricts actions to those deemed valid by providing validActions.
     Args:
-        team        : The team to perform the action from.
-        observation : The observation space, usually a multidimensional double
-            array. If None, action will be essentially random.
-        validActions: Should be some subset of all actions that were initially
-            provided to TPG, incase sub-environments have different action
-            spaces. If None, the outputted action is not checked.
-    Returns: A long that represents the action to perform.
+        team        : (Team) The team to perform the action from.
+        observation : (Flt[]) The observation space. If None, action will be
+            essentially random.
+        validActions: (Lng[]) Should be some subset of all actions that were
+            initially provided to TPG, incase sub-environments have different
+            action spaces. If None, the outputted action is not checked.
+    Returns: (Int) The action to perform.
     """
     def act(self, team, observation=None, validActions=None):
         pass
+
+
+    """
+    Gives a team the reward amount at a certain tasks. Does not increment, only
+    gives/overwrites final reward.
+    Args:
+        team  : (Team) The team to be apply this to.
+        task  : (Str) The task the reward is for.
+        reward: (Flt) The final reward value.
+    """
+    def reward(self, team, task, reward):
+        team.outcomes[task] = reward # track reward for task on team
+        self.tasks.append(label) # add to list of all tasks
 
     """
     Creates the initial population of teams and learners, on initialization of
@@ -132,11 +145,11 @@ class TpgTrainer:
     To be called once all teams finish their runs of the current generation.
     Selects, creates, and preps the population for the next generation.
     Args:
-        fitShare    : Whether to use fitness sharing, uses single outcome
+        fitShare    : (Bool) Whether to use fitness sharing, uses single outcome
             otherwise.
-        outcomesKeep: List of outcomes to keep for next generation, so unaltered
-            teams won't have to be evaluated on the same trial again, for
-            efficiency. This does require some work to be implemented on the
+        outcomesKeep: (Str[]) List of outcomes to keep for next generation, so
+            unaltered teams won't have to be evaluated on the same trial again,
+            for efficiency. This does require some work to be implemented on the
             client side.
     """
     def evolve(self, fitShare=True, outcomesKeep=[]):
@@ -148,32 +161,27 @@ class TpgTrainer:
     Selects the individuals to keep for next generation, deletes others. The
     amount deleted will be filled in through generating new teams.
     Args:
-        fitShare: Whether to use fitness sharing, uses single outcome otherwise.
+        fitShare: (Bool) Whether to use fitness sharing, uses single outcome
+            otherwise.
     """
     def select(self, fitShare=True):
         delTeams = [] # list of teams to delete
         numKeep = self.gap * len(self.rootTeams) # number of roots to keep
 
         teamScoresMap = {}
-        # all tasks from team with most labels
-        tasks = self.rootTeams[0].outcomes.keys()
-        for i in range(1,len(self.rootTeams)):
-            if len(self.rootTeams[i]) > len(tasks):
-                tasks = self.rootTeams[i].outcomes.keys()
-
-        taskTotalScores = [0]*len(tasks) # store overall score per task
+        taskTotalScores = [0]*len(self.tasks) # store overall score per task
         # get outcomes of all teams outcome[team][tasknum]
         for team in self.rootTeams:
-            teamScoresMap[team] = [0]*len(tasks)
-            for t in range(len(tasks)):
-                teamScoresMap[team][t] = team.outcomes[tasks[t]]
-                taskTotalScores[t] += team.outcomes[tasks[t]] #add to task total
+            teamScoresMap[team] = [0]*len(self.tasks)
+            for t in range(len(self.tasks)):
+                teamScoresMap[team][t] = team.outcomes[self.tasks[t]]
+                taskTotalScores[t] += team.outcomes[self.tasks[t]]#up task total
 
         scores = []
         if fitShare: # fitness share across all outcomes
             for team in teamScoresMap.keys():
                 teamRelTaskScore = 0 # teams final fitness shared score
-                for taskNum in range(len(tasks)):
+                for taskNum in range(len(self.tasks)):
                     teamRelTaskScore += (teamScoresMap[team][taskNum] /
                                                 taskTotalScores[taskNum])
                 scores.append((team, teamRelTaskScore))
@@ -257,8 +265,8 @@ class TpgTrainer:
     """
     Mutates a team and it's learners.
     Args:
-        team: The team to mutate.
-    Returns: Whether the team was successfully mutated.
+        team: (Team) The team to mutate.
+    Returns: (Bool) Whether the team was successfully mutated.
     """
     def mutate(self, team):
         isTeamChanged = False # flag to track when team actually changes
@@ -283,10 +291,10 @@ class TpgTrainer:
     """
     Mutates the learners of a team.
     Args:
-        team    : The team to mutate the learners of.
-        learners: All of the learners of the team before mutation.
-    Return:
-        Whether the team ended up actually being mutated.
+        team    : (Team) The team to mutate the learners of.
+        learners: (Learner[]) All of the learners of the team before mutation.
+    Returns:
+        (Boolean) Whether the team ended up actually being mutated.
     """
     def mutateLearners(self, team, learners):
         for learner in learners:
@@ -326,9 +334,9 @@ class TpgTrainer:
     """
     A sort of clean up method to prepare for a new epoch of learning.
     Args:
-        outcomesKeep: List of outcomes to keep for next generation, so unaltered
-            teams won't have to be evaluated on the same trial again, for
-            efficiency. This does require some work to be implemented on the
+        outcomesKeep: (Str[]) List of outcomes to keep for next generation, so
+            unaltered teams won't have to be evaluated on the same trial again,
+            for efficiency. This does require some work to be implemented on the
             client side.
     """
     def nextEpoch(self, outcomesKeep=[]):
