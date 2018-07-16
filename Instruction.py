@@ -14,7 +14,6 @@ class Instruction:
     srcSlice = slice(7,23)
 
     def __init__(self, randInit=True, randSeed=0):
-
         if randSeed == 0:
             random.seed(int(round(time.time())))
         else:

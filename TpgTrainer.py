@@ -226,12 +226,6 @@ class TpgTrainer:
                 while !mutate(child2): # attempt mutation untill it works
                     continue
 
-            # increase references in childrens learners
-            for learner in child1.learners:
-                learner.teamRefCount += 1
-            for learner in child2.learners:
-                learner.teamRefCount += 1
-
             # add children to team populations
             self.teams.append(child1)
             self.teams.append(child2)
@@ -252,7 +246,7 @@ class TpgTrainer:
         for learner in tmpLearners:
             if len(team.learners) <= 2:
                 break # must have atleast 2 learners
-            if team.countAtomicActions() == 1 and learner.action.isAtomic():
+            if team.numAtomicActions() == 1 and learner.action.isAtomic():
                 continue # never delete the sole atomic action
             # delete the learner
             if random.uniform(0,1) < self.pLearnerDelete:

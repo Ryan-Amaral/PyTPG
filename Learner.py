@@ -45,3 +45,10 @@ class Learner:
         for i in range(progSize):
             ins = Instruction(randSeed=randSeed)
             self.program.append(ins)
+
+    """
+    
+    """
+    def mutateProgram(self, pProgramDelete, pProgramAdd,
+            pProgramSwap, pProgramMutate, maxProgramSize):
+        pass
