@@ -73,6 +73,8 @@ class TpgTrainer:
             self.learners = popInit.learners
             self.curGen = popInit.gen
 
+        self.teamQueue = list(self.rootTeams)
+
     """
     Creates the initial population of teams and learners, on initialization of
     training.
@@ -323,7 +325,7 @@ class TpgTrainer:
                 if not learner.action.isAtomic:
                     learner.action.team.learnerRefCount -= 1
 
-        # maybe do something about teamqueue here, don't know how I'm
-        # implementing that yet
+        self.teamQueue = list(self.rootTeams)
+        random.shuffle(self.teamQueue)
 
         self.curGen += 1
