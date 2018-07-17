@@ -74,6 +74,50 @@ class TpgTrainer:
             self.curGen = popInit.gen
 
         self.teamQueue = list(self.rootTeams)
+        self.tasks = [] # list of tasks done per all individuals
+
+    """
+    Chooses an action to perform from the team based on the input space.
+    Restricts actions to those deemed valid by providing validActions.
+    Args:
+        team:
+            (Team) The team to perform the action from.
+        obs:
+            (Flt[]) The observation space. If None, action will be
+            essentially random.
+        valActs:
+            (Lng[]) Should be some subset of all actions that were
+            initially provided to TPG, incase sub-environments have
+            different action spaces. If None, the outputted action is
+            not checked.
+        defAct:
+            (Lng) Default action to perform if valid action not chosen
+            by team.
+    Returns:
+        (Lng) The action to perform.
+    """
+    def act(self, team, obs=None, valActs=None, defAct=0L):
+        action = team.getAction(obs) # figure out parameters in here
+        if valActs is None:
+            return action
+        else:
+            for act in valActs:
+                if action == act:
+                    return action
+
+        return defAct # action from team not valid
+
+    """
+    Gives a team the reward amount at a certain tasks. Does not increment, only
+    gives/overwrites final reward.
+    Args:
+        team  : (Team) The team to apply this to.
+        task  : (Str) The task the reward is for.
+        reward: (Flt) The final reward value.
+    """
+    def reward(self, team, task, reward):
+        team.outcomes[task] = reward # track reward for task on team
+        self.tasks.append(label) # add to list of all tasks
 
     """
     Creates the initial population of teams and learners, on initialization of
@@ -132,35 +176,27 @@ class TpgTrainer:
     Selects the individuals to keep for next generation, deletes others. The
     amount deleted will be filled in through generating new teams.
     Args:
-        fitShare:
-            (Bool) Whether to use fitness sharing, uses single outcome
+        fitShare: (Bool) Whether to use fitness sharing, uses single outcome
             otherwise.
-        tasks:
-            (Str[]) The tasks to evaluate on, if empty, evaluates all tasks
-            found on first team checked.
     """
-    def select(self, fitShare=True, tasks=[]):
+    def select(self, fitShare=True):
         delTeams = [] # list of teams to delete
         numKeep = self.gap * len(self.rootTeams) # number of roots to keep
 
-        # take tasks from first team
-        if len(tasks) == 0:
-            tasks = self.rootTeams[0].outcomes.keys()
-
         teamScoresMap = {}
-        taskTotalScores = [0]*len(tasks) # store overall score per task
+        taskTotalScores = [0]*len(self.tasks) # store overall score per task
         # get outcomes of all teams outcome[team][tasknum]
         for team in self.rootTeams:
-            teamScoresMap[team] = [0]*len(tasks)
-            for t in range(len(tasks)):
-                teamScoresMap[team][t] = team.outcomes[tasks[t]]
-                taskTotalScores[t] += team.outcomes[tasks[t]]#up task total
+            teamScoresMap[team] = [0]*len(self.tasks)
+            for t in range(len(self.tasks)):
+                teamScoresMap[team][t] = team.outcomes[self.tasks[t]]
+                taskTotalScores[t] += team.outcomes[self.tasks[t]]#up task total
 
         scores = []
         if fitShare: # fitness share across all outcomes
             for team in teamScoresMap.keys():
                 teamRelTaskScore = 0 # teams final fitness shared score
-                for taskNum in range(len(tasks)):
+                for taskNum in range(len(self.tasks)):
                     teamRelTaskScore += (teamScoresMap[team][taskNum] /
                                                 taskTotalScores[taskNum])
                 scores.append((team, teamRelTaskScore))
@@ -339,5 +375,7 @@ class TpgTrainer:
 
         self.teamQueue = list(self.rootTeams)
         random.shuffle(self.teamQueue)
+
+        self.tasks.clear()
 
         self.curGen += 1
