@@ -6,7 +6,7 @@ class Team:
     def __init__(self, birthGen = 0):
         self.birthGen = birthGen
         self.learners = []
-        self.outcomes = {} # outcomes from training episodes
+        self.outcomes = {} # outcomes for tasks from training episodes
         self.learnerRefCount # learners that reference this team
 
     """
