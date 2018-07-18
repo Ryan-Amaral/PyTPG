@@ -6,6 +6,7 @@ class Learner:
     import random
     from __future__ import division
     from math import exp
+    from bitarray import bitarray
 
     idCount = 0L # counter for id
     registerSize = 8 # size of registers
