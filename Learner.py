@@ -53,7 +53,40 @@ class Learner:
     """
     def mutateProgram(self, pProgramDelete, pProgramAdd, pProgramSwap,
             pProgramMutate, maxProgramSize):
-        pass
+
+        changed = False # whether a change occured
+
+        # maybe delete instruction
+        if (len(self.program) > 1 and random.uniform(0,1) < pProgramDelete):
+            del self.program[random.choice(range(len(self.program)-1))]
+            changed = True
+
+        # maybe insert instruction
+        if (len(self.program) < maxProgramSize and
+                random.uniform(0,1) < pProgramAdd):
+            ins = Instruction(randSeed=randSeed)
+            self.program.insert(random.choice(range(len(self.program))))
+            changed = True
+
+        # maybe flip an instruction's bit
+        if random.uniform(0,1) < pProgramMutate:
+            self.program[random.choice(range(len(self.program)-1))].flip(
+                    random.choice(range(Instruction.instructionSize-1)))
+            changed = True
+
+        # maybe swap two instructions
+        if len(self.program) > 1 and random.uniform(0,1) < pProgramSwap:
+            # indices to swap
+            idx1 = random.choice(range(len(self.program)-1))
+            idx2 = random.choice(
+                    [x for x in range(len(self.program)-1) if x != idx1])
+            # do swap
+            tmp = self.program[idx1]
+            self.program[idx1] = self.program[idx2]
+            self.program[idx2] = tmp
+            changed = True
+
+        return changed
 
     """
     Changes the learners action to the argument action.

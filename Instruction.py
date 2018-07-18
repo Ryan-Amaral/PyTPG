@@ -24,3 +24,9 @@ class Instruction:
                     for i in range(instructionSize)])
         else: # all 0's
             self.instruction = bitarray([0]*instructionSize)
+
+    """
+    Flips the bit at the index.
+    """
+    def flip(self, index):
+        pass

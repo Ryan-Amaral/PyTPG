@@ -24,5 +24,15 @@ class Action:
     Args:
         other:
             (Action) The action to compare self to.
+    Returns:
+        Whether the Action objects have the same action, either the same team,
+        or same atomic value.
     """
     def equals(self, other):
+        if self.isAtomic() and other.isAtomic() and self.action == other.action:
+            return True
+        elif (!self.isAtomic() and !other.isAtomic() and
+                self.action.uid == other.action.uid):
+            return True
+
+        return False
