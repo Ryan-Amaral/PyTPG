@@ -89,6 +89,30 @@ class TpgTrainer:
             self.lock.release()
 
     """
+    Gets/pops the next team from the population for the client, in the form of
+    an instance of TpgAgent. Thread safe.
+    Returns:
+        (TpgAgent) None if no team left in queue, means to call for evolution.
+    """
+    def getNextTeam(self):
+        self.lock.aquire()
+        agent = None
+        try:
+            agent = TpgAgent(self.teamQueue.pop(), self)
+        finally:
+            self.lock.release()
+
+        return agent
+
+    """
+    How many teams have not yet been withdrawn this generation. Can use this to
+    check for end of generation, but is not thread safe. So a more reliable
+    alternative is to call getNextTeam, and if None, then generation is done.
+    """
+    def remainingTeams(self):
+        return len(self.teamQueue)
+
+    """
     Creates the initial population of teams and learners, on initialization of
     training.
     """
