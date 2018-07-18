@@ -13,6 +13,23 @@ class Action:
         self.act = act
 
     """
+    Performs this object's action.
+    Args:
+        obs:
+            (Float[]): Current state of the environment.
+        vis:
+            (Dict(Team)): Teams already visited so we don't repeat.
+    Returns:
+        (Long) The action selected, either atomic right from this action object,
+        or from the team of this action.
+    """
+    def getAction(self, obs, vis=Set()):
+        if self.isAtomic():
+            return self.act # return atomic
+        else: # else act is team, return its action
+            return self.act.getAction(obs, vis)
+
+    """
     Returns a boolean telling whether this action is a specific action (atomic),
     or refers to a team (not atomic).
     """
@@ -25,8 +42,8 @@ class Action:
         other:
             (Action) The action to compare self to.
     Returns:
-        Whether the Action objects have the same action, either the same team,
-        or same atomic value.
+        (Bool) Whether the Action objects have the same action, either the same
+        team, or same atomic value.
     """
     def equals(self, other):
         if self.isAtomic() and other.isAtomic() and self.act == other.act:
