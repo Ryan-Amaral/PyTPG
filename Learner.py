@@ -5,7 +5,7 @@ class Learner:
 
     import random
     from __future__ import division
-    from math import exp
+    import math
     from bitarray import bitarray
 
     idCount = 0L # counter for id
@@ -73,7 +73,7 @@ class Learner:
                 regDict[self.id] = [0]*registerSize
             registers = regDict[self.id]
 
-        return 1 / (1 + exp(-runProgram(obs,registers)))
+        return 1 / (1 + math.exp(-runProgram(obs,registers)))
 
     """
     Runs this learner's program.
@@ -100,7 +100,38 @@ class Learner:
                 sourceVal = obs[Instruction.getIntVal(
                     inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)]
 
-            
+            # the operation to do on the register
+            operation = inst.getBitArraySeg(Instruction.slcOp)
+            # the register to fiddle with
+            destReg = Instruction.getIntVal(
+                inst.getBitArraySeg(Instruction.slcDest))
+
+            if Instruction.equalBitArrays(operation, Instruction.opSum):
+                registers[destReg] += sourceVal
+            elif Instruction.equalBitArrays(operation, Instruction.opDiff):
+                registers[destReg] -= sourceVal
+            elif Instruction.equalBitArrays(operation, Instruction.opProd):
+                registers[destReg] *= sourceVal
+            elif Instruction.equalBitArrays(operation, Instruction.opDiv):
+                registers[destReg] /= sourceVal
+            elif Instruction.equalBitArrays(operation, Instruction.opCos):
+                registers[destReg] = math.cos(sourceVal)
+            elif Instruction.equalBitArrays(operation, Instruction.opLog):
+                registers[destReg] = math.log(sourceVal)
+            elif Instruction.equalBitArrays(operation, Instruction.opExp):
+                registers[destReg] = math.exp(sourceVal)
+            elif Instruction.equalBitArrays(operation, Instruction.opCond):
+                if registers[destReg] < sourceVal:
+                    registers[destReg] *= -1
+            else:
+                print("Invalid operation in learner.run")
+
+            # default register to 0 if invalid value
+            if (math.isnan(registers[destReg]) or
+                    registers[destReg] == float('Inf')):
+                registers[destReg] = 0
+
+        return registers[0]
 
     """
     Mutates this learners program.
