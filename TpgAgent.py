@@ -8,7 +8,7 @@ class TpgAgent:
     currently doing training.
     Args:
         team: (Team)
-        trainer: (TpgTrainer)
+        trainer: (TpgTrainer) Only pass in if training.
     """
     def __init__(self, team, trainer=None):
         self.team = team
@@ -52,7 +52,7 @@ class TpgAgent:
         reward:
             (Float) The final reward value.
     """
-    def reward(self, team, task, reward):
+    def reward(self, task, reward):
         self.team.outcomes[task] = reward # track reward for task on team
         if self.trainer is not None:
             self.trainer.addTask(task)

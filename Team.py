@@ -21,7 +21,7 @@ class Team:
     """
     Deletes the learner from this team's learners if it is in the list.
     """
-    def deleteLearner(self, learner):
+    def removeLearner(self, learner):
         if learner in self.learners:
             learner.teamRefCount -= 1
             self.learners.remove(learner)
@@ -38,4 +38,8 @@ class Team:
     Returns the number of atomic actions that this team has.
     """
     def numAtomicActions(self):
-        pass
+        num = 0
+        for lrnr in self.learners:
+            if lrnr.action.isAtomic():
+                num += 1
+        return num
