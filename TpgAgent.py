@@ -3,8 +3,16 @@ Class the the client gets an instance of to control a team.
 """
 class TpgAgent:
 
-    def __init__(self, team):
+    """
+    Creates an agent (what the client interfaces with), links to trainer if
+    currently doing training.
+    Args:
+        team: (Team)
+        trainer: (TpgTrainer)
+    """
+    def __init__(self, team, trainer=None):
         self.team = team
+        self.trainer = trainer
 
     """
     Chooses an action to perform from the team based on the input space.
@@ -46,4 +54,5 @@ class TpgAgent:
     """
     def reward(self, team, task, reward):
         self.team.outcomes[task] = reward # track reward for task on team
-        self.tasks.append(label) # add to list of all tasks
+        if self.trainer is not None:
+            self.trainer.addTask(task)

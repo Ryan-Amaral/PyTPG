@@ -15,9 +15,9 @@ class TpgTrainer:
     Initializes the Training procedure, potentially picking up from a
     previously left off point.
     Args:
-        actions        : (Lng[]) The actions available in the env.
+        actions        : (Long[]) The actions available in the env.
         randSeed       :
-        teamPopSizeInit: (Lng) Initial Team population size.
+        teamPopSizeInit: (Long) Initial Team population size.
         gap            : Proportion of agents to replace per gen.
         pLearnerDelete :
         pLearnerAdd    :
@@ -83,18 +83,18 @@ class TpgTrainer:
         team:
             (Team) The team to perform the action from.
         obs:
-            (Flt[]) The observation space. If None, action will be
+            (Float[]) The observation space. If None, action will be
             essentially random.
         valActs:
-            (Lng[]) Should be some subset of all actions that were
+            (Long[]) Should be some subset of all actions that were
             initially provided to TPG, incase sub-environments have
             different action spaces. If None, the outputted action is
             not checked.
         defAct:
-            (Lng) Default action to perform if valid action not chosen
+            (Long) Default action to perform if valid action not chosen
             by team.
     Returns:
-        (Lng) The action to perform.
+        (Long) The action to perform.
     """
     def act(self, team, obs=None, valActs=None, defAct=0L):
         action = team.getAction(obs) # figure out parameters in here
@@ -113,7 +113,7 @@ class TpgTrainer:
     Args:
         team  : (Team) The team to apply this to.
         task  : (Str) The task the reward is for.
-        reward: (Flt) The final reward value.
+        reward: (Float) The final reward value.
     """
     def reward(self, team, task, reward):
         team.outcomes[task] = reward # track reward for task on team
