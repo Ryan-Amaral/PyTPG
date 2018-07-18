@@ -20,7 +20,28 @@ class Team:
         (Long) The action.
     """
     def getAction(self, obs, vis=Set()):
-        vis.add(self) # remember that we were here
+        vis.add(self) # remember that we visited this team
+
+        # choose learner with highest bid
+        maxBid = 0
+        maxLearner = None
+        for learner in self.learners:
+            if !learner.action.isAtomic() and learner.action.act in vis:
+                continue # don't take already visited team's bid
+
+            bid = self.learners[i].bid(obs)
+            if maxLearner is None: # first bid
+                maxBid = bid
+                maxLearner = learner
+
+            if bid > maxBid: # bid is better
+                maxBid = bid
+                maxLearner = learner
+
+        if maxLearner is None:
+            return 0L # default move if no choice made
+        else:
+            return maxLearner.action.getAction(obs, vis)
 
     """
     Adds the learner if not already in, and increments reference smount to the
