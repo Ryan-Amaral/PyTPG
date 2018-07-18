@@ -10,6 +10,7 @@ class TpgTrainer:
     import time
     from operator import itemgetter
     from __future__ import division
+    import threading
 
     """
     Initializes the Training procedure, potentially picking up from a
@@ -74,50 +75,18 @@ class TpgTrainer:
             self.curGen = popInit.gen
 
         self.teamQueue = list(self.rootTeams)
-        self.tasks = [] # list of tasks done per all individuals
+        self.tasks = Set() # set of tasks done per all individuals
+        self.lock = threading.Lock() # lock for adding tasks
 
     """
-    Chooses an action to perform from the team based on the input space.
-    Restricts actions to those deemed valid by providing validActions.
-    Args:
-        team:
-            (Team) The team to perform the action from.
-        obs:
-            (Float[]) The observation space. If None, action will be
-            essentially random.
-        valActs:
-            (Long[]) Should be some subset of all actions that were
-            initially provided to TPG, incase sub-environments have
-            different action spaces. If None, the outputted action is
-            not checked.
-        defAct:
-            (Long) Default action to perform if valid action not chosen
-            by team.
-    Returns:
-        (Long) The action to perform.
+    Attempts to add a task to the set of tasks. Thread safe.
     """
-    def act(self, team, obs=None, valActs=None, defAct=0L):
-        action = team.getAction(obs) # figure out parameters in here
-        if valActs is None:
-            return action
-        else:
-            for act in valActs:
-                if action == act:
-                    return action
-
-        return defAct # action from team not valid
-
-    """
-    Gives a team the reward amount at a certain tasks. Does not increment, only
-    gives/overwrites final reward.
-    Args:
-        team  : (Team) The team to apply this to.
-        task  : (Str) The task the reward is for.
-        reward: (Float) The final reward value.
-    """
-    def reward(self, team, task, reward):
-        team.outcomes[task] = reward # track reward for task on team
-        self.tasks.append(label) # add to list of all tasks
+    def addTask(self, task):
+        self.lock.aquire()
+        try:
+            self.tasks.add(task)
+        finally:
+            self.lock.release()
 
     """
     Creates the initial population of teams and learners, on initialization of
