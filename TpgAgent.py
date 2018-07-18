@@ -33,7 +33,7 @@ class TpgAgent:
         (Long) The action to perform.
     """
     def act(self, obs, valActs=None, defAct=0L):
-        action = self.team.getAction(obs) # figure out parameters in here
+        action = self.team.getAction(obs)
         if valActs is None:
             return action
         else:

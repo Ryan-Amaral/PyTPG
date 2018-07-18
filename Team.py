@@ -10,6 +10,19 @@ class Team:
         self.learnerRefCount # learners that reference this team
 
     """
+    Search for an action to perform based on the observation.
+    Args:
+        obs:
+            (Float[]): Current state of the environment.
+        vis:
+            (Dict(Team)): Teams already visited so we don't repeat.
+    Returns:
+        (Long) The action.
+    """
+    def getAction(self, obs, vis=Set()):
+        vis.add(self) # remember that we were here
+
+    """
     Adds the learner if not already in, and increments reference smount to the
     learner.
     """
