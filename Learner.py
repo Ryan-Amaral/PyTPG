@@ -4,8 +4,11 @@ A Learner.
 class Learner:
 
     import random
+    from __future__ import division
+    from math import exp
 
-    idCount = 0 # counter for id
+    idCount = 0L # counter for id
+    registerSize = 8 # size of registers
 
     def __init__(self, action, maxProgSize=8, randSeed=0 learner=None,
             makeNew=False, birthGen=0):
@@ -45,6 +48,31 @@ class Learner:
         for i in range(progSize):
             ins = Instruction(randSeed=randSeed)
             self.program.append(ins)
+
+    """
+    Gets the bid from this learner based on the observation, bid being the
+    weight this learner has in decision making (roughly).
+    Args:
+        obs:
+            (Float[]) The current state of the environment.
+        regDict:
+            (Dict<Long,Float[]>) Dictionary of registers, find the register of
+            this learner with the key self.id. If None, uses default (all 0)
+            register.
+    Returns:
+        (Float) The bid value.
+    """
+    def bid(self, obs, regDict=None):
+        # choose register appropriately
+        register = None
+        if regDict is None:
+            register = [0]*registerSize
+        else:
+            if self.id not in regDict:
+                regDict[self.id] = [0]*registerSize
+            register = regDict[self.id]
+
+        return 1 / (1 + exp(-run(obs,reg)))
 
     """
     Mutates this learners program.
