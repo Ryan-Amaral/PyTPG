@@ -7,7 +7,7 @@ class Learner:
 
     idCount = 0 # counter for id
 
-    def __init__(self, action=None, maxProgSize=8, randSeed=0 learner=None,
+    def __init__(self, action, maxProgSize=8, randSeed=0 learner=None,
             makeNew=False, birthGen=0):
 
         if randSeed == 0:
@@ -47,8 +47,20 @@ class Learner:
             self.program.append(ins)
 
     """
-    
+    Mutates this learners program.
+    Returns:
+        (Bool) Whether actually mutated.
     """
-    def mutateProgram(self, pProgramDelete, pProgramAdd,
-            pProgramSwap, pProgramMutate, maxProgramSize):
+    def mutateProgram(self, pProgramDelete, pProgramAdd, pProgramSwap,
+            pProgramMutate, maxProgramSize):
         pass
+
+    """
+    Changes the learners action to the argument action.
+    Returns:
+        (Bool) Whether the action is different after mutation.
+    """
+    def mutateAction(self, action):
+        act = self.action
+        self.action = action
+        return act.equals(action)

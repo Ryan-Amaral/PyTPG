@@ -16,5 +16,13 @@ class Action:
     Returns a boolean telling whether this action is a specific action (atomic),
     or refers to a team (not atomic).
     """
-    def isAtomic():
-        return type(action) is not Team
+    def isAtomic(self):
+        return type(self.action) is not Team
+
+    """
+    Checks if the action in self is equivalent to other.
+    Args:
+        other:
+            (Action) The action to compare self to.
+    """
+    def equals(self, other):
