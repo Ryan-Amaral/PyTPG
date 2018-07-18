@@ -363,7 +363,7 @@ class TpgTrainer:
             if learner.teamRefCount == 0:
                 self.learners.remove(learner)
                 # dereference if action is team
-                if not learner.action.isAtomic:
+                if not learner.action.isAtomic():
                     learner.action.team.learnerRefCount -= 1
 
         self.teamQueue = list(self.rootTeams)
