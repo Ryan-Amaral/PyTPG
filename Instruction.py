@@ -20,13 +20,13 @@ class Instruction:
             random.seed(randSeed)
 
         if randInit: # random bits
-            self.instruction = bitarray([random.choice([True,False])
+            self.inst = bitarray([random.choice([True,False])
                     for i in range(instructionSize)])
         else: # all 0's
-            self.instruction = bitarray([0]*instructionSize)
+            self.inst = bitarray([0]*instructionSize)
 
     """
     Flips the bit at the index.
     """
     def flip(self, index):
-        pass
+        self.inst[index] = not self.inst[index]

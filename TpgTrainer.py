@@ -255,13 +255,13 @@ class TpgTrainer:
             mutate(child1) # attempt a mutation
             if (set(child1.learners) == set(par1.learners) or
                     set(child1.learners) == set(par2.learners)):
-                while !mutate(child1): # attempt mutation untill it works
+                while not mutate(child1): # attempt mutation untill it works
                     continue
 
             mutate(child2) # attempt a mutation
             if (set(child2.learners) == set(par1.learners) or
                     set(child2.learners) == set(par2.learners)):
-                while !mutate(child2): # attempt mutation untill it works
+                while not mutate(child2): # attempt mutation untill it works
                     continue
 
             # add children to team populations

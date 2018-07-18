@@ -26,7 +26,7 @@ class Team:
         maxBid = 0
         maxLearner = None
         for learner in self.learners:
-            if !learner.action.isAtomic() and learner.action.act in vis:
+            if not learner.action.isAtomic() and learner.action.act in vis:
                 continue # don't take already visited team's bid
 
             bid = self.learners[i].bid(obs)

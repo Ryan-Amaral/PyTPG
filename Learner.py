@@ -64,15 +64,30 @@ class Learner:
     """
     def bid(self, obs, regDict=None):
         # choose register appropriately
-        register = None
+        registers = None
         if regDict is None:
-            register = [0]*registerSize
+            registers = [0]*registerSize
         else:
             if self.id not in regDict:
                 regDict[self.id] = [0]*registerSize
-            register = regDict[self.id]
+            registers = regDict[self.id]
 
-        return 1 / (1 + exp(-run(obs,reg)))
+        return 1 / (1 + exp(-runProgram(obs,registers)))
+
+    """
+    Runs this learner's program.
+    Args:
+        obs:
+            (Float[]) The current state of the environment.
+        registers:
+            (Float[]) Registers to be used for doing calculations with.
+    Returns:
+        (Float) What the destination register's value is at the end.
+    """
+    def runProgram(self, obs, registers):
+        # iterate over instructions in the program
+        for inst in program:
+
 
     """
     Mutates this learners program.

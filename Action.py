@@ -48,7 +48,7 @@ class Action:
     def equals(self, other):
         if self.isAtomic() and other.isAtomic() and self.act == other.act:
             return True
-        elif (!self.isAtomic() and !other.isAtomic() and
+        elif (not self.isAtomic() and not other.isAtomic() and
                 self.act.uid == other.act.uid):
             return True
 
