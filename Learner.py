@@ -57,7 +57,7 @@ class Learner:
         obs:
             (Float[]) The current state of the environment.
         regDict:
-            (Dict<Int,Float[]>) Dictionary of registers, find the register of
+            (Dict<Int,Float[]>) Dictionary of registers, find the registers of
             this learner with the key self.id. If None, uses default (all 0)
             register.
     Returns:

@@ -19,15 +19,17 @@ class Action:
             (Float[]): Current state of the environment.
         vis:
             (Dict(Team)): Teams already visited so we don't repeat.
+        regDict:
+            (Dict<Int,Float[]>) Dictionary of registers for learner.
     Returns:
         (Int) The action selected, either atomic right from this action object,
         or from the team of this action.
     """
-    def getAction(self, obs, vis=Set()):
+    def getAction(self, obs, vis=Set(), regDict=None):
         if self.isAtomic():
             return self.act # return atomic
         else: # else act is team, return its action
-            return self.act.getAction(obs, vis)
+            return self.act.getAction(obs, vis, regDict)
 
     """
     Returns a boolean telling whether this action is a specific action (atomic),

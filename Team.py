@@ -16,10 +16,12 @@ class Team:
             (Float[]): Current state of the environment.
         vis:
             (Dict(Team)): Teams already visited so we don't repeat.
+        regDict:
+            (Dict<Int,Float[]>) Dictionary of registers for learner.
     Returns:
         (Int) The action.
     """
-    def getAction(self, obs, vis=Set()):
+    def getAction(self, obs, vis=Set(), regDict=None):
         vis.add(self) # remember that we visited this team
 
         # choose learner with highest bid
@@ -29,7 +31,7 @@ class Team:
             if not learner.action.isAtomic() and learner.action.act in vis:
                 continue # don't take already visited team's bid
 
-            bid = self.learners[i].bid(obs)
+            bid = self.learners[i].bid(obs, regDict)
             if maxLearner is None: # first bid
                 maxBid = bid
                 maxLearner = learner
@@ -41,7 +43,7 @@ class Team:
         if maxLearner is None:
             return 0L # default move if no choice made
         else:
-            return maxLearner.action.getAction(obs, vis)
+            return maxLearner.action.getAction(obs, vis, )
 
     """
     Adds the learner if not already in, and increments reference smount to the

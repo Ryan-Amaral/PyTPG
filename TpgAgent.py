@@ -13,6 +13,7 @@ class TpgAgent:
     def __init__(self, team, trainer=None):
         self.team = team
         self.trainer = trainer
+        self.regDict = {}
 
     """
     Chooses an action to perform from the team based on the input space.
@@ -29,11 +30,17 @@ class TpgAgent:
         defAct:
             (Int) Default action to perform if valid action not chosen
             by team.
+        mem:
+            (Bool) Use memory by maintaining registers.
     Returns:
         (Int) The action to perform.
     """
-    def act(self, obs, valActs=None, defAct=0L):
-        action = self.team.getAction(obs)
+    def act(self, obs, valActs=None, defAct=0L, mem=False):
+        regDict = None
+        if mem:
+            regDict = self.regDict
+
+        action = self.team.getAction(obs, regDict=regDict)
         if valActs is None:
             return action
         else:
