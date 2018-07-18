@@ -8,7 +8,7 @@ class Learner:
     import math
     from bitarray import bitarray
 
-    idCount = 0L # counter for id
+    idCount = 0 # counter for id
     registerSize = 8 # size of registers
 
     def __init__(self, action, maxProgSize=8, randSeed=0 learner=None,
@@ -57,7 +57,7 @@ class Learner:
         obs:
             (Float[]) The current state of the environment.
         regDict:
-            (Dict<Long,Float[]>) Dictionary of registers, find the register of
+            (Dict<Int,Float[]>) Dictionary of registers, find the register of
             this learner with the key self.id. If None, uses default (all 0)
             register.
     Returns:

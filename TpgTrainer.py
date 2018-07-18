@@ -16,9 +16,9 @@ class TpgTrainer:
     Initializes the Training procedure, potentially picking up from a
     previously left off point.
     Args:
-        actions        : (Long[]) The actions available in the env.
+        actions        : (Int[]) The actions available in the env.
         randSeed       :
-        teamPopSizeInit: (Long) Initial Team population size.
+        teamPopSizeInit: (Int) Initial Team population size.
         gap            : Proportion of agents to replace per gen.
         pLearnerDelete :
         pLearnerAdd    :

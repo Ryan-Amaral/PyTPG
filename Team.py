@@ -7,7 +7,7 @@ class Team:
         self.birthGen = birthGen
         self.learners = []
         self.outcomes = {} # outcomes for tasks from training episodes
-        self.learnerRefCount # learners that reference this team
+        self.learnerRefCount = 0 # learners that reference this team
 
     """
     Search for an action to perform based on the observation.
@@ -17,7 +17,7 @@ class Team:
         vis:
             (Dict(Team)): Teams already visited so we don't repeat.
     Returns:
-        (Long) The action.
+        (Int) The action.
     """
     def getAction(self, obs, vis=Set()):
         vis.add(self) # remember that we visited this team

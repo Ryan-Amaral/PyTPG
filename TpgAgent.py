@@ -22,15 +22,15 @@ class TpgAgent:
             (Float[]) The observation space. If None, action will be
             essentially random.
         valActs:
-            (Long[]) Should be some subset of all actions that were
+            (Int[]) Should be some subset of all actions that were
             initially provided to TPG, incase sub-environments have
             different action spaces. If None, the outputted action is
             not checked.
         defAct:
-            (Long) Default action to perform if valid action not chosen
+            (Int) Default action to perform if valid action not chosen
             by team.
     Returns:
-        (Long) The action to perform.
+        (Int) The action to perform.
     """
     def act(self, obs, valActs=None, defAct=0L):
         action = self.team.getAction(obs)

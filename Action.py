@@ -7,7 +7,7 @@ class Action:
     Creates an action object with a specified action, either a team or atomic.
     Args:
         act:
-            (Long or Team) Long if atomic, Team otherwise.
+            (Int or Team) Int if atomic, Team otherwise.
     """
     def __init__(self, act):
         self.act = act
@@ -20,7 +20,7 @@ class Action:
         vis:
             (Dict(Team)): Teams already visited so we don't repeat.
     Returns:
-        (Long) The action selected, either atomic right from this action object,
+        (Int) The action selected, either atomic right from this action object,
         or from the team of this action.
     """
     def getAction(self, obs, vis=Set()):
