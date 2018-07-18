@@ -88,7 +88,19 @@ class Learner:
     def runProgram(self, obs, registers):
         # iterate over instructions in the program
         for inst in program:
+            sourceVal = 0
+            # first get an initial value from register or observation
+            if Instruction.equalBitArrays(
+                    inst.getBitArraySeg(Instruction.slcMode),Instruction.mode0):
+                # instruction is mode0, source value comes from register
+                sourceVal = registers[Instruction.getIntVal(
+                    inst.getBitArraySeg(Instruction.slcSrc)) % registerSize]
+            else:
+                # instruction not mode0, source value form obs
+                sourceVal = obs[Instruction.getIntVal(
+                    inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)]
 
+            
 
     """
     Mutates this learners program.

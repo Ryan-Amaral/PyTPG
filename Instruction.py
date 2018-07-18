@@ -11,18 +11,10 @@ class Instruction:
     instructionSize = 1 + 3 + 3 + 16
 
     # offsets and sizes of segments
-    modeOffset = 0
-    modeSize = 1
-
-    opOffset = 1
-    opSize = 3
-
-    destOffset = 4
-    destSize = 3
-
-    srcOffset = 7
-    srcSize = 16
-
+    slcMode = slice(0,1)
+    slcOp = slice(1,4)
+    slcDest = slice(4,7)
+    slcSrc = slice(7,23)
 
     # modes
     mode0 = bitarray([0])
@@ -53,20 +45,18 @@ class Instruction:
     """
     Gets a segment of the bitarray that makes up this instruction.
     Args:
-        offset:
-            (int) Offset to start of the segment.
-        size:
-            (int) Size of the segment wanted.
+        slc:
+            (slice) From the static attributes of this class. Ex: slcMode.
     Returns:
         (bitarray): The bitarray that makes up the desired segment.
     """
-    def getBitArraySegment(self, offset, size):
-        return self.inst[offset, offset + size]
+    def getBitArraySeg(self, slc):
+        return self.inst[slc]
 
     """
     Returns the int val of the bitarray that is passed in.
     """
-    def getIntVal(self, ba):
+    def getIntVal(ba):
         return int(ba.to01(), 2)
 
     """
