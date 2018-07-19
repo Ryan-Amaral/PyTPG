@@ -78,7 +78,7 @@ class Learner:
                 regDict[self.id] = [0]*Learner.registerSize
             registers = regDict[self.id]
 
-        return 1 / (1 + math.exp(-runProgram(obs,registers)))
+        return 1 / (1 + math.exp(-self.runProgram(obs,registers)))
 
     """
     Runs this learner's program.
@@ -92,7 +92,7 @@ class Learner:
     """
     def runProgram(self, obs, registers):
         # iterate over instructions in the program
-        for inst in program:
+        for inst in self.program:
             sourceVal = 0
             # first get an initial value from register or observation
             if Instruction.equalBitArrays(
