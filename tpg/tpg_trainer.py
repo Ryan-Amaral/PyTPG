@@ -1,4 +1,5 @@
 from __future__ import division
+import math
 import random
 import time
 from operator import itemgetter
@@ -179,16 +180,16 @@ class TpgTrainer:
     """
     def select(self, fitShare=True):
         delTeams = [] # list of teams to delete
-        numKeep = self.gap * len(self.rootTeams) # number of roots to keep
+        numKeep = math.floor(self.gap * len(self.rootTeams)) # number of roots to keep
 
         teamScoresMap = {}
         taskTotalScores = [0]*len(self.tasks) # store overall score per task
         # get outcomes of all teams outcome[team][tasknum]
         for team in self.rootTeams:
             teamScoresMap[team] = [0]*len(self.tasks)
-            for t in range(len(self.tasks)):
-                teamScoresMap[team][t] = team.outcomes[self.tasks[t]]
-                taskTotalScores[t] += team.outcomes[self.tasks[t]]#up task total
+            for t,task in enumerate(self.tasks):
+                teamScoresMap[team][t] = team.outcomes[task]
+                taskTotalScores[t] += team.outcomes[task]#up task total
 
         scores = []
         if fitShare: # fitness share across all outcomes
@@ -206,7 +207,7 @@ class TpgTrainer:
         delTeams = scores[numKeep:] # teams to get rid of
 
         # properly delete the teams
-        for team in delTeams:
+        for team, _ in delTeams:
             team.erase()
             self.teams.remove(team)
             self.rootTeams.remove(team)
@@ -257,16 +258,16 @@ class TpgTrainer:
                 else:
                     subChild.addLearner(learner)
 
-            mutate(child1) # attempt a mutation
+            self.mutate(child1) # attempt a mutation
             if (set(child1.learners) == set(par1.learners) or
                     set(child1.learners) == set(par2.learners)):
-                while not mutate(child1): # attempt mutation untill it works
+                while not self.mutate(child1): # attempt mutation untill it works
                     continue
 
-            mutate(child2) # attempt a mutation
+            self.mutate(child2) # attempt a mutation
             if (set(child2.learners) == set(par1.learners) or
                     set(child2.learners) == set(par2.learners)):
-                while not mutate(child2): # attempt mutation untill it works
+                while not self.mutate(child2): # attempt mutation untill it works
                     continue
 
             # add children to team populations
@@ -297,7 +298,7 @@ class TpgTrainer:
                 isTeamChanged = True
 
         # mutate the learners
-        isTeamChanged = mutateLearners(team, tmpLearners) or isTeamChanged
+        isTeamChanged = self.mutateLearners(team, tmpLearners) or isTeamChanged
 
         return isTeamChanged
 
@@ -310,6 +311,7 @@ class TpgTrainer:
         (Boolean) Whether the team ended up actually being mutated.
     """
     def mutateLearners(self, team, learners):
+        isTeamChanged = False
         for learner in learners:
             if len(team.learners) == self.maxTeamSize:
                 break; # limit team size
@@ -357,10 +359,9 @@ class TpgTrainer:
         self.rootTeams.clear()
         for team in self.teams:
             # keep some outcomes for efficiency
-            team.outcomes = {key:val for key, val in team.outcomes.iteritems()
-                            if key in outcomesKeep}
+            team.outcomes = { key: team.outcomes[key] for key in outcomesKeep }
             if team.learnerRefCount == 0:
-                rootTeams.append(team) # root teams must have no references
+                self.rootTeams.append(team) # root teams must have no references
 
         # remove unused learners
         tmpLearners = list(self.learners)
@@ -373,8 +374,8 @@ class TpgTrainer:
 
         self.teamQueue = list(self.rootTeams)
         random.shuffle(self.teamQueue)
-        for i in range(len(teamQueue)):
-            teamQueue[i].uid = i
+        for i in range(len(self.teamQueue)):
+            self.teamQueue[i].uid = i
 
         self.tasks.clear()
 

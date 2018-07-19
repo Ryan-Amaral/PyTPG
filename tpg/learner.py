@@ -16,7 +16,7 @@ class Learner:
     idCount = 0 # counter for id
     registerSize = 8 # size of registers
 
-    def __init__(self, action, maxProgSize=8, randSeed=0, learner=None,
+    def __init__(self, action=None, maxProgSize=8, randSeed=0, learner=None,
             makeNew=False, birthGen=0):
 
         if randSeed == 0:
@@ -159,8 +159,8 @@ class Learner:
         # maybe insert instruction
         if (len(self.program) < maxProgramSize and
                 random.uniform(0,1) < pProgramAdd):
-            ins = Instruction(randSeed=randSeed)
-            self.program.insert(random.choice(range(len(self.program))))
+            ins = Instruction()
+            self.program.insert(random.choice(range(len(self.program))), ins)
             changed = True
 
         # maybe flip an instruction's bit
