@@ -1,20 +1,20 @@
+from __future__ import division
 """
 A Learner.
 """
 class Learner:
 
     import random
-    from __future__ import division
     import math
     from bitarray import bitarray
-    
+
     from instruction import Instruction
     from action import Action
 
     idCount = 0 # counter for id
     registerSize = 8 # size of registers
 
-    def __init__(self, action, maxProgSize=8, randSeed=0 learner=None,
+    def __init__(self, action, maxProgSize=8, randSeed=0, learner=None,
             makeNew=False, birthGen=0):
 
         if randSeed == 0:

@@ -1,3 +1,5 @@
+from __future__ import division
+
 """
 The main class to do training on a population of Teams.
 Created By: Ryan Amaral.
@@ -9,7 +11,6 @@ class TpgTrainer:
     import random
     import time
     from operator import itemgetter
-    from __future__ import division
     import threading
 
     from action import Action
