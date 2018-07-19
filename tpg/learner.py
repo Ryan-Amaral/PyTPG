@@ -118,11 +118,13 @@ class Learner:
                 registers[destReg] -= sourceVal
             elif Instruction.equalBitArrays(operation, Instruction.opProd):
                 registers[destReg] *= sourceVal
-            elif Instruction.equalBitArrays(operation, Instruction.opDiv):
+            elif (Instruction.equalBitArrays(operation, Instruction.opDiv) and
+                    sourceVal != 0):
                 registers[destReg] /= sourceVal
             elif Instruction.equalBitArrays(operation, Instruction.opCos):
                 registers[destReg] = math.cos(sourceVal)
-            elif Instruction.equalBitArrays(operation, Instruction.opLog):
+            elif (Instruction.equalBitArrays(operation, Instruction.opLog) and
+                    sourceVal > 0):
                 registers[destReg] = math.log(sourceVal)
             elif Instruction.equalBitArrays(operation, Instruction.opExp):
                 registers[destReg] = math.exp(sourceVal)
