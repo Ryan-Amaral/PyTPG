@@ -257,16 +257,16 @@ class TpgTrainer:
                 else:
                     subChild.addLearner(learner)
 
-            mutate(child1) # attempt a mutation
+            self.mutate(child1) # attempt a mutation
             if (set(child1.learners) == set(par1.learners) or
                     set(child1.learners) == set(par2.learners)):
-                while not mutate(child1): # attempt mutation untill it works
+                while not self.mutate(child1): # attempt mutation untill it works
                     continue
 
-            mutate(child2) # attempt a mutation
+            self.mutate(child2) # attempt a mutation
             if (set(child2.learners) == set(par1.learners) or
                     set(child2.learners) == set(par2.learners)):
-                while not mutate(child2): # attempt mutation untill it works
+                while not self.mutate(child2): # attempt mutation untill it works
                     continue
 
             # add children to team populations
@@ -297,7 +297,7 @@ class TpgTrainer:
                 isTeamChanged = True
 
         # mutate the learners
-        isTeamChanged = mutateLearners(team, tmpLearners) or isTeamChanged
+        isTeamChanged = self.mutateLearners(team, tmpLearners) or isTeamChanged
 
         return isTeamChanged
 
