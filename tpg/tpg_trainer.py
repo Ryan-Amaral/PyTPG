@@ -13,10 +13,10 @@ class TpgTrainer:
     from operator import itemgetter
     import threading
 
-    from action import Action
-    from learner import Learner
-    from team import Team
-    from tpg_agent import TpgAgent
+    from tpg import action
+    from tpg import learner
+    from tpg import team
+    from tpg import tpg_agent
 
     """
     Initializes the Training procedure, potentially picking up from a
@@ -81,7 +81,7 @@ class TpgTrainer:
             self.curGen = popInit.gen
 
         self.teamQueue = list(self.rootTeams)
-        self.tasks = Set() # set of tasks done per all individuals
+        self.tasks = set() # set of tasks done per all individuals
         self.lock = threading.Lock() # lock for adding tasks
 
     """
@@ -146,8 +146,8 @@ class TpgTrainer:
             learnerMax = random.randint(0, self.maxTeamSize - 2)
             for i in range(learnerMax):
                 learner = Learner(
-                    self.actions[random.randint(0,len(self.actions)),
-                    self.maxProgramSize, randSeed=self.randSeed)
+                    self.actions[random.randint(0,len(self.actions))],
+                    maxProgSize=self.maxProgramSize, randSeed=self.randSeed)
                 team.addLearner(learner)
                 self.learners.append(learner)
 
@@ -294,7 +294,7 @@ class TpgTrainer:
                 continue # never delete the sole atomic action
             # delete the learner
             if random.uniform(0,1) < self.pLearnerDelete:
-                team.removeLearner(learner):
+                team.removeLearner(learner)
                 isTeamChanged = True
 
         # mutate the learners

@@ -8,8 +8,8 @@ class Learner:
     import math
     from bitarray import bitarray
 
-    from instruction import Instruction
-    from action import Action
+    from tpg import instruction
+    from tpg import action
 
     idCount = 0 # counter for id
     registerSize = 8 # size of registers

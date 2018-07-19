@@ -3,8 +3,8 @@ A Team.
 """
 class Team:
 
-    from learner import Learner
-    from action import Action
+    from tpg import learner
+    from tpg import action
 
     def __init__(self, birthGen = 0):
         self.birthGen = birthGen
@@ -24,7 +24,7 @@ class Team:
     Returns:
         (Int) The action.
     """
-    def getAction(self, obs, vis=Set(), regDict=None):
+    def getAction(self, obs, vis=set(), regDict=None):
         vis.add(self) # remember that we visited this team
 
         # choose learner with highest bid
@@ -44,7 +44,7 @@ class Team:
                 maxLearner = learner
 
         if maxLearner is None:
-            return 0L # default move if no choice made
+            return 0 # default move if no choice made
         else:
             return maxLearner.action.getAction(obs, vis=vis, regDict=regDict)
 

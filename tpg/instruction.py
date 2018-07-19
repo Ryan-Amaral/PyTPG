@@ -63,7 +63,7 @@ class Instruction:
     Checks if two bitarrays are equal.
     """
     def equalBitArrays(ba1, ba2):
-        return bitdiff(ba1, ba2) == 0:
+        return bitdiff(ba1, ba2) == 0
 
     """
     Flips the bit at the index.

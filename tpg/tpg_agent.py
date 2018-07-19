@@ -3,8 +3,8 @@ Class the the client gets an instance of to control a team.
 """
 class TpgAgent:
 
-    from team import Team
-    from tpg_trainer import TpgTrainer
+    from tpg import team
+    from tpg import tpg_trainer
 
     """
     Creates an agent (what the client interfaces with), links to trainer if
@@ -38,7 +38,7 @@ class TpgAgent:
     Returns:
         (Int) The action to perform.
     """
-    def act(self, obs, valActs=None, defAct=0L, mem=False):
+    def act(self, obs, valActs=None, defAct=0, mem=False):
         regDict = None
         if mem:
             regDict = self.regDict

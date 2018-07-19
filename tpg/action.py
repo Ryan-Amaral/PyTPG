@@ -3,8 +3,6 @@ An action.
 """
 class Action:
 
-    from team import Team
-
     """
     Creates an action object with a specified action, either a team or atomic.
     Args:
@@ -27,7 +25,7 @@ class Action:
         (Int) The action selected, either atomic right from this action object,
         or from the team of this action.
     """
-    def getAction(self, obs, vis=Set(), regDict=None):
+    def getAction(self, obs, vis=set(), regDict=None):
         if self.isAtomic():
             return self.act # return atomic
         else: # else act is team, return its action
