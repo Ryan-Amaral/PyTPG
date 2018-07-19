@@ -206,7 +206,7 @@ class TpgTrainer:
         delTeams = scores[numKeep:] # teams to get rid of
 
         # properly delete the teams
-        for team in delTeams:
+        for team,_ in delTeams:
             team.erase()
             self.teams.remove(team)
             self.rootTeams.remove(team)
