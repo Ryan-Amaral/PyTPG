@@ -3,6 +3,9 @@ A Team.
 """
 class Team:
 
+    from learner import Learner
+    from action import Action
+
     def __init__(self, birthGen = 0):
         self.birthGen = birthGen
         self.learners = []
@@ -43,7 +46,7 @@ class Team:
         if maxLearner is None:
             return 0L # default move if no choice made
         else:
-            return maxLearner.action.getAction(obs, vis, )
+            return maxLearner.action.getAction(obs, vis=vis, regDict=regDict)
 
     """
     Adds the learner if not already in, and increments reference smount to the

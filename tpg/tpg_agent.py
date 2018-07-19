@@ -3,6 +3,9 @@ Class the the client gets an instance of to control a team.
 """
 class TpgAgent:
 
+    from team import Team
+    from tpg_trainer import TpgTrainer
+
     """
     Creates an agent (what the client interfaces with), links to trainer if
     currently doing training.

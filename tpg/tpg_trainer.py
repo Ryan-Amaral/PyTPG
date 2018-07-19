@@ -12,6 +12,11 @@ class TpgTrainer:
     from __future__ import division
     import threading
 
+    from action import Action
+    from learner import Learner
+    from team import Team
+    from tpg_agent import TpgAgent
+
     """
     Initializes the Training procedure, potentially picking up from a
     previously left off point.
@@ -368,6 +373,8 @@ class TpgTrainer:
 
         self.teamQueue = list(self.rootTeams)
         random.shuffle(self.teamQueue)
+        for i in range(len(teamQueue)):
+            teamQueue[i].uid = i
 
         self.tasks.clear()
 

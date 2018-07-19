@@ -7,6 +7,9 @@ class Learner:
     from __future__ import division
     import math
     from bitarray import bitarray
+    
+    from instruction import Instruction
+    from action import Action
 
     idCount = 0 # counter for id
     registerSize = 8 # size of registers

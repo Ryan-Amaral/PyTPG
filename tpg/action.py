@@ -3,6 +3,8 @@ An action.
 """
 class Action:
 
+    from team import Team
+
     """
     Creates an action object with a specified action, either a team or atomic.
     Args:
@@ -29,7 +31,7 @@ class Action:
         if self.isAtomic():
             return self.act # return atomic
         else: # else act is team, return its action
-            return self.act.getAction(obs, vis, regDict)
+            return self.act.getAction(obs, vis=vis, regDict=regDict)
 
     """
     Returns a boolean telling whether this action is a specific action (atomic),
