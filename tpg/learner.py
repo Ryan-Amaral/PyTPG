@@ -16,7 +16,7 @@ class Learner:
     idCount = 0 # counter for id
     registerSize = 8 # size of registers
 
-    def __init__(self, action=None, maxProgSize=8, randSeed=0, learner=None,
+    def __init__(self, action=0, maxProgSize=8, randSeed=0, learner=None,
             makeNew=False, birthGen=0):
 
         if randSeed == 0:
