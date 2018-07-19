@@ -87,7 +87,7 @@ class TpgTrainer:
     Attempts to add a task to the set of tasks. Thread safe.
     """
     def addTask(self, task):
-        self.lock.aquire()
+        self.lock.acquire()
         try:
             self.tasks.add(task)
         finally:
@@ -100,7 +100,7 @@ class TpgTrainer:
         (TpgAgent) None if no team left in queue, means to call for evolution.
     """
     def getNextTeam(self):
-        self.lock.aquire()
+        self.lock.acquire()
         agent = None
         try:
             agent = TpgAgent(self.teamQueue.pop(), self)
