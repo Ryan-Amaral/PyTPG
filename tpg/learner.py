@@ -1,15 +1,17 @@
 from __future__ import division
+
+import random
+import time
+import math
+from bitarray import bitarray
+
+from tpg.instruction import Instruction
+from tpg.action import Action
+
 """
 A Learner.
 """
 class Learner:
-
-    import random
-    import math
-    from bitarray import bitarray
-
-    from tpg import instruction
-    from tpg import action
 
     idCount = 0 # counter for id
     registerSize = 8 # size of registers
@@ -25,8 +27,8 @@ class Learner:
         # reconstruct a learner
         if learner is not None:
             if makeNew: # make new from existing
-                self.id = idCount
-                idCount += 1
+                self.id = Learner.idCount
+                Learner.idCount += 1
                 self.birthGen = birthGen
                 self.teamRefCount = 0
             else: # remake existing
@@ -40,8 +42,8 @@ class Learner:
             return
 
         # or make a brand new one
-        self.id = idCount
-        idCount += 1
+        self.id = Learner.idCount
+        Learner.idCount += 1
         self.birthGen = birthGen
         self.action = Action(action)
         self.teamRefCount = 0
@@ -70,10 +72,10 @@ class Learner:
         # choose register appropriately
         registers = None
         if regDict is None:
-            registers = [0]*registerSize
+            registers = [0]*Learner.registerSize
         else:
             if self.id not in regDict:
-                regDict[self.id] = [0]*registerSize
+                regDict[self.id] = [0]*Learner.registerSize
             registers = regDict[self.id]
 
         return 1 / (1 + math.exp(-runProgram(obs,registers)))
@@ -97,7 +99,8 @@ class Learner:
                     inst.getBitArraySeg(Instruction.slcMode),Instruction.mode0):
                 # instruction is mode0, source value comes from register
                 sourceVal = registers[Instruction.getIntVal(
-                    inst.getBitArraySeg(Instruction.slcSrc)) % registerSize]
+                    inst.getBitArraySeg(Instruction.slcSrc)) %
+                        Learner.registerSize]
             else:
                 # instruction not mode0, source value form obs
                 sourceVal = obs[Instruction.getIntVal(

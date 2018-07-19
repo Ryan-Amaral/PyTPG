@@ -1,10 +1,10 @@
+from tpg.learner import Learner
+from tpg.action import Action
+
 """
 A Team.
 """
 class Team:
-
-    from tpg import learner
-    from tpg import action
 
     def __init__(self, birthGen = 0):
         self.birthGen = birthGen

@@ -1,4 +1,13 @@
 from __future__ import division
+import random
+import time
+from operator import itemgetter
+import threading
+
+from tpg.action import Action
+from tpg.learner import Learner
+from tpg.team import Team
+from tpg.tpg_agent import TpgAgent
 
 """
 The main class to do training on a population of Teams.
@@ -7,16 +16,6 @@ Created On: June 29, 2018 13:44.
 Created Because: I was tired of Java.
 """
 class TpgTrainer:
-
-    import random
-    import time
-    from operator import itemgetter
-    import threading
-
-    from tpg import action
-    from tpg import learner
-    from tpg import team
-    from tpg import tpg_agent
 
     """
     Initializes the Training procedure, potentially picking up from a
@@ -73,7 +72,7 @@ class TpgTrainer:
             self.rootTeams = []
             self.learners = []
             self.curGen = 0
-            initPops()
+            self.initPops()
         else: # or carry on from object
             self.teams = popInit.teams
             self.rootTeams = popInit.rootTeams
@@ -126,9 +125,9 @@ class TpgTrainer:
         # create teams to fill population
         for i in range(self.teamPopSizeInit):
             # take two distinct initial actions for each of two learners on team
-            ac1 = self.actions[random.randint(0,len(self.actions))]
+            ac1 = self.actions[random.randint(0,len(self.actions)-1)]
             tmpActions = [a for a in self.actions if a != ac1]
-            ac2 = tmpActions[random.randint(0,len(tmpActions))]
+            ac2 = tmpActions[random.randint(0,len(tmpActions)-1)]
 
             team = Team() # create new team
 
@@ -146,7 +145,7 @@ class TpgTrainer:
             learnerMax = random.randint(0, self.maxTeamSize - 2)
             for i in range(learnerMax):
                 learner = Learner(
-                    self.actions[random.randint(0,len(self.actions))],
+                    self.actions[random.randint(0,len(self.actions)-1)],
                     maxProgSize=self.maxProgramSize, randSeed=self.randSeed)
                 team.addLearner(learner)
                 self.learners.append(learner)

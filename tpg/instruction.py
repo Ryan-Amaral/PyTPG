@@ -1,11 +1,12 @@
+from bitarray import bitarray
+from bitarray import bitdiff
+import random
+import time
+
 """
 An Instruction
 """
 class Instruction:
-
-    from bitarray import bitarray
-    from bitarray import bitdiff
-    import random
 
     # bits correspond to: mode + op + dest + src
     instructionSize = 1 + 3 + 3 + 16
@@ -38,9 +39,9 @@ class Instruction:
 
         if randInit: # random bits
             self.inst = bitarray([random.choice([True,False])
-                    for i in range(instructionSize)])
+                    for i in range(Instruction.instructionSize)])
         else: # all 0's
-            self.inst = bitarray([0]*instructionSize)
+            self.inst = bitarray([0]*Instruction.instructionSize)
 
     """
     Gets a segment of the bitarray that makes up this instruction.
