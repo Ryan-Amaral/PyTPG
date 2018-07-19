@@ -100,7 +100,7 @@ class TpgTrainer:
     Returns:
         (TpgAgent) None if no team left in queue, means to call for evolution.
     """
-    def getNextTeam(self):
+    def getNextAgent(self):
         self.lock.acquire()
         agent = None
         try:
