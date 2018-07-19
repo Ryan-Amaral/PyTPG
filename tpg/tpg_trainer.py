@@ -186,9 +186,9 @@ class TpgTrainer:
         # get outcomes of all teams outcome[team][tasknum]
         for team in self.rootTeams:
             teamScoresMap[team] = [0]*len(self.tasks)
-            for t in range(len(self.tasks)):
-                teamScoresMap[team][t] = team.outcomes[self.tasks[t]]
-                taskTotalScores[t] += team.outcomes[self.tasks[t]]#up task total
+            for t, task in enumerate(self.tasks):
+                teamScoresMap[team][t] = team.outcomes[task]
+                taskTotalScores[t] += team.outcomes[task]#up task total
 
         scores = []
         if fitShare: # fitness share across all outcomes
