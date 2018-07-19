@@ -104,7 +104,10 @@ class TpgTrainer:
         self.lock.acquire()
         agent = None
         try:
-            agent = TpgAgent(self.teamQueue.pop(), self)
+            if len(self.teamQueue) == 0:
+                agent = None
+            else:
+                agent = TpgAgent(self.teamQueue.pop(), self)
         finally:
             self.lock.release()
 
