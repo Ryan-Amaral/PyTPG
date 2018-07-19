@@ -1,5 +1,5 @@
 from tpg.learner import Learner
-from tpg.action import Action
+import tpg.action
 
 """
 A Team.

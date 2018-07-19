@@ -6,7 +6,7 @@ import math
 from bitarray import bitarray
 
 from tpg.instruction import Instruction
-from tpg.action import Action
+import tpg.action
 
 """
 A Learner.
@@ -45,7 +45,7 @@ class Learner:
         self.id = Learner.idCount
         Learner.idCount += 1
         self.birthGen = birthGen
-        self.action = Action(action)
+        self.action = tpg.action.Action(action)
         self.teamRefCount = 0
         self.program = [] # program is list of instructions
 

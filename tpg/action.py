@@ -1,3 +1,5 @@
+import tpg.team
+
 """
 An action.
 """
@@ -36,7 +38,7 @@ class Action:
     or refers to a team (not atomic).
     """
     def isAtomic(self):
-        return type(self.act) is not Team
+        return type(self.act) is not tpg.team.Team
 
     """
     Checks if the action in self is equivalent to other.
