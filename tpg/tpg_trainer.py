@@ -174,7 +174,7 @@ class TpgTrainer:
                 self.learners.append(learner)
 
             team.uid = TpgTrainer.uidCounter
-            uidCounter += 1
+            TpgTrainer.uidCounter += 1
 
             # add into population
             self.teams.append(team)
@@ -297,9 +297,9 @@ class TpgTrainer:
                     continue
 
             child1.uid = TpgTrainer.uidCounter
-            uidCounter += 1
+            TpgTrainer.uidCounter += 1
             child2.uid = TpgTrainer.uidCounter
-            uidCounter += 1
+            TpgTrainer.uidCounter += 1
 
             # add children to team populations
             self.teams.append(child1)
