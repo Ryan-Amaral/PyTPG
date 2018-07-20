@@ -216,8 +216,9 @@ class TpgTrainer:
             for team in teamScoresMap.keys():
                 teamRelTaskScore = 0 # teams final fitness shared score
                 for taskNum in range(len(self.tasks)):
-                    teamRelTaskScore += (teamScoresMap[team][taskNum] /
-                                                taskTotalScores[taskNum])
+                    if taskTotalScores[taskNum] != 0:
+                        teamRelTaskScore += (teamScoresMap[team][taskNum] /
+                                                    taskTotalScores[taskNum])
                 scores.append((team, teamRelTaskScore))
         else: # just take first outcome
             for team in teamScoresMap.keys():
