@@ -18,6 +18,8 @@ Created Because: I was tired of Java.
 """
 class TpgTrainer:
 
+    uidCounter = 0
+
     """
     Initializes the Training procedure, potentially picking up from a
     previously left off point.
@@ -171,6 +173,9 @@ class TpgTrainer:
                 team.addLearner(learner)
                 self.learners.append(learner)
 
+            team.uid = TpgTrainer.uidCounter
+            uidCounter += 1
+
             # add into population
             self.teams.append(team)
             self.rootTeams.append(team)
@@ -291,6 +296,11 @@ class TpgTrainer:
                 while not self.mutate(child2): # attempt mutation untill it works
                     continue
 
+            child1.uid = TpgTrainer.uidCounter
+            uidCounter += 1
+            child2.uid = TpgTrainer.uidCounter
+            uidCounter += 1
+
             # add children to team populations
             self.teams.append(child1)
             self.teams.append(child2)
@@ -396,7 +406,7 @@ class TpgTrainer:
         self.teamQueue = list(self.rootTeams)
         self.rand.shuffle(self.teamQueue)
         for i in range(len(self.teamQueue)):
-            self.teamQueue[i].uid = i
+            self.teamQueue[i].rootNum = i
 
         self.tasks.clear()
 

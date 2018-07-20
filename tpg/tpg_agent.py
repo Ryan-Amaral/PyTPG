@@ -67,7 +67,7 @@ class TpgAgent:
             self.trainer.addTask(task)
 
     """
-    Gets ID of the agent's team.
+    Gets Number of this agent from it's team, unique within generation.
     """
-    def getId(self):
-        return self.team.uid
+    def getAgentNum(self):
+        return self.team.rootNum
