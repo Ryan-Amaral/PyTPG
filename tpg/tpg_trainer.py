@@ -373,7 +373,7 @@ class TpgTrainer:
                 self.learners.remove(learner)
                 # dereference if action is team
                 if not learner.action.isAtomic():
-                    learner.action.team.learnerRefCount -= 1
+                    learner.action.act.learnerRefCount -= 1
 
         self.teamQueue = list(self.rootTeams)
         self.rand.shuffle(self.teamQueue)
