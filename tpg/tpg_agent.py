@@ -56,12 +56,12 @@ class TpgAgent:
     Gives the team the reward amount at a certain tasks. Does not increment,
     only gives/overwrites final reward.
     Args:
-        task  :
-            (Str) The task the reward is for.
         reward:
             (Float) The final reward value.
+        task  :
+            (Str) The task the reward is for.
     """
-    def reward(self, task, reward):
+    def reward(self, reward, task='def'):
         self.team.outcomes[task] = reward # track reward for task on team
         if self.trainer is not None:
             self.trainer.addTask(task)
