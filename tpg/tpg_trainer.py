@@ -131,11 +131,7 @@ class TpgTrainer:
         for i in range(self.teamPopSizeInit):
             # take two distinct initial actions for each of two learners on team
             ac1 = self.rand.choice(self.actions)
-            #ac1 = self.actions[random.randint(0,len(self.actions)-1)]
-            #tmpActions = [a for a in self.actions if a != ac1]
             ac2 = self.rand.choice([a for a in self.actions if a != ac1])
-            #ac2 = tmpActions[random.randint(0,len(tmpActions)-1)]
-            print(ac1,ac2)
 
             team = Team() # create new team
 
