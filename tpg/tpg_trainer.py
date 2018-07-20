@@ -115,11 +115,12 @@ class TpgTrainer:
         return agent
 
     """
-    How many teams have not yet been withdrawn this generation. Can use this to
-    check for end of generation, but is not thread safe. So a more reliable
-    alternative is to call getNextTeam, and if None, then generation is done.
+    How many root teams / agents have not yet been withdrawn this generation.
+    Can use this to check for end of generation, but is not thread safe. So a
+    more reliable alternative is to call getNextTeam, and if None, then
+    generation is done.
     """
-    def remainingTeams(self):
+    def remainingAgents(self):
         return len(self.teamQueue)
 
     """
