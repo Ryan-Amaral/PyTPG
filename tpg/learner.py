@@ -80,7 +80,12 @@ class Learner:
                 regDict[self.id] = [0]*Learner.registerSize
             registers = regDict[self.id]
 
-        return 1 / (1 + math.exp(-self.runProgram(obs,registers)))
+        # math overflow error happens sometimes
+        try:
+            progResult = self.runProgram(obs,registers)
+            return 1 / (1 + math.exp(-progResult))
+        except:
+            return 0
 
     """
     Runs this learner's program.
@@ -139,7 +144,8 @@ class Learner:
 
             # default register to 0 if invalid value
             if (math.isnan(registers[destReg]) or
-                    registers[destReg] == float('Inf')):
+                    registers[destReg] == float('inf') or
+                    registers[destReg] == float('-inf')):
                 registers[destReg] = 0
 
         return registers[0]
