@@ -65,3 +65,9 @@ class TpgAgent:
         self.team.outcomes[task] = reward # track reward for task on team
         if self.trainer is not None:
             self.trainer.addTask(task)
+
+    """
+    Gets ID of the agent's team.
+    """
+    def getId(self):
+        return self.team.uid
