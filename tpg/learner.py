@@ -19,6 +19,7 @@ class Learner:
     def __init__(self, action=0, maxProgSize=8, randSeed=0, learner=None,
             makeNew=False, birthGen=0):
 
+        self.randSeed = randSeed
         self.rand = random.Random()
         if randSeed == 0:
             self.rand.seed(int(round(time.time())))
@@ -160,7 +161,7 @@ class Learner:
         # maybe insert instruction
         if (len(self.program) < maxProgramSize and
                 self.rand.uniform(0,1) < pProgramAdd):
-            ins = Instruction(randSeed=randSeed)
+            ins = Instruction(randSeed=self.randSeed)
             self.program.insert(self.rand.choice(range(len(self.program))), ins)
             changed = True
 
