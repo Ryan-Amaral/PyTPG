@@ -62,10 +62,11 @@ class TpgTrainer:
         self.pProgramMutate = pProgramMutate
 
         # establish random for training
+        self.rand = random.Random()
         if randSeed == 0:
-            random.seed(int(round(time.time())))
+            self.rand.seed(int(round(time.time())))
         else:
-            random.seed(randSeed)
+            self.rand.seed(randSeed)
 
         # create initial populations if starting anew
         if popInit is None:
@@ -129,9 +130,12 @@ class TpgTrainer:
         # create teams to fill population
         for i in range(self.teamPopSizeInit):
             # take two distinct initial actions for each of two learners on team
-            ac1 = self.actions[random.randint(0,len(self.actions)-1)]
-            tmpActions = [a for a in self.actions if a != ac1]
-            ac2 = tmpActions[random.randint(0,len(tmpActions)-1)]
+            ac1 = self.rand.choice(self.actions)
+            #ac1 = self.actions[random.randint(0,len(self.actions)-1)]
+            #tmpActions = [a for a in self.actions if a != ac1]
+            ac2 = self.rand.choice([a for a in self.actions if a != ac1])
+            #ac2 = tmpActions[random.randint(0,len(tmpActions)-1)]
+            print(ac1,ac2)
 
             team = Team() # create new team
 
@@ -140,16 +144,16 @@ class TpgTrainer:
             team.addLearner(learner)
             self.learners.append(learner)
 
-            # add/create seconds learner
+            # add/create second learner
             learner = Learner(ac2, self.maxProgramSize, randSeed=self.randSeed)
             team.addLearner(learner)
             self.learners.append(learner)
 
             # add other random learners
-            learnerMax = random.randint(0, self.maxTeamSize - 2)
+            learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
             for i in range(learnerMax):
                 learner = Learner(
-                    self.actions[random.randint(0,len(self.actions)-1)],
+                    self.actions[self.rand.randint(0,len(self.actions)-1)],
                     maxProgSize=self.maxProgramSize, randSeed=self.randSeed)
                 team.addLearner(learner)
                 self.learners.append(learner)
@@ -224,8 +228,8 @@ class TpgTrainer:
         # add teams until maxed size
         while len(self.teams) < self.teamPopSizeInit:
             # choose 2 random teams as parents
-            par1 = random.choice(parents)
-            par2 = random.choice([par for par in parents if par is not par1])
+            par1 = self.rand.choice(parents)
+            par2 = self.rand.choice([par for par in parents if par is not par1])
 
             # get learners
             par1Lrns = set(par1.learners)
@@ -245,7 +249,7 @@ class TpgTrainer:
             for learner in par1Lrns.symmetric_difference(par2Lrns):
                 superChild = None
                 subChild = None
-                if random.choice([True,False]) == True:
+                if self.rand.choice([True,False]) == True:
                     superChild = child1
                     subChild = child2
                 else:
@@ -288,7 +292,7 @@ class TpgTrainer:
     def mutate(self, team):
         isTeamChanged = False # flag to track when team actually changes
         tmpLearners = list(team.learners)
-        random.shuffle(tmpLearners)
+        self.rand.shuffle(tmpLearners)
         # delete some learners maybe
         for learner in tmpLearners:
             if len(team.learners) <= 2:
@@ -296,7 +300,7 @@ class TpgTrainer:
             if team.numAtomicActions() == 1 and learner.action.isAtomic():
                 continue # never delete the sole atomic action
             # delete the learner
-            if random.uniform(0,1) < self.pLearnerDelete:
+            if self.rand.uniform(0,1) < self.pLearnerDelete:
                 team.removeLearner(learner)
                 isTeamChanged = True
 
@@ -319,7 +323,7 @@ class TpgTrainer:
             if len(team.learners) == self.maxTeamSize:
                 break; # limit team size
             # maybe add a learner
-            if random.uniform(0,1) < self.pLearnerAdd:
+            if self.rand.uniform(0,1) < self.pLearnerAdd:
                 isLearnerChanged = False
                 lrnr = Learner(learner=learner, makeNew=True,
                         birthGen=self.curGen)
@@ -329,14 +333,14 @@ class TpgTrainer:
                     self.maxProgramSize)
 
                 # maybe mutate the action of the learner
-                if random.uniform(0,1) < self.pMutateAction:
+                if self.rand.uniform(0,1) < self.pMutateAction:
                     action = None
-                    if random.uniform(0,1) < self.pActionIsTeam: # team action
-                        actionTeam = random.choice(self.teams)
+                    if self.rand.uniform(0,1) < self.pActionIsTeam: # team action
+                        actionTeam = self.rand.choice(self.teams)
                         action = Action(actionTeam)
                         actionTeam.learnerRefCount += 1
                     else: # atomic action
-                        action = Action(random.choice(self.actions))
+                        action = Action(self.rand.choice(self.actions))
                     # try to mutate the learners action, and record whether
                     # learner changed at all
                     isLearnerChanged = (lrnr.mutateAction(action) or
@@ -376,7 +380,7 @@ class TpgTrainer:
                     learner.action.team.learnerRefCount -= 1
 
         self.teamQueue = list(self.rootTeams)
-        random.shuffle(self.teamQueue)
+        self.rand.shuffle(self.teamQueue)
         for i in range(len(self.teamQueue)):
             self.teamQueue[i].uid = i
 

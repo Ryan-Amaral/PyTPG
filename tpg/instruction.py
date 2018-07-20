@@ -32,13 +32,14 @@ class Instruction:
     opCond = bitarray([1,1,1])
 
     def __init__(self, randInit=True, randSeed=0):
+        self.rand = random.Random()
         if randSeed == 0:
-            random.seed(int(round(time.time())))
+            self.rand.seed(int(round(time.time())))
         else:
-            random.seed(randSeed)
+            self.rand.seed(randSeed)
 
         if randInit: # random bits
-            self.inst = bitarray([random.choice([True,False])
+            self.inst = bitarray([self.rand.choice([True,False])
                     for i in range(Instruction.instructionSize)])
         else: # all 0's
             self.inst = bitarray([0]*Instruction.instructionSize)

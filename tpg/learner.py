@@ -19,10 +19,11 @@ class Learner:
     def __init__(self, action=0, maxProgSize=8, randSeed=0, learner=None,
             makeNew=False, birthGen=0):
 
+        self.rand = random.Random()
         if randSeed == 0:
-            random.seed(int(round(time.time())))
+            self.rand.seed(int(round(time.time())))
         else:
-            random.seed(randSeed)
+            self.rand.seed(randSeed)
 
         # reconstruct a learner
         if learner is not None:
@@ -50,7 +51,7 @@ class Learner:
         self.program = [] # program is list of instructions
 
         # amount of instruction in program
-        progSize = random.randint(1, maxProgSize)
+        progSize = self.rand.randint(1, maxProgSize)
         for i in range(progSize):
             ins = Instruction(randSeed=randSeed)
             self.program.append(ins)
@@ -152,28 +153,28 @@ class Learner:
         changed = False # whether a change occured
 
         # maybe delete instruction
-        if (len(self.program) > 1 and random.uniform(0,1) < pProgramDelete):
-            del self.program[random.choice(range(len(self.program)))]
+        if (len(self.program) > 1 and self.rand.uniform(0,1) < pProgramDelete):
+            del self.program[self.rand.choice(range(len(self.program)))]
             changed = True
 
         # maybe insert instruction
         if (len(self.program) < maxProgramSize and
-                random.uniform(0,1) < pProgramAdd):
+                self.rand.uniform(0,1) < pProgramAdd):
             ins = Instruction(randSeed=randSeed)
-            self.program.insert(random.choice(range(len(self.program))), ins)
+            self.program.insert(self.rand.choice(range(len(self.program))), ins)
             changed = True
 
         # maybe flip an instruction's bit
-        if random.uniform(0,1) < pProgramMutate:
-            self.program[random.choice(range(len(self.program)))].flip(
-                    random.choice(range(Instruction.instructionSize)))
+        if self.rand.uniform(0,1) < pProgramMutate:
+            self.program[self.rand.choice(range(len(self.program)))].flip(
+                    self.rand.choice(range(Instruction.instructionSize)))
             changed = True
 
         # maybe swap two instructions
-        if len(self.program) > 1 and random.uniform(0,1) < pProgramSwap:
+        if len(self.program) > 1 and self.rand.uniform(0,1) < pProgramSwap:
             # indices to swap
-            idx1 = random.choice(range(len(self.program)))
-            idx2 = random.choice(
+            idx1 = self.rand.choice(range(len(self.program)))
+            idx2 = self.rand.choice(
                     [x for x in range(len(self.program)) if x != idx1])
             # do swap
             tmp = self.program[idx1]
