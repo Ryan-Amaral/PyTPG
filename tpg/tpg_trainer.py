@@ -119,12 +119,12 @@ class TpgTrainer:
     Returns:
         (List[TpgAgent]) A list containing all of the remaining agents.
     """
-    def getNextAgent(self):
+    def getAllAgents(self):
         self.lock.acquire()
         agents = []
         try:
             agents = list(self.teamQueue)
-            teamQueue.clear()
+            self.teamQueue.clear()
         finally:
             self.lock.release()
 
