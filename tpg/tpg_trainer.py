@@ -115,6 +115,22 @@ class TpgTrainer:
         return agent
 
     """
+    Gets all the agents. Thread safe. empties the teamQueue.
+    Returns:
+        (List[TpgAgent]) A list containing all of the remaining agents.
+    """
+    def getNextAgent(self):
+        self.lock.acquire()
+        agents = []
+        try:
+            agents = list(self.teamQueue)
+            teamQueue.clear()
+        finally:
+            self.lock.release()
+
+        return agents
+
+    """
     How many root teams / agents have not yet been withdrawn this generation.
     Can use this to check for end of generation, but is not thread safe. So a
     more reliable alternative is to call getNextTeam, and if None, then
