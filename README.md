@@ -1,7 +1,11 @@
+This readme will be updated one day to be better formatted and more informative.
+
 # tpg-python
 A python implementation of Tangled Program Graphs. Based on a yet unreleased  Java version created by Robert Smith.
 
-## Practically all implemented, but not yet working, should be working relatively soon.
+## How to use
+- clone this repo
+- install with 'pip install .'
 
 Other implementations:
 https://github.com/skellco/Tangled-Program-Graphs
