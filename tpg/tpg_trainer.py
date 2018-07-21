@@ -83,6 +83,7 @@ class TpgTrainer:
             self.learners = popInit.learners
             self.curGen = popInit.gen
             TpgTrainer.uidCounter = popInit.uidCounter
+            Learner.idCount = popInit.idCount
 
         self.teamQueue = list(self.rootTeams)
         self.tasks = set() # set of tasks done per all individuals
