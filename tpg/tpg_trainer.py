@@ -114,12 +114,29 @@ class TpgTrainer:
     """
     Gets all the agents. Empties the teamQueue. Needs to be made thread safe on
     client side if applicable.
+    Args:
+        skipTasks:
+            (String[]): Don't return agents that already completed all task in
+            this list. If None, skips only the default tasks. If empty list,
+            skips no task.
     Returns:
         (List[TpgAgent]) A list containing all of the remaining agents.
     """
-    def getAllAgents(self):
-        agents = list(reversed(
-                [TpgAgent(team, trainer=self) for team in self.teamQueue]))
+    def getAllAgents(self, skipTasks=None):
+        agents = []
+        if skipTasks is None:
+            agents = list(reversed(
+                [TpgAgent(team, trainer=self) for team in self.teamQueue
+                    if TpgAgent.defTaskName not in team.outcomes]))
+        else:
+            if len(skipTasks) == 0:
+                agents = list(reversed(
+                    [TpgAgent(team, trainer=self) for team in self.teamQueue]))
+            else:
+                agents = list(reversed(
+                    [TpgAgent(team, trainer=self) for team in self.teamQueue
+                        if any(task not in team.outcomes for task in skipTasks)]))
+
         self.teamQueue = []
 
         return agents

@@ -5,6 +5,8 @@ Class the the client gets an instance of to control a team.
 """
 class TpgAgent:
 
+    defTaskName = 'DefTaskName'
+
     """
     Creates an agent (what the client interfaces with), links to trainer if
     currently doing training.
@@ -59,9 +61,11 @@ class TpgAgent:
         reward:
             (Float) The final reward value.
         task  :
-            (Str) The task the reward is for.
+            (Str) The task the reward is for. Leave as none for default value
     """
-    def reward(self, reward, task='def'):
+    def reward(self, reward, task=None):
+        if task is None:
+            task = TpgAgent.defTaskName
         self.team.outcomes[task] = reward # track reward for task on team
         if self.trainer is not None:
             self.trainer.addTask(task)
@@ -71,3 +75,9 @@ class TpgAgent:
     """
     def getAgentNum(self):
         return self.team.rootNum
+
+    """
+    Returns boolean telling whether this agent completed the task already.
+    """
+    def taskDone(self, task):
+        return task in self.teams.outcomes
