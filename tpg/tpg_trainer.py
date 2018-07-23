@@ -128,7 +128,7 @@ class TpgTrainer:
         agents = []
         try:
             agents = list(self.teamQueue)
-            self.teamQueue.clear()
+            self.teamQueue = []
         finally:
             self.lock.release()
 
@@ -389,7 +389,7 @@ class TpgTrainer:
     """
     def nextEpoch(self, outcomesKeep=[]):
         # decide new root teams
-        self.rootTeams.clear()
+        self.rootTeams = []
         for team in self.teams:
             # keep some outcomes for efficiency
             team.outcomes = { key: team.outcomes[key] for key in outcomesKeep }
@@ -410,6 +410,6 @@ class TpgTrainer:
         for i in range(len(self.teamQueue)):
             self.teamQueue[i].rootNum = i
 
-        self.tasks.clear()
+        self.tasks = set()
 
         self.curGen += 1
