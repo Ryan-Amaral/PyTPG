@@ -61,7 +61,7 @@ class TpgAgent:
         reward:
             (Float) The final reward value.
         task  :
-            (Str) The task the reward is for. Leave as none for default value
+            (Str) The task the reward is for. Leave as none for default value.
     """
     def reward(self, reward, task=None):
         if task is None:
@@ -78,6 +78,20 @@ class TpgAgent:
 
     """
     Returns boolean telling whether this agent completed the task already.
+    Args:
+        task  :
+            (Str) The task to check for. Leave as none for default value.
     """
-    def taskDone(self, task):
-        return task in self.teams.outcomes
+    def taskDone(self, task=None):
+        if task is None:
+            task = TpgAgent.defTaskName
+        return task in self.team.outcomes
+
+    def getOutcome(self, task=None):
+        if task is None:
+            task = TpgAgent.defTaskName
+
+        if task in self.team.outcomes:
+            return self.team.outcomes[task]
+        else:
+            return None

@@ -210,7 +210,7 @@ class TpgTrainer:
     """
     def select(self, fitShare=True):
         delTeams = [] # list of teams to delete
-        numKeep = int(self.gap * len(self.rootTeams)) # number of roots to keep
+        numKeep = int(self.gap*len(self.rootTeams)) # number of roots to keep
 
         teamScoresMap = {}
         taskTotalScores = [0]*len(self.tasks) # store overall score per task

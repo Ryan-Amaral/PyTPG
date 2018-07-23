@@ -42,7 +42,7 @@ class Instruction:
             self.inst = bitarray([self.rand.choice([True,False])
                     for i in range(Instruction.instructionSize)])
         else: # all 0's
-            self.inst = bitarray([0]*Instruction.instructionSize)
+            self.inst = bitarray([False]*Instruction.instructionSize)
 
     """
     Gets a segment of the bitarray that makes up this instruction.
