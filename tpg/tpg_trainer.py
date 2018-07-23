@@ -178,15 +178,11 @@ class TpgTrainer:
     Args:
         fitShare    : (Bool) Whether to use fitness sharing, uses single outcome
                       otherwise.
-        outcomesKeep: (Str[]) List of outcomes to keep for next generation, so
-                      unaltered teams won't have to be evaluated on the same
-                      trial again, for efficiency. This does require some work
-                      to be implemented on the client side.
     """
-    def evolve(self, fitShare=True, outcomesKeep=[]):
+    def evolve(self, fitShare=True):
         self.select(fitShare=fitShare)
         self.generateNewTeams()
-        self.nextEpoch(outcomesKeep=outcomesKeep)
+        self.nextEpoch()
 
     """
     Selects the individuals to keep for next generation, deletes others. The
@@ -371,18 +367,11 @@ class TpgTrainer:
 
     """
     A sort of clean up method to prepare for a new epoch of learning.
-    Args:
-        outcomesKeep: (Str[]) List of outcomes to keep for next generation, so
-            unaltered teams won't have to be evaluated on the same trial again,
-            for efficiency. This does require some work to be implemented on the
-            client side.
     """
-    def nextEpoch(self, outcomesKeep=[]):
+    def nextEpoch(self):
         # decide new root teams
         self.rootTeams = []
         for team in self.teams:
-            # keep some outcomes for efficiency
-            team.outcomes = { key: team.outcomes[key] for key in outcomesKeep }
             if team.learnerRefCount == 0:
                 self.rootTeams.append(team) # root teams must have no references
 
