@@ -127,7 +127,7 @@ class TpgTrainer:
         self.lock.acquire()
         agents = []
         try:
-            agents = list(self.teamQueue)
+            agents = [TpgAgent(team, trainer=self) for team in self.teamQueue]
             self.teamQueue = []
         finally:
             self.lock.release()
