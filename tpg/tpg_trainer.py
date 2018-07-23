@@ -3,7 +3,6 @@ import math
 import random
 import time
 from operator import itemgetter
-import threading
 
 from tpg.action import Action
 from tpg.learner import Learner
@@ -87,50 +86,42 @@ class TpgTrainer:
 
         self.teamQueue = list(self.rootTeams)
         self.tasks = set() # set of tasks done per all individuals
-        self.lock = threading.Lock() # lock for adding tasks
+
+        for i in range(len(self.teamQueue)):
+            self.teamQueue[i].rootNum = i
 
     """
-    Attempts to add a task to the set of tasks. Thread safe.
+    Attempts to add a task to the set of tasks. Needs to be made thread safe on
+    client side if applicable.
     """
     def addTask(self, task):
-        self.lock.acquire()
-        try:
-            self.tasks.add(task)
-        finally:
-            self.lock.release()
+        self.tasks.add(task)
 
     """
     Gets/pops the next team from the population for the client, in the form of
-    an instance of TpgAgent. Thread safe.
+    an instance of TpgAgent. Needs to be made thread safe on client side if
+    applicable.
     Returns:
         (TpgAgent) None if no team left in queue, means to call for evolution.
     """
     def getNextAgent(self):
-        self.lock.acquire()
-        agent = None
-        try:
-            if len(self.teamQueue) == 0:
-                agent = None
-            else:
-                agent = TpgAgent(self.teamQueue.pop(), self)
-        finally:
-            self.lock.release()
+        if len(self.teamQueue) == 0:
+            agent = None
+        else:
+            agent = TpgAgent(self.teamQueue.pop(), self)
 
         return agent
 
     """
-    Gets all the agents. Thread safe. empties the teamQueue.
+    Gets all the agents. Empties the teamQueue. Needs to be made thread safe on
+    client side if applicable.
     Returns:
         (List[TpgAgent]) A list containing all of the remaining agents.
     """
     def getAllAgents(self):
-        self.lock.acquire()
-        agents = []
-        try:
-            agents = [TpgAgent(team, trainer=self) for team in self.teamQueue]
-            self.teamQueue = []
-        finally:
-            self.lock.release()
+        agents = list(reversed(
+                [TpgAgent(team, trainer=self) for team in self.teamQueue]))
+        self.teamQueue = []
 
         return agents
 
