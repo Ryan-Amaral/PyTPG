@@ -87,6 +87,14 @@ class TpgAgent:
             task = TpgAgent.defTaskName
         return task in self.team.outcomes
 
+    """
+    Gets the score/outcome of the specified task.
+    Args:
+        task  :
+            (Str) The task to check for. Leave as none for default value.
+    Returns:
+        (Bool) The score, or None if agent didn't do task.
+    """
     def getOutcome(self, task=None):
         if task is None:
             task = TpgAgent.defTaskName

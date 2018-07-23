@@ -29,8 +29,10 @@ class Action:
     """
     def getAction(self, obs, vis=set(), regDict=None):
         if self.isAtomic():
+            print('Returned act')
             return self.act # return atomic
         else: # else act is team, return its action
+            print('Returned Teams action')
             return self.act.getAction(obs, vis=vis, regDict=regDict)
 
     """
@@ -38,7 +40,7 @@ class Action:
     or refers to a team (not atomic).
     """
     def isAtomic(self):
-        return type(self.act) is not tpg.team.Team
+        return isinstance(self.act, int)
 
     """
     Checks if the action in self is equivalent to other.
