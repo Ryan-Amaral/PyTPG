@@ -38,12 +38,13 @@ class TpgTrainer:
         pProgramMutate :
         popInit        : Object containing all info needed to carry on from a
             previous training session. Serialize and deserialize with pickle.
+        tourneyGap     : (Float) Gap for tournament selection.
     """
     def __init__(self, actions, randSeed=0, teamPopSizeInit=360, gap=0.5,
             pLearnerDelete=0.7, pLearnerAdd=0.7, pMutateAction=0.2,
             pActionIsTeam=0.5, maxTeamSize=5, maxProgramSize=96,
             pProgramDelete=0.5, pProgramAdd=0.5, pProgramSwap=1.0,
-            pProgramMutate=1.0, popInit=None):
+            pProgramMutate=1.0, popInit=None, tourneyGap=0.5):
 
         # set the variables
         self.actions = actions
@@ -60,6 +61,7 @@ class TpgTrainer:
         self.pProgramAdd = pProgramAdd
         self.pProgramSwap = pProgramSwap
         self.pProgramMutate = pProgramMutate
+        self.tourneyGap = tourneyGap
 
         # establish random for training
         self.rand = random.Random()
@@ -74,12 +76,14 @@ class TpgTrainer:
             self.rootTeams = []
             self.learners = []
             self.curGen = 0
+            self.tournamentsPlayed = 0
             self.initPops()
         else: # or carry on from object
             self.teams = popInit.teams
             self.rootTeams = popInit.rootTeams
             self.learners = popInit.learners
             self.curGen = popInit.gen
+            self.tournamentsPlayed = popInit.tournamentsPlayed
             TpgTrainer.teamIdCounter = popInit.teamIdCounter
             Learner.idCount = popInit.idCount
 
@@ -191,15 +195,21 @@ class TpgTrainer:
 
     """
     To be called once all teams finish their runs of the current generation.
-    Selects, creates, and preps the population for the next generation.
+    Selects, creates, and preps the population for the next generation. Or called
+    when a tournament is completed.
     Args:
         fitShare    : (Bool) Whether to use fitness sharing, uses single outcome
                       otherwise.
+        tourneyAgents: (Agent[]) The agents in a current tournament if doing
+            tournament selection. Leave as None if doing generational selection.
     """
-    def evolve(self, fitShare=True):
-        self.select(fitShare=fitShare)
-        self.generateNewTeams()
-        self.nextEpoch()
+    def evolve(self, fitShare=True, tourneyAgents=None):
+        rTeams = None # root teams to get from tourneyAgents, or None
+        if tourneyAgents is not None:
+            rTeams = [agent.team for agent in tourneyAgents]
+        self.select(fitShare=fitShare, rTeams=rTeams)
+        self.generateNewTeams(parents=rTeams)
+        self.nextEpoch(tourney=tourneyAgents is not None)
 
     """
     Selects the individuals to keep for next generation, deletes others. The
@@ -207,15 +217,24 @@ class TpgTrainer:
     Args:
         fitShare: (Bool) Whether to use fitness sharing, uses single outcome
             otherwise.
+        tourneyAgents: (Agent[]) The agents in a current tournament if doing
+          tournament selection. Leave as None if doing generational selection.
     """
-    def select(self, fitShare=True):
+    def select(self, fitShare=True, rTeams=None):
+        gapSz = self.gap
+        # if rTeams not supplied use whole root population
+        if rTeams is None:
+            rTeams = list(self.rootTeams)
+        else:
+            gapSz = self.tourneyGap
+
         delTeams = [] # list of teams to delete
-        numKeep = int(self.gap*len(self.rootTeams)) # number of roots to keep
+        numKeep = int(gapSz*len(rTeams)) # number of roots to keep
 
         teamScoresMap = {}
         taskTotalScores = [0]*len(self.tasks) # store overall score per task
         # get outcomes of all teams outcome[team][tasknum]
-        for team in self.rootTeams:
+        for team in rTeams:
             teamScoresMap[team] = [0]*len(self.tasks)
             for t,task in enumerate(self.tasks):
                 teamScoresMap[team][t] = team.outcomes[task]
@@ -242,13 +261,18 @@ class TpgTrainer:
             team.erase()
             self.teams.remove(team)
             self.rootTeams.remove(team)
-
+            if team in rTeams:
+                rTeams.remove(team)
 
     """
     Generates new teams from existing teams (in the root population).
+    Args:
+        parents:
+            (Team[]) Parents to use, leave as None to use whole root popultaion.
     """
-    def generateNewTeams(self):
-        parents = list(self.rootTeams) # parents are all original root teams
+    def generateNewTeams(self, parents=None):
+        if parents is None:
+            parents = list(self.rootTeams) # parents are all original root teams
         # add teams until maxed size
         while len(self.teams) < self.teamPopSizeInit:
             # choose 2 random teams as parents
@@ -384,8 +408,11 @@ class TpgTrainer:
 
     """
     A sort of clean up method to prepare for a new epoch of learning.
+    Args:
+        tourney:
+            (Bool) Whether doing tournament selection.
     """
-    def nextEpoch(self):
+    def nextEpoch(self, tourney=False):
         # decide new root teams
         self.rootTeams = []
         for team in self.teams:
@@ -408,7 +435,10 @@ class TpgTrainer:
 
         self.tasks = set()
 
-        self.curGen += 1
+        if tourney == True:
+            self.tournamentsPlayed += 1
+        else:
+            self.curGen += 1
 
     """
     Gets the current state of the trainer by returning an instance of TrainerState
@@ -416,17 +446,19 @@ class TpgTrainer:
     current generation, and team and learner id counters.
     """
     def getTrainerState():
-        return TrainerState(self.teams, self.rootTeams, self.learners, self.curGen)
+        return TrainerState(self.teams, self.rootTeams, self.learners,
+            self.curGen, self.tournamentsPlayed)
 
 """
 Contains all information needed to pick up from wherever last left off. An
 instance can be obtained by the client and saved with something like Pickle.
 """
 class TrainerState:
-    def __init__(self, teams, rootTeams, learners, gen):
+    def __init__(self, teams, rootTeams, learners, gen, tournamentsPlayed):
         self.teams = teams
         self.rootTeams = rootTeams
         self.learners = learners
         self.curGen = gen
+        self.tournamentsPlayed = tournamentsPlayed
         self.teamIdCounter = TpgTrainer.teamIdCounter
         self.learnerIdCounter = Learner.learnerIdCounter
