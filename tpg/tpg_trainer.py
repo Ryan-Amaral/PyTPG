@@ -16,7 +16,7 @@ Created Because: I was tired of Java.
 """
 class TpgTrainer:
 
-    uidCounter = 0
+    teamIdCounter = 0
 
     """
     Initializes the Training procedure, potentially picking up from a
@@ -80,7 +80,7 @@ class TpgTrainer:
             self.rootTeams = popInit.rootTeams
             self.learners = popInit.learners
             self.curGen = popInit.gen
-            TpgTrainer.uidCounter = popInit.uidCounter
+            TpgTrainer.teamIdCounter = popInit.teamIdCounter
             Learner.idCount = popInit.idCount
 
         self.teamQueue = list(self.rootTeams)
@@ -182,8 +182,8 @@ class TpgTrainer:
                 team.addLearner(learner)
                 self.learners.append(learner)
 
-            team.uid = TpgTrainer.uidCounter
-            TpgTrainer.uidCounter += 1
+            team.uid = TpgTrainer.teamIdCounter
+            TpgTrainer.teamIdCounter += 1
 
             # add into population
             self.teams.append(team)
@@ -301,10 +301,10 @@ class TpgTrainer:
                 while not self.mutate(child2): # attempt mutation untill it works
                     continue
 
-            child1.uid = TpgTrainer.uidCounter
-            TpgTrainer.uidCounter += 1
-            child2.uid = TpgTrainer.uidCounter
-            TpgTrainer.uidCounter += 1
+            child1.uid = TpgTrainer.teamIdCounter
+            TpgTrainer.teamIdCounter += 1
+            child2.uid = TpgTrainer.teamIdCounter
+            TpgTrainer.teamIdCounter += 1
 
             # add children to team populations
             self.teams.append(child1)
@@ -409,3 +409,24 @@ class TpgTrainer:
         self.tasks = set()
 
         self.curGen += 1
+
+    """
+    Gets the current state of the trainer by returning an instance of TrainerState
+    which contains the team population, rootTeams population, learner population,
+    current generation, and team and learner id counters.
+    """
+    def getTrainerState():
+        return TrainerState(self.teams, self.rootTeams, self.learners, self.curGen)
+
+"""
+Contains all information needed to pick up from wherever last left off. An
+instance can be obtained by the client and saved with something like Pickle.
+"""
+class TrainerState:
+    def __init__(self, teams, rootTeams, learners, gen):
+        self.teams = teams
+        self.rootTeams = rootTeams
+        self.learners = learners
+        self.curGen = gen
+        self.teamIdCounter = TpgTrainer.teamIdCounter
+        self.learnerIdCounter = Learner.learnerIdCounter

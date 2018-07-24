@@ -13,7 +13,7 @@ A Learner.
 """
 class Learner:
 
-    idCount = 0 # counter for id
+    learnerIdCounter = 0 # counter for id
     registerSize = 8 # size of registers
 
     def __init__(self, action=0, maxProgSize=8, randSeed=0, learner=None,
@@ -29,8 +29,8 @@ class Learner:
         # reconstruct a learner
         if learner is not None:
             if makeNew: # make new from existing
-                self.id = Learner.idCount
-                Learner.idCount += 1
+                self.id = Learner.learnerIdCounter
+                Learner.learnerIdCounter += 1
                 self.birthGen = birthGen
                 self.teamRefCount = 0
             else: # remake existing
@@ -44,8 +44,8 @@ class Learner:
             return
 
         # or make a brand new one
-        self.id = Learner.idCount
-        Learner.idCount += 1
+        self.id = Learner.learnerIdCounter
+        Learner.learnerIdCounter += 1
         self.birthGen = birthGen
         self.action = tpg.action.Action(action)
         self.teamRefCount = 0
