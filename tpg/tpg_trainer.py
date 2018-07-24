@@ -155,16 +155,21 @@ class TpgTrainer:
         return len(self.teamQueue)
 
     """
-    Gets desired number of agents for tournament selection. Does not change the
-    teamQueue.
+    Gets desired number of agents for tournament selection.
     Args:
         tourneySize:
             (Int) Number of agents to take.
+        replace:
+            (Bool) Whether to keep selected teams in teamQueue. Absolutely
+            should not if doing paralell tournaments.
     Returns:
         (List[TpgAgent]) A list containing the agents for the tournament.
     """
-    def getTournamentAgents(self, tourneySize=8):
-        pass
+    def getTournamentAgents(self, tourneySize=8, replace=False):
+        agents = []
+
+        return agents
+
 
     """
     Creates the initial population of teams and learners, on initialization of
