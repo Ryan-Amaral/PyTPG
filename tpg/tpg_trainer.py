@@ -214,12 +214,16 @@ class TpgTrainer:
                       otherwise.
         tourneyAgents: (Agent[]) The agents in a current tournament if doing
             tournament selection. Leave as None if doing generational selection.
+        tasks: (Str[]) List of tasks to be evaluated on in selection. If empty,
+            uses only default task. If None, uses tasks for current generation.
+            Really only need if using tournament selection with multiple paralell
+            tournaments where some may have different tasks.
     """
-    def evolve(self, fitShare=True, tourneyAgents=None):
+    def evolve(self, fitShare=True, tourneyAgents=None, tasks=None):
         rTeams = None # root teams to get from tourneyAgents, or None
         if tourneyAgents is not None:
             rTeams = [agent.team for agent in tourneyAgents]
-        self.select(fitShare=fitShare, rTeams=rTeams)
+        self.select(fitShare=fitShare, rTeams=rTeams, tasks=tasks)
         self.generateNewTeams(parents=rTeams)
         self.nextEpoch(tourney=tourneyAgents is not None)
 
@@ -230,9 +234,13 @@ class TpgTrainer:
         fitShare: (Bool) Whether to use fitness sharing, uses single outcome
             otherwise.
         tourneyAgents: (Agent[]) The agents in a current tournament if doing
-          tournament selection. Leave as None if doing generational selection.
+            tournament selection. Leave as None if doing generational selection.
+        tasks: (Str[]) List of tasks to be evaluated on in selection. If empty,
+            uses only default task. If None, uses tasks for current generation.
+            Really only need if using tournament selection with multiple paralell
+            tournaments where some may have different tasks.
     """
-    def select(self, fitShare=True, rTeams=None):
+    def select(self, fitShare=True, rTeams=None, tasks=None):
         gapSz = self.gap
         # if rTeams not supplied use whole root population
         if rTeams is None:
@@ -243,12 +251,17 @@ class TpgTrainer:
         delTeams = [] # list of teams to delete
         numKeep = int(gapSz*len(rTeams)) # number of roots to keep
 
+        if tasks is None:
+            tasks = self.tasks
+        elif len(tasks) == 0:
+            tasks = [TpgAgent.defTaskName]
+
         teamScoresMap = {}
-        taskTotalScores = [0]*len(self.tasks) # store overall score per task
+        taskTotalScores = [0]*len(tasks) # store overall score per task
         # get outcomes of all teams outcome[team][tasknum]
         for team in rTeams:
-            teamScoresMap[team] = [0]*len(self.tasks)
-            for t,task in enumerate(self.tasks):
+            teamScoresMap[team] = [0]*len(tasks)
+            for t,task in enumerate(tasks):
                 teamScoresMap[team][t] = team.outcomes[task]
                 taskTotalScores[t] += team.outcomes[task]#up task total
 
@@ -256,7 +269,7 @@ class TpgTrainer:
         if fitShare: # fitness share across all outcomes
             for team in teamScoresMap.keys():
                 teamRelTaskScore = 0 # teams final fitness shared score
-                for taskNum in range(len(self.tasks)):
+                for taskNum in range(len(tasks)):
                     if taskTotalScores[taskNum] != 0:
                         teamRelTaskScore += (teamScoresMap[team][taskNum] /
                                                     taskTotalScores[taskNum])
