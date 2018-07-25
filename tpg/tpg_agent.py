@@ -99,7 +99,7 @@ class TpgAgent:
         task  :
             (Str) The task to check for. Leave as none for default value.
     Returns:
-        (Bool) The score, or None if agent didn't do task.
+        (Int) The score, or None if agent didn't do task.
     """
     def getOutcome(self, task=None):
         if task is None:

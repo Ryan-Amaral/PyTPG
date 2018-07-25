@@ -93,6 +93,8 @@ class TpgTrainer:
         for i in range(len(self.teamQueue)):
             self.teamQueue[i].rootNum = i
 
+        self.scoreStats = {}
+
     """
     Attempts to add a task to the set of tasks. Needs to be made thread safe on
     client side if applicable.
@@ -176,6 +178,10 @@ class TpgTrainer:
     when multiprocessing. Very inefficient, I need to find a better way.
     """
     def applyAgentsScores(self, agents):
+        # make sure we do tasks in evolution
+        for task in agents[0].team.outcomes:
+            self.addTask(task)
+
         for agent in agents:
             for team in self.rootTeams:
                 if agent.team.uid == team.uid:
@@ -193,6 +199,10 @@ class TpgTrainer:
             apply.
     """
     def applyScores(self, scores):
+        # make sure we do tasks in evolution
+        for task in scores[0][1]:
+            self.addTask(task)
+
         for score in scores:
             for team in self.rootTeams:
                 if score[0] == team.uid:
@@ -313,6 +323,9 @@ class TpgTrainer:
                 scores.append((team, teamScoresMap[team][0]))
 
         scores.sort(key=itemgetter(1), reverse=True) # scores descending
+
+        self.saveScores([score[1] for score in scores]) # save scores for reporting
+
         delTeams = scores[numKeep:] # teams to get rid of
 
         # properly delete the teams
@@ -498,6 +511,16 @@ class TpgTrainer:
             self.tournamentsPlayed += 1
         else:
             self.curGen += 1
+
+    """
+    Saves stats about the previous generations scores, in a dict.
+    """
+    def saveScores(self, scores):
+        self.scoreStats = {}
+        self.scoreStats['scores'] = scores
+        self.scoreStats['min'] = min(scores)
+        self.scoreStats['max'] = max(scores)
+        self.scoreStats['average'] = sum(scores)/len(scores)
 
     """
     Gets the current state of the trainer by returning an instance of TrainerState
