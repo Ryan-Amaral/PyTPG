@@ -169,6 +169,19 @@ class TpgTrainer:
     """
     def getTournamentAgents(self, tourneySize=8, replace=False):
         agents = []
+        if replace: # don't remove team from teamQueue
+            teams = []
+            for i in range(tourneySize):
+                candidates = [team for team in self.teamQueue if team not in teams]
+                if len(candidates) > 0:
+                    teams.append(random.choice(candidates))
+                    agents.append(TpgAgent(teams[-1], trainer=self))
+        else: # remove team from queue
+            for i in range(tourneySize):
+                if len(self.teamQueue) > 0:
+                    agents.append(TpgAgent(self.teamQueue.pop(), trainer=self))
+                else:
+                    break # no more agents to add
 
         return agents
 
