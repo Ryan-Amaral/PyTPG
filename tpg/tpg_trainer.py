@@ -170,6 +170,19 @@ class TpgTrainer:
 
         return agents
 
+    """
+    Takes in a list of agents and applies the scores in those agents teams to
+    the matching root teams in trainer. Because of some weird stuff that happens
+    when multiprocessing. Very inefficient, I need to find a better way.
+    """
+    def applyAgentsScores(self, agents):
+        for agent in agents:
+            for team in self.rootTeams:
+                if agent.team.uid == team.uid:
+                    for task, outcome in agent.team.outcomes.items():
+                        team.outcomes[task] = outcome
+                    break # on to next agent
+
 
     """
     Creates the initial population of teams and learners, on initialization of
