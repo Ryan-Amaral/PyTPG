@@ -516,7 +516,7 @@ class TpgTrainer:
     Saves stats about the previous generations scores, in a dict.
     """
     def saveScores(self, scores):
-        self.scoreStats = {}
+        self.scoreStats = {} 
         self.scoreStats['scores'] = scores
         self.scoreStats['min'] = min(scores)
         self.scoreStats['max'] = max(scores)
