@@ -109,3 +109,9 @@ class TpgAgent:
             return self.team.outcomes[task]
         else:
             return None
+
+    """
+    Returns the agent's team's outcomes dict.
+    """
+    def getOutcomes(self):
+        return self.team.outcomes

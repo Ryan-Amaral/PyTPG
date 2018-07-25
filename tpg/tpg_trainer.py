@@ -183,6 +183,22 @@ class TpgTrainer:
                         team.outcomes[task] = outcome
                     break # on to next agent
 
+    """
+    Takes in a list of 2-tuples containing the team uid and outcome dict. Just
+    like applyAgentsScores, but more efficient on the client side, when used
+    with multiprocessing.
+    Args:
+        scores:
+            ((uid, outcomes)) UID of the team, followed by the outcome dict to
+            apply.
+    """
+    def applyScores(self, scores):
+        for score in scores:
+            for team in self.rootTeams:
+                if score[0] == team.uid:
+                    for task, outcome in score[1].items():
+                        team.outcomes[task] = outcome
+                    break # on to next score
 
     """
     Creates the initial population of teams and learners, on initialization of
