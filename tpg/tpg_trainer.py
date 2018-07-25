@@ -195,12 +195,17 @@ class TpgTrainer:
         for task in agents[0].team.outcomes:
             self.addTask(task)
 
+        teams = [] # list of teams that the agents refer to
+
         for agent in agents:
             for team in self.rootTeams:
                 if agent.team.uid == team.uid:
+                    teams.append(team)
                     for task, outcome in agent.team.outcomes.items():
                         team.outcomes[task] = outcome
                     break # on to next agent
+
+        return teams
 
     """
     Takes in a list of 2-tuples containing the team uid and outcome dict. Just
@@ -216,12 +221,17 @@ class TpgTrainer:
         for task in scores[0][1]:
             self.addTask(task)
 
+        teams = [] # list of teams that the agents refer to
+
         for score in scores:
             for team in self.rootTeams:
                 if score[0] == team.uid:
+                    teams.append(team)
                     for task, outcome in score[1].items():
                         team.outcomes[task] = outcome
                     break # on to next score
+
+        return teams
 
     """
     Creates the initial population of teams and learners, on initialization of
