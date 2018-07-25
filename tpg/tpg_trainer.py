@@ -189,6 +189,8 @@ class TpgTrainer:
     Takes in a list of agents and applies the scores in those agents teams to
     the matching root teams in trainer. Because of some weird stuff that happens
     when multiprocessing. Very inefficient, I need to find a better way.
+    Returns:
+        (Team[]) The teams that the scores got applied to.
     """
     def applyAgentsScores(self, agents):
         # make sure we do tasks in evolution
@@ -215,6 +217,8 @@ class TpgTrainer:
         scores:
             ((uid, outcomes)) UID of the team, followed by the outcome dict to
             apply.
+    Returns:
+        (Team[]) The teams that the scores got applied to.
     """
     def applyScores(self, scores):
         # make sure we do tasks in evolution
@@ -288,7 +292,7 @@ class TpgTrainer:
             Really only need if using tournament selection with multiple paralell
             tournaments where some may have different tasks.
     """
-    def evolve(self, fitShare=True, tourneyAgents=None, tourneyTeams, tasks=None):
+    def evolve(self, fitShare=True, tourneyAgents=None, tourneyTeams=None, tasks=None):
         rTeams = None # root teams to get from tourneyAgents, or None
         if tourneyAgents is not None:
             rTeams = [agent.team for agent in tourneyAgents]
@@ -553,6 +557,40 @@ class TpgTrainer:
         self.scoreStats['min'] = min(scores)
         self.scoreStats['max'] = max(scores)
         self.scoreStats['average'] = sum(scores)/len(scores)
+
+    """
+    Iterates through all root teams to generate a score stats now.
+    Args:
+        tasks:
+            (Str[]) The tasks to score on. Leave empty for default score. None
+            for whatever was used the previous generation.
+        mode:
+            (Str) How to handle multiple tasks. 'sum' to sum them. 'avg' to
+            average them.
+    Returns:
+        (Dict<Str,float): The score stats.
+    """
+    def generateScoreStats(self, tasks=[], mode='sum'):
+        if tasks is None:
+            tasks = self.tasks
+        elif len(tasks) == 0:
+            tasks = [TpgAgent.defTaskName]
+            
+        scores = [0]*len(self.rootTeams)
+        for team in self.rootTeams:
+            for task in tasks:
+                if task in team.outcomes:
+                    scores[-1] += team.outcomes[task]
+            if mode == 'avg':
+                scores[-1] /= len(tasks)
+
+        self.scoreStats = {}
+        self.scoreStats['scores'] = scores
+        self.scoreStats['min'] = min(scores)
+        self.scoreStats['max'] = max(scores)
+        self.scoreStats['average'] = sum(scores)/len(scores)
+
+        return self.scoreStats
 
     """
     Gets the current state of the trainer by returning an instance of TrainerState
