@@ -77,6 +77,12 @@ class TpgAgent:
         return self.team.rootNum
 
     """
+    Returns the UID of this agent's team.
+    """
+    def getUid(self):
+        return self.team.uid
+
+    """
     Returns boolean telling whether this agent completed the task already.
     Args:
         task  :
