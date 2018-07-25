@@ -300,6 +300,8 @@ class TpgTrainer:
         elif len(tasks) == 0:
             tasks = [TpgAgent.defTaskName]
 
+        statScores = [] # list of scores used for saving stats
+
         teamScoresMap = {}
         taskTotalScores = [0]*len(tasks) # store overall score per task
         # get outcomes of all teams outcome[team][tasknum]
@@ -307,24 +309,27 @@ class TpgTrainer:
             teamScoresMap[team] = [0]*len(tasks)
             for t,task in enumerate(tasks):
                 teamScoresMap[team][t] = team.outcomes[task]
-                taskTotalScores[t] += team.outcomes[task]#up task total
+                taskTotalScores[t] += team.outcomes[task]# up task total
 
         scores = []
         if fitShare: # fitness share across all outcomes
             for team in teamScoresMap.keys():
                 teamRelTaskScore = 0 # teams final fitness shared score
+                statScores.append(0)
                 for taskNum in range(len(tasks)):
                     if taskTotalScores[taskNum] != 0:
                         teamRelTaskScore += (teamScoresMap[team][taskNum] /
                                                     taskTotalScores[taskNum])
+                    statScores[-1] += teamScoresMap[team][taskNum]
                 scores.append((team, teamRelTaskScore))
         else: # just take first outcome
             for team in teamScoresMap.keys():
                 scores.append((team, teamScoresMap[team][0]))
+                statScores.append(teamScoresMap[team][0])
 
         scores.sort(key=itemgetter(1), reverse=True) # scores descending
 
-        self.saveScores([score[1] for score in scores]) # save scores for reporting
+        self.saveScores(statScores) # save scores for reporting
 
         delTeams = scores[numKeep:] # teams to get rid of
 
@@ -516,7 +521,7 @@ class TpgTrainer:
     Saves stats about the previous generations scores, in a dict.
     """
     def saveScores(self, scores):
-        self.scoreStats = {} 
+        self.scoreStats = {}
         self.scoreStats['scores'] = scores
         self.scoreStats['min'] = min(scores)
         self.scoreStats['max'] = max(scores)
