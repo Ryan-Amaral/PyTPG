@@ -271,15 +271,19 @@ class TpgTrainer:
                       otherwise.
         tourneyAgents: (Agent[]) The agents in a current tournament if doing
             tournament selection. Leave as None if doing generational selection.
+        tourneyTeams: (Team[]) Like tourneyAgents, but teams in case thats all
+            you have, probably in case of multiprocessing.
         tasks: (Str[]) List of tasks to be evaluated on in selection. If empty,
             uses only default task. If None, uses tasks for current generation.
             Really only need if using tournament selection with multiple paralell
             tournaments where some may have different tasks.
     """
-    def evolve(self, fitShare=True, tourneyAgents=None, tasks=None):
+    def evolve(self, fitShare=True, tourneyAgents=None, tourneyTeams, tasks=None):
         rTeams = None # root teams to get from tourneyAgents, or None
         if tourneyAgents is not None:
             rTeams = [agent.team for agent in tourneyAgents]
+        elif tourneyTeams is not None:
+            rTeams = tourneyTeams
         self.select(fitShare=fitShare, rTeams=rTeams, tasks=tasks)
         self.generateNewTeams(parents=rTeams)
         self.nextEpoch(tourney=tourneyAgents is not None)
