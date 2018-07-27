@@ -575,12 +575,14 @@ class TpgTrainer:
             tasks = self.tasks
         elif len(tasks) == 0:
             tasks = [TpgAgent.defTaskName]
-            
+
         scores = [0]*len(self.rootTeams)
+        i = -1
         for team in self.rootTeams:
+            i += 1
             for task in tasks:
                 if task in team.outcomes:
-                    scores[-1] += team.outcomes[task]
+                    scores[i] += team.outcomes[task]
             if mode == 'avg':
                 scores[-1] /= len(tasks)
 
