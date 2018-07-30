@@ -58,6 +58,7 @@ The above were just some of the important functions, and left out some necessary
 ## Aknowledgements
 - Dr. Malcolm Heywood: My supervisor on the (current) summer I learned about TPG.
 - Robert Smith: Provided an initial Java implementation of TPG.
+- [Richard Wardin](https://github.com/Shalmezad): Helped fix a few bugs.
 
 ## Other implementations:
 - https://github.com/skellco/Tangled-Program-Graphs
