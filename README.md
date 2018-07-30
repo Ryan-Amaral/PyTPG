@@ -22,7 +22,7 @@ from tpg.tpg_agent import TpgAgent
 
 **TpgTrainer** is the class used for training, to do all the standard tasks of an evolutionary algorithm. Such as getting individuals, evolving, and reporting stats. **TpgAgent** is essentially a wrapper for an individual of the population that the user (you) gets access to. Its API allows for things like selecting an action based on the world state, and giving a reward.
 
-Create an instance of the trainer, which initialized the necessary populations for the algorithms. There are many parameters to choose for the initializer. `actions` is the only required one, which is the number of actions available to you from the chosen environment.
+Create an instance of the trainer, which initializes the necessary populations for the algorithm. There are many parameters to choose for the initializer. `actions` is the only required one, which is the number of actions available to you from the chosen environment.
 
 ```python
 trainer = TpgTrainer(actions=range(7))
