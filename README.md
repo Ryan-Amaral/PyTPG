@@ -22,7 +22,7 @@ from tpg.tpg_agent import TpgAgent
 
 **TpgTrainer** is the class used for training, to do all the standard tasks of an evolutionary algorithm. Such as getting individuals, evolving, and reporting stats. **TpgAgent** is essentially a wrapper for an individual of the population that the user (you) gets access to. Its API allows for things like selecting an action based on the world state, and giving a reward.
 
-Create an instance of the trainer, which initializes the necessary populations for the algorithm. There are many parameters to choose for the initializer. `actions` is the only required one, which is the number of actions available to you from the chosen environment.
+Create an instance of the trainer, which initializes the necessary populations for the algorithm. There are many parameters to choose for the initializer, `actions` is the only required one, which is the number of actions available to you from the chosen environment.
 
 ```python
 trainer = TpgTrainer(actions=range(7))
@@ -53,7 +53,7 @@ trainer.evolve()
 ```
 
 ### Other ways to use
-The above were just some of the important functions, and left out some necessary code for the environment, and a few other small details. There are different ways to do things like withdrawing agents, rewarding agents, and evolving. And things become a bit tricky if you wish to work with multiprocessing, but we have some example workarounds for such things to make it work. See [the examples page](./tpg_examples.ipynb) for details.
+The above were just some of the important functions, and left out some necessary code for the environment, and a few other ways to use this API (some perhaps better). There are different ways to do things like withdrawing agents, rewarding agents, and evolving. And things become a bit tricky if you wish to work with multiprocessing, but we have some example workarounds to make it work. See [the examples page](./tpg_examples.ipynb) for details.
 
 ## Aknowledgements
 - Dr. Malcolm Heywood: My supervisor on the (current) summer I learned about TPG.
