@@ -40,7 +40,7 @@ The agent can act on the current state of the environment by the act method.
 action = agent.act(state) # call every timestep
 ```
 
-TPG works with final score only (for now), so track the score of whatever environment is being used and, reward it to the agent after the episode.
+TPG works with final score only (for now), so track the score of whatever environment is being used, and reward it to the agent after the episode.
 
 ```python
 agent.reward(score)
