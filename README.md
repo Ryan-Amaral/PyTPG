@@ -11,7 +11,7 @@ A python implementation of Tangled Program Graphs.
 - install with `pip install -e .`
 
 ## How to use
-I will describe basic usage here. For more examples and details go to [the examples page](./tpg_examples.ipynb).
+We will go over basic usage here. For more examples and details go to [the examples page](./tpg_examples.ipynb).
 
 For practically all uses, you must import [TpgTrainer](./tpg/tpg_trainer.py) and [TpgAgent](./tpg/tpg_agent.py).
 
