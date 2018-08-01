@@ -221,9 +221,6 @@ class TpgTrainer:
         (Team[]) The teams that the scores got applied to.
     """
     def applyScores(self, scores):
-        # make sure we do tasks in evolution
-        for task in scores[0][1]:
-            self.addTask(task)
 
         teams = [] # list of teams that the agents refer to
 
@@ -290,7 +287,7 @@ class TpgTrainer:
         tasks: (Str[]) List of tasks to be evaluated on in selection. If empty,
             uses only default task. If None, uses tasks for current generation.
             Really only need if using tournament selection with multiple paralell
-            tournaments where some may have different tasks.
+            tournaments where some may have different tasks, or any multiprocessing.
     """
     def evolve(self, fitShare=True, tourneyAgents=None, tourneyTeams=None, tasks=None):
         rTeams = None # root teams to get from tourneyAgents, or None
@@ -313,7 +310,7 @@ class TpgTrainer:
         tasks: (Str[]) List of tasks to be evaluated on in selection. If empty,
             uses only default task. If None, uses tasks for current generation.
             Really only need if using tournament selection with multiple paralell
-            tournaments where some may have different tasks.
+            tournaments where some may have different tasks, or any multiprocessing.
     """
     def select(self, fitShare=True, rTeams=None, tasks=None):
         gapSz = self.gap
