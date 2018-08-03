@@ -54,6 +54,10 @@ class TpgTrainer:
 
         # set the variables
         self.actions = actions
+        if isinstance(actions, int):
+            self.multiAction = False
+        else:
+            self.multiAction = True
         self.randSeed = randSeed
         self.teamPopSizeInit = teamPopSizeInit
         self.gap = gap
@@ -249,8 +253,14 @@ class TpgTrainer:
         # create teams to fill population
         for i in range(self.teamPopSizeInit):
             # take two distinct initial actions for each of two learners on team
-            ac1 = self.rand.choice(self.actions)
-            ac2 = self.rand.choice([a for a in self.actions if a != ac1])
+            if not self.multiAction: # choose single number
+                ac1 = self.rand.choice(self.actions)
+                ac2 = self.rand.choice([a for a in self.actions if a != ac1])
+            else: # choose list of length self.actions within range
+                min = self.actionRange[0]
+                max = self.actionRange[1]
+                ac1 = [self.rand.uniform(min, max) for i in range(self.actions)]
+                ac2 = [self.rand.uniform(min, max) for i in range(self.actions)]
 
             team = Team() # create new team
 
@@ -267,9 +277,11 @@ class TpgTrainer:
             # add other random learners
             learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
             for i in range(learnerMax):
-                learner = Learner(
-                    self.actions[self.rand.randint(0,len(self.actions)-1)],
-                    maxProgSize=self.maxProgramSize, randSeed=self.randSeed)
+                if not self.multiAction: # choose single number
+                    ac = self.rand.choice(self.actions)
+                else: # choose list of length self.actions within range
+                    ac = [self.rand.uniform(min, max) for i in range(self.actions)]
+                learner = Learner(ac,maxProgSize=self.maxProgramSize, randSeed=self.randSeed)
                 team.addLearner(learner)
                 self.learners.append(learner)
 
@@ -505,7 +517,10 @@ class TpgTrainer:
                         action = Action(actionTeam)
                         actionTeam.learnerRefCount += 1
                     else: # atomic action
-                        action = Action(self.rand.choice(self.actions))
+                        if not self.multiAction: # choose single number
+                            action = self.rand.choice(self.actions)
+                        else: # choose list of length self.actions within range
+                            action = [self.rand.uniform(min, max) for i in range(self.actions)]
                     # try to mutate the learners action, and record whether
                     # learner changed at all
                     isLearnerChanged = (lrnr.mutateAction(action) or
