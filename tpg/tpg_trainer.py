@@ -55,9 +55,9 @@ class TpgTrainer:
         # set the variables
         self.actions = actions
         if isinstance(actions, int):
-            self.multiAction = False
-        else:
             self.multiAction = True
+        else:
+            self.multiAction = False
         self.randSeed = randSeed
         self.teamPopSizeInit = teamPopSizeInit
         self.gap = gap
