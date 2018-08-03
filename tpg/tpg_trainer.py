@@ -520,8 +520,13 @@ class TpgTrainer:
                         if not self.multiAction: # choose single number
                             action = Action(self.rand.choice(self.actions))
                         else: # choose list of length self.actions within range
-                            action = Action([self.rand.uniform(min, max)
-                                            for i in range(self.actions)])
+                            act = lrnr.action.act
+                            min = self.actionRange[0]
+                            max = self.actionRange[1]
+                            stp = self.actionRange[2]
+                            action = Action(
+                                [clip(i+self.rand.choice(-stp,stp), min, max)
+                                            for i in act])
                     # try to mutate the learners action, and record whether
                     # learner changed at all
                     isLearnerChanged = (lrnr.mutateAction(action) or
@@ -622,6 +627,10 @@ class TpgTrainer:
     def getTrainerState():
         return TrainerState(self.teams, self.rootTeams, self.learners,
             self.curGen, self.tournamentsPlayed)
+
+# https://stackoverflow.com/questions/4092528/how-to-clamp-an-integer-to-some-range
+def clip(val, minv, maxv):
+    return max(minv, min(val, maxv))
 
 """
 Contains all information needed to pick up from wherever last left off. An
