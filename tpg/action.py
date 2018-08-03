@@ -50,7 +50,7 @@ class Action:
         team, or same atomic value.
     """
     def equals(self, other):
-        if self.isAtomic() and other.isAtomic() and self.act == other.act:
+        if self.isAtomic() and other.isAtomic() and self.act is other.act:
             return True
         elif (not self.isAtomic() and not other.isAtomic() and
                 self.act.uid == other.act.uid):

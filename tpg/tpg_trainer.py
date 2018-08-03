@@ -23,8 +23,9 @@ class TpgTrainer:
     previously left off point.
     Args:
         actions        : (Int[] or Int) The actions available in the env. If
-            Int[] the actions are each number in the list. If Int, the actions
-            will be a list of length of the Int.
+            Int[], the actions are each number in the list, use for single action
+            output. If Int, the actions will be a list of length of the Int, use
+            for multi action output.
         randSeed       :
         teamPopSizeInit: (Int) Initial Team population size.
         gap            : Proportion of agents to replace per gen.
@@ -41,12 +42,15 @@ class TpgTrainer:
         popInit        : Object containing all info needed to carry on from a
             previous training session. Serialize and deserialize with pickle.
         tourneyGap     : (Float) Gap for tournament selection.
+        actionRange    : ((Float, Float, Float)) A 3-tuple of min, max, and step
+            size for actions (if multi-action).
     """
     def __init__(self, actions, randSeed=0, teamPopSizeInit=360, gap=0.5,
             pLearnerDelete=0.7, pLearnerAdd=0.7, pMutateAction=0.2,
             pActionIsTeam=0.5, maxTeamSize=5, maxProgramSize=96,
             pProgramDelete=0.5, pProgramAdd=0.5, pProgramSwap=1.0,
-            pProgramMutate=1.0, popInit=None, tourneyGap=0.5):
+            pProgramMutate=1.0, popInit=None, tourneyGap=0.5,
+            actionRange=(0.0, 1.0, 0.05)):
 
         # set the variables
         self.actions = actions
@@ -64,6 +68,7 @@ class TpgTrainer:
         self.pProgramSwap = pProgramSwap
         self.pProgramMutate = pProgramMutate
         self.tourneyGap = tourneyGap
+        self.actionRange = actionRange
 
         # establish random for training
         self.rand = random.Random()
