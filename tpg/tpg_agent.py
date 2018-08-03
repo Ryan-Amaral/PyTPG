@@ -37,7 +37,7 @@ class TpgAgent:
         mem:
             (Bool) Use memory by maintaining registers.
     Returns:
-        (Int) The action to perform.
+        (Int or Float[]) The action to perform.
     """
     def act(self, obs, valActs=None, defAct=0, mem=False):
         regDict = None

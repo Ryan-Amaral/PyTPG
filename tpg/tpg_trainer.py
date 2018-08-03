@@ -518,9 +518,10 @@ class TpgTrainer:
                         actionTeam.learnerRefCount += 1
                     else: # atomic action
                         if not self.multiAction: # choose single number
-                            action = self.rand.choice(self.actions)
+                            action = Action(self.rand.choice(self.actions))
                         else: # choose list of length self.actions within range
-                            action = [self.rand.uniform(min, max) for i in range(self.actions)]
+                            action = Action([self.rand.uniform(min, max)
+                                            for i in range(self.actions)])
                     # try to mutate the learners action, and record whether
                     # learner changed at all
                     isLearnerChanged = (lrnr.mutateAction(action) or
