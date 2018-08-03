@@ -38,7 +38,7 @@ class Action:
     or refers to a team (not atomic).
     """
     def isAtomic(self):
-        return isinstance(self.act, int)
+        return isinstance(self.act, int) or isinstance(self.act, list)
 
     """
     Checks if the action in self is equivalent to other.
