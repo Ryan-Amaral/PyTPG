@@ -280,7 +280,7 @@ class TpgTrainer:
                 if not self.multiAction: # choose single number
                     ac = self.rand.choice(self.actions)
                 else: # choose list of length self.actions within range
-                    ac = [self.rand.uniform(min, max) for i in range(self.actions)]
+                    ac = [self.rand.uniform(minv, maxv) for i in range(self.actions)]
                 learner = Learner(ac,maxProgSize=self.maxProgramSize, randSeed=self.randSeed)
                 team.addLearner(learner)
                 self.learners.append(learner)
