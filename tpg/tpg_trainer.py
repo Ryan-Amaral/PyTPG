@@ -525,7 +525,7 @@ class TpgTrainer:
                             max = self.actionRange[1]
                             stp = self.actionRange[2]
                             action = Action(
-                                [clip(i+self.rand.choice(-stp,stp), min, max)
+                                [clip(i+self.rand.choice([-stp,stp]), min, max)
                                             for i in act])
                     # try to mutate the learners action, and record whether
                     # learner changed at all
