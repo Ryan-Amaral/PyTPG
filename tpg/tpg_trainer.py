@@ -257,10 +257,10 @@ class TpgTrainer:
                 ac1 = self.rand.choice(self.actions)
                 ac2 = self.rand.choice([a for a in self.actions if a != ac1])
             else: # choose list of length self.actions within range
-                min = self.actionRange[0]
-                max = self.actionRange[1]
-                ac1 = [self.rand.uniform(min, max) for i in range(self.actions)]
-                ac2 = [self.rand.uniform(min, max) for i in range(self.actions)]
+                minv = self.actionRange[0]
+                maxv = self.actionRange[1]
+                ac1 = [self.rand.uniform(minv, maxv) for i in range(self.actions)]
+                ac2 = [self.rand.uniform(minv, maxv) for i in range(self.actions)]
 
             team = Team() # create new team
 
@@ -520,13 +520,18 @@ class TpgTrainer:
                         if not self.multiAction: # choose single number
                             action = Action(self.rand.choice(self.actions))
                         else: # choose list of length self.actions within range
-                            act = lrnr.action.act
-                            min = self.actionRange[0]
-                            max = self.actionRange[1]
-                            stp = self.actionRange[2]
-                            action = Action(
-                                [clip(i+self.rand.choice([-stp,stp]), min, max)
-                                            for i in act])
+                            minv = self.actionRange[0]
+                            maxv = self.actionRange[1]
+                            if lrnr.action.isAtomic():
+                                act = lrnr.action.act
+                                stp = self.actionRange[2]
+                                action = Action(
+                                    [clip(i+self.rand.choice([-stp,stp]), minv, maxv)
+                                                for i in act])
+                            else:
+                                action = [self.rand.uniform(minv, maxv)
+                                            for i in range(self.actions)]
+
                     # try to mutate the learners action, and record whether
                     # learner changed at all
                     isLearnerChanged = (lrnr.mutateAction(action) or
