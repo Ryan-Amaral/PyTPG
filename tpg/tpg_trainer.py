@@ -114,6 +114,33 @@ class TpgTrainer:
         self.tasks.add(task)
 
     """
+    Gets the agent that scores the best at the specified tasks.
+    Args:
+        tasks:
+            (Str[]) List of tasks to base best on. If None, uses cur gen tasks.
+            If Empty, uses default task.
+    Returns:
+        (Agent) The agent that scored the best.
+    """
+    def getBestAgent(self, tasks=None):
+        if tasks is None:
+            tasks = self.tasks
+        elif len(tasks) == 0:
+            tasks = [TpgAgent.defTaskName]
+
+        bestScore = sum([val for key,val in self.rootTeams[0].outcomes.items()
+                        if key in tasks])
+        bestTeam = self.rootTeams[0]
+        for team in self.rootTeams[1:]:
+            curScore = sum([val for key,val in team.outcomes.items()
+                            if key in tasks])
+            if curScore > bestScore:
+                bestScore = curScore
+                bestTeam = team
+
+        return Agent(bestTeam)
+
+    """
     Gets/pops the next team from the population for the client, in the form of
     an instance of TpgAgent. Needs to be made thread safe on client side if
     applicable.
