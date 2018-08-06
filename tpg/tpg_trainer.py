@@ -138,20 +138,26 @@ class TpgTrainer:
                 bestScore = curScore
                 bestTeam = team
 
-        return Agent(bestTeam)
+        return TpgAgent(bestTeam)
 
     """
     Gets/pops the next team from the population for the client, in the form of
     an instance of TpgAgent. Needs to be made thread safe on client side if
     applicable.
+    Args:
+        noRef:
+            (Bool): Whether to link to this trainer, don't use if multiprocessing.
     Returns:
         (TpgAgent) None if no team left in queue, means to call for evolution.
     """
-    def getNextAgent(self):
+    def getNextAgent(self, noRef=False):
         if len(self.teamQueue) == 0:
             agent = None
         else:
-            agent = TpgAgent(self.teamQueue.pop(), self)
+            trainer = self
+            if noRef:
+                trainer = None
+            agent = TpgAgent(self.teamQueue.pop(), trainer=trainer)
 
         return agent
 
@@ -163,22 +169,28 @@ class TpgTrainer:
             (String[]): Don't return agents that already completed all task in
             this list. If None, skips only the default tasks. If empty list,
             skips no task.
+        noRef:
+            (Bool): Whether to link to this trainer, don't use if multiprocessing.
     Returns:
         (List[TpgAgent]) A list containing all of the remaining agents.
     """
-    def getAllAgents(self, skipTasks=None):
+    def getAllAgents(self, skipTasks=None, noRef=False):
         agents = []
+        trainer = self
+        if noRef:
+            trainer = None
+
         if skipTasks is None:
             agents = list(reversed(
-                [TpgAgent(team, trainer=self) for team in self.teamQueue
+                [TpgAgent(team, trainer=trainer) for team in self.teamQueue
                     if TpgAgent.defTaskName not in team.outcomes]))
         else:
             if len(skipTasks) == 0:
                 agents = list(reversed(
-                    [TpgAgent(team, trainer=self) for team in self.teamQueue]))
+                    [TpgAgent(team, trainer=trainer) for team in self.teamQueue]))
             else:
                 agents = list(reversed(
-                    [TpgAgent(team, trainer=self) for team in self.teamQueue
+                    [TpgAgent(team, trainer=trainer) for team in self.teamQueue
                         if any(task not in team.outcomes for task in skipTasks)]))
 
         self.teamQueue = []
