@@ -38,7 +38,7 @@ class Action:
     or refers to a team (not atomic).
     """
     def isAtomic(self):
-        return isinstance(self.act, int)
+        return isinstance(self.act, int) or isinstance(self.act, list)
 
     """
     Checks if the action in self is equivalent to other.
@@ -50,7 +50,7 @@ class Action:
         team, or same atomic value.
     """
     def equals(self, other):
-        if self.isAtomic() and other.isAtomic() and self.act == other.act:
+        if self.isAtomic() and other.isAtomic() and self.act is other.act:
             return True
         elif (not self.isAtomic() and not other.isAtomic() and
                 self.act.uid == other.act.uid):

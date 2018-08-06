@@ -22,7 +22,10 @@ class TpgTrainer:
     Initializes the Training procedure, potentially picking up from a
     previously left off point.
     Args:
-        actions        : (Int[]) The actions available in the env.
+        actions        : (Int[] or Int) The actions available in the env. If
+            Int[], the actions are each number in the list, use for single action
+            output. If Int, the actions will be a list of length of the Int, use
+            for multi action output.
         randSeed       :
         teamPopSizeInit: (Int) Initial Team population size.
         gap            : Proportion of agents to replace per gen.
@@ -39,15 +42,22 @@ class TpgTrainer:
         popInit        : Object containing all info needed to carry on from a
             previous training session. Serialize and deserialize with pickle.
         tourneyGap     : (Float) Gap for tournament selection.
+        actionRange    : ((Float, Float, Float)) A 3-tuple of min, max, and step
+            size for actions (if multi-action).
     """
     def __init__(self, actions, randSeed=0, teamPopSizeInit=360, gap=0.5,
             pLearnerDelete=0.7, pLearnerAdd=0.7, pMutateAction=0.2,
             pActionIsTeam=0.5, maxTeamSize=5, maxProgramSize=96,
             pProgramDelete=0.5, pProgramAdd=0.5, pProgramSwap=1.0,
-            pProgramMutate=1.0, popInit=None, tourneyGap=0.5):
+            pProgramMutate=1.0, popInit=None, tourneyGap=0.5,
+            actionRange=(0.0, 1.0, 0.05)):
 
         # set the variables
         self.actions = actions
+        if isinstance(actions, int):
+            self.multiAction = True
+        else:
+            self.multiAction = False
         self.randSeed = randSeed
         self.teamPopSizeInit = teamPopSizeInit
         self.gap = gap
@@ -62,6 +72,7 @@ class TpgTrainer:
         self.pProgramSwap = pProgramSwap
         self.pProgramMutate = pProgramMutate
         self.tourneyGap = tourneyGap
+        self.actionRange = actionRange
 
         # establish random for training
         self.rand = random.Random()
@@ -242,8 +253,14 @@ class TpgTrainer:
         # create teams to fill population
         for i in range(self.teamPopSizeInit):
             # take two distinct initial actions for each of two learners on team
-            ac1 = self.rand.choice(self.actions)
-            ac2 = self.rand.choice([a for a in self.actions if a != ac1])
+            if not self.multiAction: # choose single number
+                ac1 = self.rand.choice(self.actions)
+                ac2 = self.rand.choice([a for a in self.actions if a != ac1])
+            else: # choose list of length self.actions within range
+                minv = self.actionRange[0]
+                maxv = self.actionRange[1]
+                ac1 = [self.rand.uniform(minv, maxv) for i in range(self.actions)]
+                ac2 = [self.rand.uniform(minv, maxv) for i in range(self.actions)]
 
             team = Team() # create new team
 
@@ -260,9 +277,11 @@ class TpgTrainer:
             # add other random learners
             learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
             for i in range(learnerMax):
-                learner = Learner(
-                    self.actions[self.rand.randint(0,len(self.actions)-1)],
-                    maxProgSize=self.maxProgramSize, randSeed=self.randSeed)
+                if not self.multiAction: # choose single number
+                    ac = self.rand.choice(self.actions)
+                else: # choose list of length self.actions within range
+                    ac = [self.rand.uniform(minv, maxv) for i in range(self.actions)]
+                learner = Learner(ac,maxProgSize=self.maxProgramSize, randSeed=self.randSeed)
                 team.addLearner(learner)
                 self.learners.append(learner)
 
@@ -498,7 +517,21 @@ class TpgTrainer:
                         action = Action(actionTeam)
                         actionTeam.learnerRefCount += 1
                     else: # atomic action
-                        action = Action(self.rand.choice(self.actions))
+                        if not self.multiAction: # choose single number
+                            action = Action(self.rand.choice(self.actions))
+                        else: # choose list of length self.actions within range
+                            minv = self.actionRange[0]
+                            maxv = self.actionRange[1]
+                            if lrnr.action.isAtomic():
+                                act = lrnr.action.act
+                                stp = self.actionRange[2]
+                                action = Action(
+                                    [clip(i+self.rand.choice([-stp,stp]), minv, maxv)
+                                                for i in act])
+                            else:
+                                action = Action([self.rand.uniform(minv, maxv)
+                                            for i in range(self.actions)])
+
                     # try to mutate the learners action, and record whether
                     # learner changed at all
                     isLearnerChanged = (lrnr.mutateAction(action) or
@@ -599,6 +632,10 @@ class TpgTrainer:
     def getTrainerState():
         return TrainerState(self.teams, self.rootTeams, self.learners,
             self.curGen, self.tournamentsPlayed)
+
+# https://stackoverflow.com/questions/4092528/how-to-clamp-an-integer-to-some-range
+def clip(val, minv, maxv):
+    return max(minv, min(val, maxv))
 
 """
 Contains all information needed to pick up from wherever last left off. An

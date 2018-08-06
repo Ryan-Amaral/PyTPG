@@ -22,7 +22,7 @@ class Team:
         regDict:
             (Dict<Int,Float[]>) Dictionary of registers for learner.
     Returns:
-        (Int) The action.
+        (Int or Float[]) The action.
     """
     def getAction(self, obs, vis=set(), regDict=None):
         vis.add(self) # remember that we visited this team

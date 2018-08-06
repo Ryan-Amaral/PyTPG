@@ -194,6 +194,9 @@ class Learner:
 
     """
     Changes the learners action to the argument action.
+    Args:
+        action:
+            (Action) an Action object.
     Returns:
         (Bool) Whether the action is different after mutation.
     """
