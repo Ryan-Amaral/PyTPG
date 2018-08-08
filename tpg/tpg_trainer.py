@@ -114,6 +114,21 @@ class TpgTrainer:
         self.tasks.add(task)
 
     """
+    Clears the outcomes of all root teams.
+    Args:
+        tasks:
+            (Str[]) List of tasks to clear from the outcomes, leave as None to
+            clear all outcomes.
+    """
+    def clearOutcomes(self, tasks=None):
+        for team in self.rootTeams:
+            if tasks is None:
+                team.outcomes = {}
+            else:
+                for task in tasks:
+                    team.outcomes.pop(task, None)
+
+    """
     Gets the agent that scores the best at the specified tasks.
     Args:
         tasks:
