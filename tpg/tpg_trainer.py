@@ -356,7 +356,7 @@ class TpgTrainer:
             rTeams = [agent.team for agent in tourneyAgents]
         elif tourneyTeams is not None:
             rTeams = tourneyTeams
-        self.select(fitShare=fitShare, rTeams=rTeams, tasks=tasks)
+        self.select(fitShare=fitShare, rTeams=rTeams, tasks=tasks, elitistTasks=elitistTasks)
         self.generateNewTeams(parents=rTeams)
         self.nextEpoch(tourney=tourneyAgents is not None)
 
@@ -418,6 +418,22 @@ class TpgTrainer:
                 scores.append((team, teamScoresMap[team][0]))
                 statScores.append(teamScoresMap[team][0])
 
+        eliteTeams = [] # teams to keep for elitism
+        for eTask in elitistTasks:
+            bestScore = 0
+            bestTeam = None
+            for team in rTeams:
+                if eTask in team.outcomes:
+                    if bestTeam is None: # default first to best
+                        bestScore = team.outcomes[eTask]
+                        bestTeam = team
+                    else: # seach for best after first
+                        if team.outcomes[eTask] > bestScore:
+                            bestScore = team.outcomes[eTask]
+                            bestTeam = team
+            if bestTeam not in eliteTeams:
+                eliteTeams.append(bestTeam) # this is best team for task
+
         scores.sort(key=itemgetter(1), reverse=True) # scores descending
 
         self.saveScores(statScores) # save scores for reporting
@@ -426,6 +442,8 @@ class TpgTrainer:
 
         # properly delete the teams
         for team, _ in delTeams:
+            if team in eliteTeams:
+                continue # don't delete an elite, even if bad on current eval
             team.erase()
             self.teams.remove(team)
             self.rootTeams.remove(team)
