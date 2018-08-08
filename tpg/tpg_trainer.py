@@ -346,8 +346,11 @@ class TpgTrainer:
             uses only default task. If None, uses tasks for current generation.
             Really only need if using tournament selection with multiple paralell
             tournaments where some may have different tasks, or any multiprocessing.
+        elitistTasks: (Str[]) List of tasks to maintain elitism on, AKA keep the
+            top performing agent for every task in the list.
     """
-    def evolve(self, fitShare=True, tourneyAgents=None, tourneyTeams=None, tasks=None):
+    def evolve(self, fitShare=False, tourneyAgents=None, tourneyTeams=None,
+            tasks=None, elitistTasks=[]):
         rTeams = None # root teams to get from tourneyAgents, or None
         if tourneyAgents is not None:
             rTeams = [agent.team for agent in tourneyAgents]
@@ -369,8 +372,10 @@ class TpgTrainer:
             uses only default task. If None, uses tasks for current generation.
             Really only need if using tournament selection with multiple paralell
             tournaments where some may have different tasks, or any multiprocessing.
+        elitistTasks: (Str[]) List of tasks to maintain elitism on, AKA keep the
+            top performing agent for every task in the list.
     """
-    def select(self, fitShare=True, rTeams=None, tasks=None):
+    def select(self, fitShare=False, rTeams=None, tasks=None, elitistTasks=[]):
         gapSz = self.gap
         # if rTeams not supplied use whole root population
         if rTeams is None:
