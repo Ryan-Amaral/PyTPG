@@ -592,7 +592,6 @@ class TpgTrainer:
                     if self.rand.uniform(0,1) < self.pActionIsTeam: # team action
                         actionTeam = self.rand.choice(self.teams)
                         action = Action(actionTeam)
-                        actionTeam.learnerRefCount += 1
                     else: # atomic action
                         if not self.multiAction: # choose single number
                             action = Action(self.rand.choice(self.actions))
@@ -618,6 +617,8 @@ class TpgTrainer:
                     team.addLearner(lrnr)
                     self.learners.append(lrnr)
                     isTeamChanged = True
+                    if not lrnr.action.isAtomic():
+                        lrnr.action.act.learnerRefCount += 1
 
         return isTeamChanged
 
@@ -628,12 +629,6 @@ class TpgTrainer:
             (Bool) Whether doing tournament selection.
     """
     def nextEpoch(self, tourney=False):
-        # decide new root teams
-        self.rootTeams = []
-        for team in self.teams:
-            if team.learnerRefCount == 0:
-                self.rootTeams.append(team) # root teams must have no references
-
         # remove unused learners
         tmpLearners = list(self.learners)
         for learner in tmpLearners:
@@ -642,6 +637,12 @@ class TpgTrainer:
                 # dereference if action is team
                 if not learner.action.isAtomic():
                     learner.action.act.learnerRefCount -= 1
+
+        # decide new root teams
+        self.rootTeams = []
+        for team in self.teams:
+            if team.learnerRefCount == 0:
+                self.rootTeams.append(team) # root teams must have no references
 
         self.teamQueue = list(self.rootTeams)
         self.rand.shuffle(self.teamQueue)
