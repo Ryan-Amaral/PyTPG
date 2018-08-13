@@ -413,7 +413,7 @@ class TpgTrainer:
         # get outcomes of all teams outcome[team][tasknum]
         for team in rTeams:
             teamScoresMap[team] = [0]*len(tasks)
-            for t,task in enumerate(tasks):
+            for t,task in enumerate([tsk for tsk in tasks if tsk in team.outcomes]):
                 teamScoresMap[team][t] = team.outcomes[task]
                 taskTotalScores[t] += team.outcomes[task]# up task total
 
