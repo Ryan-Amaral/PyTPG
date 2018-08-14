@@ -1,7 +1,6 @@
 from bitarray import bitarray
 from bitarray import bitdiff
 import random
-import time
 
 """
 An Instruction
@@ -34,7 +33,7 @@ class Instruction:
     def __init__(self, randInit=True, randSeed=0):
         self.rand = random.Random()
         if randSeed == 0:
-            self.rand.seed(int(round(time.time())))
+            self.rand.seed()
         else:
             self.rand.seed(randSeed)
 

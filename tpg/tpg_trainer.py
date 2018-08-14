@@ -1,6 +1,5 @@
 from __future__ import division
 import random
-import time
 from operator import itemgetter
 
 from tpg.action import Action
@@ -77,7 +76,7 @@ class TpgTrainer:
         # establish random for training
         self.rand = random.Random()
         if randSeed == 0:
-            self.rand.seed(int(round(time.time())))
+            self.rand.seed()
         else:
             self.rand.seed(randSeed)
 

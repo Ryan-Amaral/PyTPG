@@ -1,7 +1,6 @@
 from __future__ import division
 
 import random
-import time
 import math
 from bitarray import bitarray
 
@@ -22,7 +21,7 @@ class Learner:
         self.randSeed = randSeed
         self.rand = random.Random()
         if randSeed == 0:
-            self.rand.seed(int(round(time.time())))
+            self.rand.seed()
         else:
             self.rand.seed(randSeed)
 
