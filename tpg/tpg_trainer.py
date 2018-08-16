@@ -710,9 +710,15 @@ class TpgTrainer:
         return TrainerState(self.teams, self.rootTeams, self.learners,
             self.curGen, self.tournamentsPlayed)
 
-# https://stackoverflow.com/questions/4092528/how-to-clamp-an-integer-to-some-range
-def clip(val, minv, maxv):
-    return max(minv, min(val, maxv))
+    def getFullGraph():
+        pass
+
+    def getRootTeamGraph():
+        pass
+
+    # https://stackoverflow.com/questions/4092528/how-to-clamp-an-integer-to-some-range
+    def clip(val, minv, maxv):
+        return max(minv, min(val, maxv))
 
 """
 Contains all information needed to pick up from wherever last left off. An
