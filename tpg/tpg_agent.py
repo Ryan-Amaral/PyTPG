@@ -1,7 +1,8 @@
 from tpg.team import Team
 
 """
-Class the the client gets an instance of to control a team.
+Class that the client gets an instance of to control a team. Essentially just a
+convenient wrapper around a (root) team.
 """
 class TpgAgent:
 

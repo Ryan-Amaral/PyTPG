@@ -2,7 +2,7 @@ from tpg.learner import Learner
 import tpg.action
 
 """
-A Team.
+A Team. A node in the graph that makes the Tangled Program Graph.
 """
 class Team:
 

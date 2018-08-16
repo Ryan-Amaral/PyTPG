@@ -8,7 +8,8 @@ from tpg.instruction import Instruction
 import tpg.action
 
 """
-A Learner.
+A Learner. Contains a program that makes a bid to use its action, based on the
+current input and perhaps previous outcomes.
 """
 class Learner:
 

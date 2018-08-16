@@ -1,7 +1,8 @@
 import tpg.team
 
 """
-An action.
+An action. Each learner of a team will bid to use its own action, either an atomic
+action or another team (continue traversing the graph from the next team).
 """
 class Action:
 

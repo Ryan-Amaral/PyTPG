@@ -3,7 +3,8 @@ from bitarray import bitdiff
 import random
 
 """
-An Instruction
+An Instruction. A binary string that can be mutated to change the outcome of the
+instruction used in a program.
 """
 class Instruction:
 
