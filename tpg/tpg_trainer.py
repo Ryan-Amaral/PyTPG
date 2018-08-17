@@ -710,12 +710,6 @@ class TpgTrainer:
         return TrainerState(self.teams, self.rootTeams, self.learners,
             self.curGen, self.tournamentsPlayed)
 
-    def getFullGraph():
-        pass
-
-    def getRootTeamGraph():
-        pass
-
     # https://stackoverflow.com/questions/4092528/how-to-clamp-an-integer-to-some-range
     def clip(val, minv, maxv):
         return max(minv, min(val, maxv))
