@@ -3,37 +3,36 @@ A collection of functions to get metrics of the population or individuals in the
 population. For diagnostic or visualization purposes.
 """
 
-import networkx as nx
-
+"""
+Returns all nodes and edges that make up the population.
+"""
 def getFullGraph(trainer):
-    g = nx.MultiDiGraph()
-    colMap = []
+    nodes = []
+    edges = []
     for team in trainer.rootTeams:
-        graphTeam(team, g)
+        graphTeam(team, nodes, edges)
 
-    nc, ec, ew = getAttributes(g)
+    return nodes, edges
 
-    return g, nc, ec, ew
-
+"""
+Returns all nodes and edges from this root team.
+"""
 def getRootTeamGraph(rootTeam):
-    g = nx.MultiDiGraph()
-    colMap = []
+    nodes = []
+    edges = []
+    graphTeam(rootTeam, nodes, edges)
 
-    graphTeam(rootTeam, g)
+    return nodes, edges
 
-    nc, ec, ew = getAttributes(g)
-
-    return g, nc, ec, ew
-
-def graphTeam(team, g, visTeams=set(), actionCounts={}):
+"""
+Helper function to make traversing teams easier.
+"""
+def graphTeam(team, nodes, edges, actionCounts={}):
     if team.learnerRefCount == 0:
         teamName = 'R:' + str(team.uid)
-        g.add_node(teamName, color='red')
     else:
         teamName = 'T:' + str(team.uid)
-        g.add_node(teamName, color='lightcoral')
-
-    visTeams.add(team)
+    nodes.append(teamName)
 
     for learner in team.learners:
         if learner.action.isAtomic():
@@ -41,21 +40,11 @@ def graphTeam(team, g, visTeams=set(), actionCounts={}):
                 actionCounts[learner.action.act] = 0
             else:
                 actionCounts[learner.action.act] += 1
-            actionName = 'A:' + str(learner.action.act)
-            for ac in range(actionCounts[learner.action.act]):
-                actionName = ' ' + actionName + ' '
-            g.add_node(actionName, color='yellow')
-            g.add_edge(teamName, actionName, color='grey', weight=1)
+            actionName = 'A:' + str(learner.action.act) + ':' + str(actionCounts[learner.action.act])
+            nodes.append(actionName)
+            edges.append((teamName, actionName))
         else:
-            if learner.action.act not in visTeams:
-                graphTeam(learner.action.act, g, visTeams)
-            g.add_edge(teamName, 'T:' + str(learner.action.act.uid), color='grey', weight=2)
-
-def getAttributes(g):
-    nodes = g.nodes(data=True)
-    nodeColors = [d['color'] for n,d in nodes]
-    edges = g.edges(data=True)
-    edgeColors = [d['color'] for u,v,d in edges]
-    edgeWeights = [d['weight'] for u,v,d in edges]
-
-    return nodeColors, edgeColors, edgeWeights
+            teamName2 = 'T:' + str(learner.action.act.uid)
+            if teamName2 not in nodes:
+                graphTeam(learner.action.act, nodes, edges, actionCounts)
+            edges.append((teamName, teamName2))
