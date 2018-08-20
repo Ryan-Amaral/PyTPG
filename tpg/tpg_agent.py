@@ -19,6 +19,10 @@ class TpgAgent:
         self.team = team
         self.trainer = trainer
         self.regDict = {}
+        self.teamEnvVis = {} # times that team is visited in env
+        self.teamVis = {} # times each team is visited, env not yet known
+        self.envActions = {} # number of each action made in envs
+        self.curEnvActions = {} # number of each action made in current env
 
     """
     Chooses an action to perform from the team based on the input space.
@@ -45,7 +49,20 @@ class TpgAgent:
         if mem:
             regDict = self.regDict
 
-        action = self.team.getAction(obs, regDict=regDict)
+        vis = set() # teams visited
+        action = self.team.getAction(obs, regDict=regDict, vis=vis)
+
+        for team in vis:
+            if team not in self.teamVis:
+                self.teamVis[team] = 1
+            else:
+                self.teamVis[team] += 1
+
+        if action not in self.curEnvActions:
+            self.curEnvActions[action] = 1
+        else:
+            self.curEnvActions[action] += 1
+
         if valActs is None:
             return action
         else:
@@ -70,6 +87,27 @@ class TpgAgent:
         self.team.outcomes[task] = reward # track reward for task on team
         if self.trainer is not None:
             self.trainer.addTask(task)
+
+        for team in self.teamVis:
+            if team not in self.teamEnvVis:
+                self.teamEnvVis[team] = {} # new dictionary of team env visits
+
+            if task not in self.teamEnvVis[team]:
+                self.teamEnvVis[team][task] = self.teamVis[team]
+            else:
+                self.teamEnvVis[team][task] += self.teamVis[team]
+
+        if task not in self.envActions:
+            self.envActions[task] = self.curEnvActions
+        else:
+            for action in self.curEnvActions:
+                if action not in self.envActions[task]:
+                    self.envActions[task][action] = self.curEnvActions[action]
+                else:
+                    self.envActions[task][action] += self.curEnvActions[action]
+
+        self.teamVis = {} # reset for new team
+        self.curEnvActions = {}
 
     """
     Gets Number of this agent from it's team, unique within generation.
