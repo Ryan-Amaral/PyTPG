@@ -88,6 +88,8 @@ class TpgAgent:
         if self.trainer is not None:
             self.trainer.addTask(task)
 
+        ###
+        # all diagnostic stuff bellow
         for team in self.teamVis:
             if team not in self.teamEnvVis:
                 self.teamEnvVis[team] = {} # new dictionary of team env visits
@@ -106,7 +108,10 @@ class TpgAgent:
                 else:
                     self.envActions[task][action] += self.curEnvActions[action]
 
-        self.teamVis = {} # reset for new team
+        self.team.teamsEnvsVis = self.teamEnvVis
+        self.team.envsActions = self.envActions
+
+        self.teamVis = {}
         self.curEnvActions = {}
 
     """

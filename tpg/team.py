@@ -12,6 +12,10 @@ class Team:
         self.outcomes = {} # outcomes for tasks from training episodes
         self.learnerRefCount = 0 # learners that reference this team
 
+        # only filled in root teams
+        self.envsActions = {} # actions made per env
+        self.teamsEnvsVis = {} # envs that each team visits
+
     """
     Search for an action to perform based on the observation.
     Args:
