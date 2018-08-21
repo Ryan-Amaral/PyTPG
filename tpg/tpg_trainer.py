@@ -133,26 +133,39 @@ class TpgTrainer:
         tasks:
             (Str[]) List of tasks to base best on. If None, uses cur gen tasks.
             If Empty, uses default task.
+        amount:
+            (Int) Number of best to take.
+        topn:
+            (Int) Positions to consider for points.
     Returns:
-        (Agent) The agent that scored the best.
+        (Agent) The agent that scored the best. Based on positions, and points
+        awarded to those positions.
     """
-    def getBestAgent(self, tasks=None):
+    def getBestAgents(self, tasks=None, amount=1, topn=3):
         if tasks is None:
             tasks = self.tasks
         elif len(tasks) == 0:
             tasks = [TpgAgent.defTaskName]
 
-        bestScore = sum([val for key,val in self.rootTeams[0].outcomes.items()
-                        if key in tasks])
-        bestTeam = self.rootTeams[0]
-        for team in self.rootTeams[1:]:
-            curScore = sum([val for key,val in team.outcomes.items()
-                            if key in tasks])
-            if curScore > bestScore:
-                bestScore = curScore
-                bestTeam = team
+        taskPosMatrix = {}
+        # fill position matrix
+        for task in tasks:
+            taskPosMatrix[task] = sorted([rt for rt in self.rootTeams if task in rt.outcomes],
+                    key = lambda rt: rt.outcomes[task], reverse=True)[:topn]
 
-        return TpgAgent(bestTeam)
+        teamPoints = {}
+        # assign points to teams based on positions
+        for task in tasks:
+            for i in range(len(taskPosMatrix[task])):
+                team = taskPosMatrix[task][i]
+                if team not in teamPoints:
+                    teamPoints[team] = topn - i
+                else:
+                    teamPoints[team] += topn - i
+
+        bestTeams = sorted(teamPoints.items(), key=operator.itemgetter(1), reverse=True)[amount]
+        
+        return [TpgAgent(bt[0]) for bt in bestTeams]
 
     """
     Gets/pops the next team from the population for the client, in the form of
