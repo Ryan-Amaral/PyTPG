@@ -163,7 +163,7 @@ class TpgTrainer:
                 else:
                     teamPoints[team] += topn - i
 
-        bestTeams = sorted(teamPoints.items(), key=itemgetter(1), reverse=True)[amount]
+        bestTeams = sorted(teamPoints.items(), key=itemgetter(1), reverse=True)[:amount]
 
         return [TpgAgent(bt[0]) for bt in bestTeams]
 
