@@ -93,4 +93,4 @@ class Team:
     is a root team.
     """
     def getRootTeamGraph(self):
-        return extensions.getRootTeamGraph(self)
+        return tpg.extensions.getRootTeamGraph(self)
