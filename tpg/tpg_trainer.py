@@ -138,7 +138,7 @@ class TpgTrainer:
         topn:
             (Int) Positions to consider for points.
     Returns:
-        (Agent) The agent that scored the best. Based on positions, and points
+        (Agent[]) The agents that scored the best. Based on positions, and points
         awarded to those positions.
     """
     def getBestAgents(self, tasks=None, amount=1, topn=3):
@@ -166,6 +166,31 @@ class TpgTrainer:
         bestTeams = sorted(teamPoints.items(), key=itemgetter(1), reverse=True)[:amount]
 
         return [TpgAgent(bt[0]) for bt in bestTeams]
+
+    """
+    Gets the topn best agents at each task.
+    Args:
+        tasks:
+            (Str[]) List of tasks to base best on. If None, uses cur gen tasks.
+            If Empty, uses default task.
+        topn:
+            (Int) Number of positions to consider.
+    Returns:
+        (Dict{str:Agent[]})
+    """
+    def getAgentsPositions(self, tasks=None, topn=3):
+        if tasks is None:
+            tasks = self.tasks
+        elif len(tasks) == 0:
+            tasks = [TpgAgent.defTaskName]
+
+        taskPosMatrix = {}
+        # fill position matrix
+        for task in tasks:
+            taskPosMatrix[task] = sorted([rt for rt in self.rootTeams if task in rt.outcomes],
+                    key = lambda rt: rt.outcomes[task], reverse=True)[:topn]
+
+        return taskPosMatrix
 
     """
     Gets/pops the next team from the population for the client, in the form of
