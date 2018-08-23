@@ -176,7 +176,8 @@ class TpgTrainer:
         topn:
             (Int) Number of positions to consider.
     Returns:
-        (Dict{str:Agent[]})
+        (Dict{str:Agent[]}) Dictionary with tasks as the keys, and a list of agents
+        in order
     """
     def getAgentsPositions(self, tasks=None, topn=3):
         if tasks is None:
@@ -187,8 +188,8 @@ class TpgTrainer:
         taskPosMatrix = {}
         # fill position matrix
         for task in tasks:
-            taskPosMatrix[task] = sorted([rt for rt in self.rootTeams if task in rt.outcomes],
-                    key = lambda rt: rt.outcomes[task], reverse=True)[:topn]
+            taskPosMatrix[task] = sorted([TpgAgent(rt) for rt in self.rootTeams if task in rt.outcomes],
+                    key = lambda ag: ag.team.outcomes[task], reverse=True)[:topn]
 
         return taskPosMatrix
 
