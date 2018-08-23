@@ -58,12 +58,14 @@ class Instruction:
     """
     Returns the int val of the bitarray that is passed in.
     """
+    @staticmethod
     def getIntVal(ba):
         return int(ba.to01(), 2)
 
     """
     Checks if two bitarrays are equal.
     """
+    @staticmethod
     def equalBitArrays(ba1, ba2):
         return bitdiff(ba1, ba2) == 0
 
