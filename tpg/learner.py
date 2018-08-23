@@ -109,7 +109,7 @@ class Learner:
                     inst.getBitArraySeg(Instruction.slcSrc)) %
                         Learner.registerSize]
             else:
-                # instruction not mode0, source value form obs
+                # instruction not mode0, source value from obs
                 sourceVal = obs[Instruction.getIntVal(
                     inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)]
 
