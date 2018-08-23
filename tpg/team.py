@@ -92,5 +92,5 @@ class Team:
     Returns all nodes and edges from this root team. Should only call if this
     is a root team.
     """
-    def getRootTeamGraph():
+    def getRootTeamGraph(self):
         return extensions.getRootTeamGraph(self)
