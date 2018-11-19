@@ -94,10 +94,10 @@ class TpgTrainer:
             self.teams = popInit.teams
             self.rootTeams = popInit.rootTeams
             self.learners = popInit.learners
-            self.curGen = popInit.gen
+            self.curGen = popInit.curGen
             self.tournamentsPlayed = popInit.tournamentsPlayed
             TpgTrainer.teamIdCounter = popInit.teamIdCounter
-            Learner.idCount = popInit.idCount
+            Learner.idCount = popInit.learnerIdCounter
 
         self.teamQueue = list(self.rootTeams)
         self.tasks = set() # set of tasks done per all individuals
@@ -169,6 +169,7 @@ class TpgTrainer:
 
         return [TpgAgent(bt[0]) for bt in bestTeams]
 
+  
     """
     Gets the topn best agents at each task.
     Args:
@@ -455,6 +456,7 @@ class TpgTrainer:
             teamScoresMap[team] = [0]*len(tasks)
             for t,task in enumerate([tsk for tsk in tasks if tsk in team.outcomes]):
                 teamScoresMap[team][t] = team.outcomes[task]
+
                 taskTotalScores[t] += team.outcomes[task]# up task total
 
         scores = []
@@ -756,7 +758,7 @@ class TpgTrainer:
     which contains the team population, rootTeams population, learner population,
     current generation, and team and learner id counters.
     """
-    def getTrainerState():
+    def getTrainerState(self):
         return TrainerState(self.teams, self.rootTeams, self.learners,
             self.curGen, self.tournamentsPlayed)
 
