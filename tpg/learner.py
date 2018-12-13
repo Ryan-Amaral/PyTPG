@@ -40,7 +40,7 @@ class Learner:
 
             # these copied either way
             self.action = learner.action
-            self.program = [i for i in learner.program]
+            self.program = [Instruction(inst=i) for i in learner.program]
             return
 
         # or make a brand new one

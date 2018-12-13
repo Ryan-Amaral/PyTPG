@@ -31,12 +31,19 @@ class Instruction:
     opExp  = bitarray([1,1,0])
     opCond = bitarray([1,1,1])
 
-    def __init__(self, randInit=True, randSeed=0):
+    def __init__(self, randInit=True, randSeed=0, inst=None):
         self.rand = random.Random()
         if randSeed == 0:
             self.rand.seed()
         else:
             self.rand.seed(randSeed)
+
+        # recreate existing instruction
+        if inst is not None:
+            self.inst = bitarray([False]*Instruction.instructionSize)
+            for i in inst.inst:
+                self.inst[i] = i
+            return
 
         if randInit: # random bits
             self.inst = bitarray([self.rand.choice([True,False])
