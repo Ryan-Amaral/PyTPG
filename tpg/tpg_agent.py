@@ -44,7 +44,7 @@ class TpgAgent:
     Returns:
         (Int or Float[]) The action to perform.
     """
-    def act(self, obs, valActs=None, defAct=0, mem=False):
+    def act(self, obs, valActs=None, defAct=0, mem=True):
         regDict = None
         if mem:
             regDict = self.regDict
