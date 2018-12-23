@@ -169,7 +169,7 @@ class TpgTrainer:
 
         return [TpgAgent(bt[0]) for bt in bestTeams]
 
-  
+
     """
     Gets the topn best agents at each task.
     Args:
@@ -370,7 +370,8 @@ class TpgTrainer:
             self.learners.append(learner)
 
             # add other random learners
-            learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
+            #learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
+            learnerMax = self.maxTeamSize - 2
             for i in range(learnerMax):
                 if not self.multiAction: # choose single number
                     ac = self.rand.choice(self.actions)
