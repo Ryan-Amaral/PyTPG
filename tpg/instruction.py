@@ -40,9 +40,7 @@ class Instruction:
 
         # recreate existing instruction
         if inst is not None:
-            self.inst = bitarray([False]*Instruction.instructionSize)
-            for i in inst.inst:
-                self.inst[i] = i
+            self.inst = bitarray(inst.inst)
             return
 
         if randInit: # random bits
