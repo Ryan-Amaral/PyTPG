@@ -39,7 +39,7 @@ class Learner:
                 self.teamRefCount = learner.teamRefCount
 
             # these copied either way
-            self.action = tpg.action.Action(learner.action)
+            self.action = tpg.action.Action(learner.action.act)
             self.program = [Instruction(inst=i) for i in learner.program]
             return
 
