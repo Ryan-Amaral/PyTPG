@@ -39,7 +39,7 @@ class Learner:
                 self.teamRefCount = learner.teamRefCount
 
             # these copied either way
-            self.action = learner.action
+            self.action = tpg.action.Action(learner.action)
             self.program = [Instruction(inst=i) for i in learner.program]
             return
 
@@ -201,6 +201,12 @@ class Learner:
         (Bool) Whether the action is different after mutation.
     """
     def mutateAction(self, action):
+        # set action to new but keep reference
         act = self.action
         self.action = action
-        return act.equals(action)
+
+        # dereference if team in original action
+        if not act.isAtomic():
+            act.act.learnerRefCount -= 1
+
+        return not act.equals(action)
