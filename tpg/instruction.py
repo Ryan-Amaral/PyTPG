@@ -9,13 +9,13 @@ instruction used in a program.
 class Instruction:
 
     # bits correspond to: mode + op + dest + src
-    instructionSize = 1 + 3 + 3 + 16
+    instructionSize = 1 + 3 + 3 + 24
 
     # offsets and sizes of segments
     slcMode = slice(0,1)
     slcOp = slice(1,4)
     slcDest = slice(4,7)
-    slcSrc = slice(7,23)
+    slcSrc = slice(7,31)
 
     # modes
     mode0 = bitarray([0])
