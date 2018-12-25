@@ -646,7 +646,7 @@ class TpgTrainer:
                                 act = lrnr.action.act
                                 stp = self.actionRange[2]
                                 action = Action(
-                                    [clip(i+self.rand.choice([-stp,stp]), minv, maxv)
+                                    [self.clip(i+self.rand.choice([-stp,stp]), minv, maxv)
                                                 for i in act])
                             else:
                                 action = Action([self.rand.uniform(minv, maxv)
