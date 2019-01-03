@@ -9,13 +9,13 @@ instruction used in a program.
 class Instruction:
 
     # bits correspond to: mode + op + dest + src
-    instructionSize = 1 + 3 + 3 + 16
+    instructionSize = 1 + 3 + 3 + 24
 
     # offsets and sizes of segments
     slcMode = slice(0,1)
     slcOp = slice(1,4)
     slcDest = slice(4,7)
-    slcSrc = slice(7,23)
+    slcSrc = slice(7,31)
 
     # modes
     mode0 = bitarray([0])
@@ -31,12 +31,17 @@ class Instruction:
     opExp  = bitarray([1,1,0])
     opCond = bitarray([1,1,1])
 
-    def __init__(self, randInit=True, randSeed=0):
+    def __init__(self, randInit=True, randSeed=0, inst=None):
         self.rand = random.Random()
         if randSeed == 0:
             self.rand.seed()
         else:
             self.rand.seed(randSeed)
+
+        # recreate existing instruction
+        if inst is not None:
+            self.inst = bitarray(inst.inst)
+            return
 
         if randInit: # random bits
             self.inst = bitarray([self.rand.choice([True,False])

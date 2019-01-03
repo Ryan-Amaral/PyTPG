@@ -39,8 +39,8 @@ class Learner:
                 self.teamRefCount = learner.teamRefCount
 
             # these copied either way
-            self.action = learner.action
-            self.program = [i for i in learner.program]
+            self.action = tpg.action.Action(learner.action.act)
+            self.program = [Instruction(inst=i) for i in learner.program]
             return
 
         # or make a brand new one
@@ -109,7 +109,7 @@ class Learner:
                     inst.getBitArraySeg(Instruction.slcSrc)) %
                         Learner.registerSize]
             else:
-                # instruction not mode0, source value form obs
+                # instruction not mode0, source value from obs
                 sourceVal = obs[Instruction.getIntVal(
                     inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)]
                 si[Instruction.getIntVal(inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)] = 1
@@ -202,6 +202,12 @@ class Learner:
         (Bool) Whether the action is different after mutation.
     """
     def mutateAction(self, action):
+        # set action to new but keep reference
         act = self.action
         self.action = action
-        return act.equals(action)
+
+        # dereference if team in original action
+        if not act.isAtomic():
+            act.act.learnerRefCount -= 1
+
+        return not act.equals(action)

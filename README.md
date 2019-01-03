@@ -56,10 +56,10 @@ trainer.evolve()
 The above were just some of the important functions, and left out some necessary code for the environment, and a few other ways to use this API (some perhaps better). There are different ways to do things like withdrawing agents, rewarding agents, and evolving. And things become a bit tricky if you wish to work with multiprocessing, but we have some example workarounds to make it work. See [the examples page](./tpg_examples.ipynb) for details.
 
 ## Aknowledgements
-- Dr. Malcolm Heywood: My supervisor on the (current) summer I learned about TPG.
-- Robert Smith: Provided an initial Java implementation of TPG.
+- Dr. Malcolm Heywood: My supervisor on the summer I learned about TPG.
+- Robert Smith: Provided an initial Java implementation of TPG, whiched I based this version on.
 - [Richard Wardin](https://github.com/Shalmezad): Helped fix a few bugs.
 
 ## Other implementations:
 - https://github.com/skellco/Tangled-Program-Graphs
-- Based on a yet unreleased Java version created by Robert Smith.
+- https://github.com/LivinBreezy/TPG-J

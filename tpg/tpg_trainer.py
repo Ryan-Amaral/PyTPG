@@ -26,7 +26,8 @@ class TpgTrainer:
             output. If Int, the actions will be a list of length of the Int, use
             for multi action output.
         randSeed       :
-        teamPopSizeInit: (Int) Initial Team population size.
+        teamPopSize    : (Int) Team population size to maintain throughout evolution.
+        rTeamPopSize   : (Int) Root ". Keep as 0 to not care about.
         gap            : Proportion of agents to replace per gen.
         pLearnerDelete :
         pLearnerAdd    :
@@ -44,8 +45,8 @@ class TpgTrainer:
         actionRange    : ((Float, Float, Float)) A 3-tuple of min, max, and step
             size for actions (if multi-action).
     """
-    def __init__(self, actions, randSeed=0, teamPopSizeInit=360, gap=0.5,
-            pLearnerDelete=0.7, pLearnerAdd=0.7, pMutateAction=0.2,
+    def __init__(self, actions, randSeed=0, teamPopSize=360, rTeamPopSize=0,
+            gap=0.5, pLearnerDelete=0.7, pLearnerAdd=0.7, pMutateAction=0.2,
             pActionIsTeam=0.5, maxTeamSize=5, maxProgramSize=96,
             pProgramDelete=0.5, pProgramAdd=0.5, pProgramSwap=1.0,
             pProgramMutate=1.0, popInit=None, tourneyGap=0.5,
@@ -58,7 +59,8 @@ class TpgTrainer:
         else:
             self.multiAction = False
         self.randSeed = randSeed
-        self.teamPopSizeInit = teamPopSizeInit
+        self.teamPopSize = teamPopSize
+        self.rTeamPopSize = rTeamPopSize
         self.gap = gap
         self.pLearnerDelete = pLearnerDelete
         self.pLearnerAdd = pLearnerAdd
@@ -92,10 +94,10 @@ class TpgTrainer:
             self.teams = popInit.teams
             self.rootTeams = popInit.rootTeams
             self.learners = popInit.learners
-            self.curGen = popInit.gen
+            self.curGen = popInit.curGen
             self.tournamentsPlayed = popInit.tournamentsPlayed
             TpgTrainer.teamIdCounter = popInit.teamIdCounter
-            Learner.idCount = popInit.idCount
+            Learner.idCount = popInit.learnerIdCounter
 
         self.teamQueue = list(self.rootTeams)
         self.tasks = set() # set of tasks done per all individuals
@@ -166,6 +168,7 @@ class TpgTrainer:
         bestTeams = sorted(teamPoints.items(), key=itemgetter(1), reverse=True)[:amount]
 
         return [TpgAgent(bt[0]) for bt in bestTeams]
+
 
     """
     Gets the topn best agents at each task.
@@ -343,7 +346,7 @@ class TpgTrainer:
     """
     def initPops(self):
         # create teams to fill population
-        for i in range(self.teamPopSizeInit):
+        for i in range(self.teamPopSize):
             # take two distinct initial actions for each of two learners on team
             if not self.multiAction: # choose single number
                 ac1 = self.rand.choice(self.actions)
@@ -367,7 +370,8 @@ class TpgTrainer:
             self.learners.append(learner)
 
             # add other random learners
-            learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
+            #learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
+            learnerMax = self.maxTeamSize - 2
             for i in range(learnerMax):
                 if not self.multiAction: # choose single number
                     ac = self.rand.choice(self.actions)
@@ -453,6 +457,7 @@ class TpgTrainer:
             teamScoresMap[team] = [0]*len(tasks)
             for t,task in enumerate([tsk for tsk in tasks if tsk in team.outcomes]):
                 teamScoresMap[team][t] = team.outcomes[task]
+
                 taskTotalScores[t] += team.outcomes[task]# up task total
 
         scores = []
@@ -513,7 +518,8 @@ class TpgTrainer:
         if parents is None:
             parents = list(self.rootTeams) # parents are all original root teams
         # add teams until maxed size
-        while len(self.teams) < self.teamPopSizeInit:
+        while (len(self.teams) < self.teamPopSize or (self.rTeamPopSize > 0 and
+                self.getRootTeamsSize() < self.rTeamPopSize)):
             # choose 2 random teams as parents
             par1 = self.rand.choice(parents)
             par2 = self.rand.choice([par for par in parents if par is not par1])
@@ -640,7 +646,7 @@ class TpgTrainer:
                                 act = lrnr.action.act
                                 stp = self.actionRange[2]
                                 action = Action(
-                                    [clip(i+self.rand.choice([-stp,stp]), minv, maxv)
+                                    [self.clip(i+self.rand.choice([-stp,stp]), minv, maxv)
                                                 for i in act])
                             else:
                                 action = Action([self.rand.uniform(minv, maxv)
@@ -694,6 +700,14 @@ class TpgTrainer:
         else:
             self.curGen += 1
 
+    def getRootTeamsSize(self):
+        numRTeams = 0
+        for team in self.teams:
+            if team.learnerRefCount == 0:
+                numRTeams += 1
+
+        return numRTeams
+
     """
     Saves stats about the previous generations scores, in a dict.
     """
@@ -745,7 +759,7 @@ class TpgTrainer:
     which contains the team population, rootTeams population, learner population,
     current generation, and team and learner id counters.
     """
-    def getTrainerState():
+    def getTrainerState(self):
         return TrainerState(self.teams, self.rootTeams, self.learners,
             self.curGen, self.tournamentsPlayed)
 
