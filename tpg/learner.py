@@ -70,7 +70,7 @@ class Learner:
     Returns:
         (Float) The bid value.
     """
-    def bid(self, obs, regDict=None):
+    def bid(self, obs, regDict=None, si=None):
         # choose register appropriately
         registers = None
         if regDict is None:
@@ -82,7 +82,7 @@ class Learner:
 
         # math overflow error happens sometimes
         try:
-            progResult = self.runProgram(obs,registers)
+            progResult = self.runProgram(obs,registers, si=si)
             return 1 / (1 + math.exp(-progResult))
         except:
             return 0
@@ -97,7 +97,7 @@ class Learner:
     Returns:
         (Float) What the destination register's value is at the end.
     """
-    def runProgram(self, obs, registers):
+    def runProgram(self, obs, registers, si=None):
         # iterate over instructions in the program
         for inst in self.program:
             sourceVal = 0
@@ -112,6 +112,7 @@ class Learner:
                 # instruction not mode0, source value form obs
                 sourceVal = obs[Instruction.getIntVal(
                     inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)]
+                si[Instruction.getIntVal(inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)] = 1
 
             # the operation to do on the register
             operation = inst.getBitArraySeg(Instruction.slcOp)

@@ -29,7 +29,7 @@ class Team:
     Returns:
         (Int or Float[]) The action.
     """
-    def getAction(self, obs, vis=set(), regDict=None):
+    def getAction(self, obs, vis=set(), regDict=None, si=None):
         vis.add(self) # remember that we visited this team
 
         # choose learner with highest bid
@@ -39,7 +39,7 @@ class Team:
             if not learner.action.isAtomic() and learner.action.act in vis:
                 continue # don't take already visited team's bid
 
-            bid = learner.bid(obs, regDict)
+            bid = learner.bid(obs, regDict, si=si)
             if maxLearner is None: # first bid
                 maxBid = bid
                 maxLearner = learner
@@ -51,7 +51,7 @@ class Team:
         if maxLearner is None:
             return 0 # default move if no choice made
         else:
-            return maxLearner.action.getAction(obs, vis=vis, regDict=regDict)
+            return maxLearner.action.getAction(obs, vis=vis, regDict=regDict, si=si)
 
     """
     Adds the learner if not already in, and increments reference smount to the
@@ -92,5 +92,5 @@ class Team:
     Returns all nodes and edges from this root team. Should only call if this
     is a root team.
     """
-    def getRootTeamGraph():
-        return extensions.getRootTeamGraph(self)
+    def getRootTeamGraph(self):
+        return tpg.extensions.getRootTeamGraph(self)

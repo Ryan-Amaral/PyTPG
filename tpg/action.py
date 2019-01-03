@@ -28,11 +28,11 @@ class Action:
         (Int) The action selected, either atomic right from this action object,
         or from the team of this action.
     """
-    def getAction(self, obs, vis=set(), regDict=None):
+    def getAction(self, obs, vis=set(), regDict=None, si=None):
         if self.isAtomic():
             return self.act # return atomic
         else: # else act is team, return its action
-            return self.act.getAction(obs, vis=vis, regDict=regDict)
+            return self.act.getAction(obs, vis=vis, regDict=regDict, si=si)
 
     """
     Returns a boolean telling whether this action is a specific action (atomic),
