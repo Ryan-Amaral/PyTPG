@@ -107,6 +107,8 @@ class TpgTrainer:
 
         self.scoreStats = {}
 
+        self.elites = [] # list of elites to save
+
     """
     Attempts to add a task to the set of tasks. Needs to be made thread safe on
     client side if applicable.
@@ -492,6 +494,8 @@ class TpgTrainer:
             if bestTeam not in eliteTeams:
                 eliteTeams.append(bestTeam) # this is best team for task
 
+        self.elites = eliteTeams
+
         scores.sort(key=itemgetter(1), reverse=True) # scores descending
 
         self.saveScores(statScores) # save scores for reporting
@@ -685,8 +689,9 @@ class TpgTrainer:
         # decide new root teams
         self.rootTeams = []
         for team in self.teams:
-            if team.learnerRefCount == 0:
-                self.rootTeams.append(team) # root teams must have no references
+            if team.learnerRefCount == 0 or team in self.elites:
+                # root teams must have no references or be elite
+                self.rootTeams.append(team)
 
         self.teamQueue = list(self.rootTeams)
         self.rand.shuffle(self.teamQueue)
