@@ -395,8 +395,9 @@ class TpgTrainer:
     Selects, creates, and preps the population for the next generation. Or called
     when a tournament is completed.
     Args:
-        fitShare    : (Bool) Whether to use fitness sharing, uses single outcome
-                      otherwise.
+        fitMthd: (Str) Method to use for determining fitness. 'single' uses first
+            task found. 'combine' uses a combined score of all tasks. 'fitshare'
+            uses the fitness sharing method among the tasks.
         tourneyAgents: (Agent[]) The agents in a current tournament if doing
             tournament selection. Leave as None if doing generational selection.
         tourneyTeams: (Team[]) Like tourneyAgents, but teams in case thats all
@@ -408,14 +409,14 @@ class TpgTrainer:
         elitistTasks: (Str[]) List of tasks to maintain elitism on, AKA keep the
             top performing agent for every task in the list.
     """
-    def evolve(self, fitShare=False, tourneyAgents=None, tourneyTeams=None,
+    def evolve(self, fitMthd='single', tourneyAgents=None, tourneyTeams=None,
             tasks=None, elitistTasks=[]):
         rTeams = None # root teams to get from tourneyAgents, or None
         if tourneyAgents is not None:
             rTeams = [agent.team for agent in tourneyAgents]
         elif tourneyTeams is not None:
             rTeams = tourneyTeams
-        self.select(fitShare=fitShare, rTeams=rTeams, tasks=tasks, elitistTasks=elitistTasks)
+        self.select(fitMthd=fitMthd, rTeams=rTeams, tasks=tasks, elitistTasks=elitistTasks)
         self.generateNewTeams(parents=rTeams)
         self.nextEpoch(tourney=tourneyAgents is not None)
 
@@ -423,8 +424,9 @@ class TpgTrainer:
     Selects the individuals to keep for next generation, deletes others. The
     amount deleted will be filled in through generating new teams.
     Args:
-        fitShare: (Bool) Whether to use fitness sharing, uses single outcome
-            otherwise.
+        fitMthd: (Str) Method to use for determining fitness. 'single' uses first
+            task found. 'combine' uses a combined score of all tasks. 'fitshare'
+            uses the fitness sharing method among the tasks.
         tourneyAgents: (Agent[]) The agents in a current tournament if doing
             tournament selection. Leave as None if doing generational selection.
         tasks: (Str[]) List of tasks to be evaluated on in selection. If empty,
@@ -434,7 +436,7 @@ class TpgTrainer:
         elitistTasks: (Str[]) List of tasks to maintain elitism on, AKA keep the
             top performing agent for every task in the list.
     """
-    def select(self, fitShare=False, rTeams=None, tasks=None, elitistTasks=[]):
+    def select(self, fitMthd='single', rTeams=None, tasks=None, elitistTasks=[]):
         gapSz = self.gap
         # if rTeams not supplied use whole root population
         if rTeams is None:
@@ -450,8 +452,6 @@ class TpgTrainer:
         elif len(tasks) == 0:
             tasks = [TpgAgent.defTaskName]
 
-        statScores = [] # list of scores used for saving stats
-
         teamScoresMap = {}
         taskTotalScores = [0]*len(tasks) # store overall score per task
         # get outcomes of all teams outcome[team][tasknum]
@@ -462,24 +462,13 @@ class TpgTrainer:
 
                 taskTotalScores[t] += team.outcomes[task]# up task total
 
-        scores = []
-        if fitShare: # fitness share across all outcomes
-            for team in teamScoresMap.keys():
-                teamRelTaskScore = 0 # teams final fitness shared score
-                statScores.append(0)
-                for taskNum in range(len(tasks)):
-                    if taskTotalScores[taskNum] != 0:
-                        teamRelTaskScore += (teamScoresMap[team][taskNum] /
-                                                    taskTotalScores[taskNum])
-                    statScores[-1] += teamScoresMap[team][taskNum]
-                scores.append((team, teamRelTaskScore))
-        else: # just take first outcome
-            for team in teamScoresMap.keys():
-                scores.append((team, teamScoresMap[team][0]))
-                statScores.append(teamScoresMap[team][0])
+        scores = [] # scores used for fitnesses
 
+        eliteTaskTeams = {} # save which team is elite for each task
+
+        # find the elites for desired tasks
         eliteTeams = [] # teams to keep for elitism
-        for eTask in elitistTasks:
+        for eTask in elitistTasks: # change this to be all tasks in tasks or elitist tasks ( this only good for my current research)
             bestScore = 0
             bestTeam = None
             for team in rTeams:
@@ -491,10 +480,45 @@ class TpgTrainer:
                         if team.outcomes[eTask] > bestScore:
                             bestScore = team.outcomes[eTask]
                             bestTeam = team
-            if bestTeam not in eliteTeams:
+            eliteTaskTeams[eTask] = bestTeam # save elite team of this tasks
+            if bestTeam not in eliteTeams and eTask in elitistTasks:
                 eliteTeams.append(bestTeam) # this is best team for task
 
         self.elites = eliteTeams
+
+        statScores = [] # list of scores used for saving stats
+
+        # assign fitness to individuals by selected method
+        # use fitness sharing
+        if fitMthd == 'fitShare': # fitness share across all outcomes
+            for team in teamScoresMap.keys():
+                teamRelTaskScore = 0 # teams final fitness shared score
+                statScores.append(0)
+                for taskNum in range(len(tasks)):
+                    if taskTotalScores[taskNum] != 0:
+                        teamRelTaskScore += (teamScoresMap[team][taskNum] /
+                                                    taskTotalScores[taskNum])
+                    statScores[-1] += teamScoresMap[team][taskNum]
+                scores.append((team, teamRelTaskScore))
+
+        # combine scores accross all tasks
+        elif fitMthd == 'combine':
+            for team in teamScoresMap.keys():
+                curFit = 0 # fitness accross tasks for individual
+                teamTotalScore = 0
+                for task in tasks:
+                    curFit += 1/(1+(eliteTaskTeams[task].outcomes[task] -
+                                    team.outcomes[task]))
+                    teamTotalScore += team.outcomes[task] # update how to report scores with multiple tasks
+
+                scores.append((team, curFit))
+                statScores.append(teamTotalScore)
+
+        # just use score of first task found
+        elif fitMthd == 'single': # just take first outcome
+            for team in teamScoresMap.keys():
+                scores.append((team, teamScoresMap[team][0]))
+                statScores.append(teamScoresMap[team][0])
 
         scores.sort(key=itemgetter(1), reverse=True) # scores descending
 
@@ -758,6 +782,25 @@ class TpgTrainer:
         self.scoreStats['average'] = sum(scores)/len(scores)
 
         return self.scoreStats
+
+    """
+    Gets the score stats of all teams on the specified task.
+    """
+    def getTaskScores(self, task):
+        scores = [0]*len(self.rootTeams)
+
+        i = -1
+        for team in self.rootTeams:
+            i += 1
+            scores[i] = team.outcomes[task]
+
+        scoreStats = {}
+        scoreStats['scores'] = scores
+        scoreStats['min'] = min(scores)
+        scoreStats['max'] = max(scores)
+        scoreStats['average'] = sum(scores)/len(scores)
+
+        return scoreStats
 
     """
     Gets the current state of the trainer by returning an instance of TrainerState
