@@ -326,21 +326,17 @@ class TpgTrainer:
             ((uid, outcomes)) UID of the team, followed by the outcome dict to
             apply.
     Returns:
-        (Team[]) The teams that the scores got applied to.
+        (Team[]) All root teams, with the newly updated outcomes.
     """
     def applyScores(self, scores):
-
-        teams = [] # list of teams that the agents refer to
-
         for score in scores:
             for team in self.rootTeams:
                 if score[0] == team.uid:
-                    teams.append(team)
                     for task, outcome in score[1].items():
                         team.outcomes[task] = outcome
                     break # on to next score
 
-        return teams
+        return self.rootTeams
 
     """
     Creates the initial population of teams and learners, on initialization of
