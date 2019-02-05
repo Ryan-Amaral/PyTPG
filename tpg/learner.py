@@ -103,9 +103,8 @@ class Learner:
         # math overflow error happens sometimes
         try:
             #progResult = self.runProgram(obs,registers)
-            progResult, registers = self.runProgram2(obs, registers, self.modes,
-                    self.ops, self.dests, self.srcs)
-            regDict[self.id] = registers
+            progResult, regDict[self.id] = runProgram2(obs, registers, self.modes,
+                    self.ops, self.dests, self.srcs, Learner.registerSize)
             return 1 / (1 + math.exp(-progResult))
         except:
             return 0
@@ -173,58 +172,7 @@ class Learner:
 
         return registers[0]
 
-    """
-    Optimized version of runProgram.
-    """
-    @njit
-    def runProgram2(obs, registers, modes, ops, dsts, srcs):
-        for i in range(len(modes)):
-            # first get source
-            if modes[i] == False:
-                src = registers[srcs[i]%registerSize]
-            else:
-                src = obs[srcs[i]%len(obs)]
 
-            # do operation
-            op = ops[i]
-            x = registers[dsts[i]]
-            y = src
-            if op == 0:
-                registers[dsts[i]] = x+y
-
-            elif op == 1:
-                registers[dsts[i]] = x-y
-
-            elif op == 2:
-                registers[dsts[i]] = x*y
-
-            elif op == 3:
-                if y != 0:
-                    registers[dsts[i]] = x/y
-
-            elif op == 4:
-                registers[dsts[i]] = np.cos(y)
-
-            elif op == 5:
-                registers[dsts[i]] = np.log(y)
-
-            elif op == 6:
-                registers[dsts[i]] = np.exp(y)
-
-            elif op == 7:
-                if x < y:
-                    registers[dsts[i]] = x*(-1)
-                else:
-                    registers[dsts[i]] = x
-
-            if np.isnan(registers[dsts[i]]):
-                registers[dsts[i]] = 0
-            elif registers[dsts[i]] == np.inf:
-                registers[dsts[i]] = np.finfo(np.float64).max
-            elif registers[dsts[i]] == np.NINF:
-                registers[dsts[i]] = np.finfo(np.float64).min
-
-        return registers[0], registers
 
 
     """
@@ -287,3 +235,48 @@ class Learner:
             act.act.learnerRefCount -= 1
 
         return not act.equals(action)
+
+"""
+Optimized version of runProgram.
+"""
+@njit
+def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
+    for i in range(len(modes)):
+        # first get source
+        if modes[i] == False:
+            src = registers[srcs[i]%regSize]
+        else:
+            src = obs[srcs[i]%len(obs)]
+
+        # do operation
+        op = ops[i]
+        x = registers[dsts[i]]
+        y = src
+        if op == 0:
+            registers[dsts[i]] = x+y
+        elif op == 1:
+            registers[dsts[i]] = x-y
+        elif op == 2:
+            registers[dsts[i]] = x*y
+        elif op == 3:
+            if y != 0:
+                registers[dsts[i]] = x/y
+        elif op == 4:
+            registers[dsts[i]] = np.cos(y)
+        elif op == 5:
+            if y > 0:
+                registers[dsts[i]] = np.log(y)
+        elif op == 6:
+            registers[dsts[i]] = np.exp(y)
+        elif op == 7:
+            if x < y:
+                registers[dsts[i]] = x*(-1)
+
+        if np.isnan(registers[dsts[i]]):
+            registers[dsts[i]] = 0
+        elif registers[dsts[i]] == np.inf:
+            registers[dsts[i]] = np.finfo(np.float64).max
+        elif registers[dsts[i]] == np.NINF:
+            registers[dsts[i]] = np.finfo(np.float64).min
+
+    return registers[0], registers
