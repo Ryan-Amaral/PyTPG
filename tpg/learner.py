@@ -3,6 +3,8 @@ from __future__ import division
 import random
 import math
 from bitarray import bitarray
+import numpy as np
+from numba import njit # for optimizing program running
 
 from tpg.instruction import Instruction
 import tpg.action
@@ -41,21 +43,38 @@ class Learner:
             # these copied either way
             self.action = tpg.action.Action(learner.action.act)
             self.program = [Instruction(inst=i) for i in learner.program]
-            return
+        else:
+            # or make a brand new one
+            self.id = Learner.learnerIdCounter
+            Learner.learnerIdCounter += 1
+            self.birthGen = birthGen
+            self.action = tpg.action.Action(action)
+            self.teamRefCount = 0
+            self.program = [] # program is list of instructions
 
-        # or make a brand new one
-        self.id = Learner.learnerIdCounter
-        Learner.learnerIdCounter += 1
-        self.birthGen = birthGen
-        self.action = tpg.action.Action(action)
-        self.teamRefCount = 0
-        self.program = [] # program is list of instructions
+            # amount of instruction in program
+            progSize = self.rand.randint(1, maxProgSize)
+            for i in range(progSize):
+                ins = Instruction(randSeed=randSeed)
+                self.program.append(ins)
 
-        # amount of instruction in program
-        progSize = self.rand.randint(1, maxProgSize)
-        for i in range(progSize):
-            ins = Instruction(randSeed=randSeed)
-            self.program.append(ins)
+        self.extractProgramData(self.program) # get data in form for optimized running
+
+    def extractProgramData(self, program):
+        progData = np.array(
+            [[
+                Instruction.getIntVal(inst.getBitArraySeg(Instruction.slcMode)),
+                Instruction.getIntVal(inst.getBitArraySeg(Instruction.slcOp)),
+                Instruction.getIntVal(inst.getBitArraySeg(Instruction.slcDest)),
+                Instruction.getIntVal(inst.getBitArraySeg(Instruction.slcSrc))
+            ]
+            for inst in program])
+
+        self.modes = np.array(progData[:,0], dtype = bool)
+        self.ops = np.array(progData[:,1], dtype = np.int8)
+        self.dests = np.array(progData[:,2], dtype = np.int8)
+        self.srcs = np.array(progData[:,3], dtype = np.int32)
+
 
     """
     Gets the bid from this learner based on the observation, bid being the
@@ -74,15 +93,19 @@ class Learner:
         # choose register appropriately
         registers = None
         if regDict is None:
-            registers = [0]*Learner.registerSize
+            #registers = [0]*Learner.registerSize
+            registers = np.zeros(Learner.registerSize)
         else:
             if self.id not in regDict:
-                regDict[self.id] = [0]*Learner.registerSize
+                regDict[self.id] = np.zeros(Learner.registerSize)
             registers = regDict[self.id]
 
         # math overflow error happens sometimes
         try:
-            progResult = self.runProgram(obs,registers)
+            #progResult = self.runProgram(obs,registers)
+            progResult, registers = self.runProgram2(obs, registers, self.modes,
+                    self.ops, self.dests, self.srcs)
+            regDict[self.id] = registers
             return 1 / (1 + math.exp(-progResult))
         except:
             return 0
@@ -149,6 +172,60 @@ class Learner:
                 registers[destReg] = 0
 
         return registers[0]
+
+    """
+    Optimized version of runProgram.
+    """
+    @njit
+    def runProgram2(obs, registers, modes, ops, dsts, srcs):
+        for i in range(len(modes)):
+            # first get source
+            if modes[i] == False:
+                src = registers[srcs[i]%registerSize]
+            else:
+                src = obs[srcs[i]%len(obs)]
+
+            # do operation
+            op = ops[i]
+            x = registers[dsts[i]]
+            y = src
+            if op == 0:
+                registers[dsts[i]] = x+y
+
+            elif op == 1:
+                registers[dsts[i]] = x-y
+
+            elif op == 2:
+                registers[dsts[i]] = x*y
+
+            elif op == 3:
+                if y != 0:
+                    registers[dsts[i]] = x/y
+
+            elif op == 4:
+                registers[dsts[i]] = np.cos(y)
+
+            elif op == 5:
+                registers[dsts[i]] = np.log(y)
+
+            elif op == 6:
+                registers[dsts[i]] = np.exp(y)
+
+            elif op == 7:
+                if x < y:
+                    registers[dsts[i]] = x*(-1)
+                else:
+                    registers[dsts[i]] = x
+
+            if np.isnan(registers[dsts[i]]):
+                registers[dsts[i]] = 0
+            elif registers[dsts[i]] == np.inf:
+                registers[dsts[i]] = np.finfo(np.float64).max
+            elif registers[dsts[i]] == np.NINF:
+                registers[dsts[i]] = np.finfo(np.float64).min
+
+        return registers[0], registers
+
 
     """
     Mutates this learners program.
