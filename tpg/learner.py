@@ -215,6 +215,8 @@ class Learner:
             self.program[idx2] = tmp
             changed = True
 
+        self.extractProgramData(self.program) # get data in form for optimized running
+
         return changed
 
     """
