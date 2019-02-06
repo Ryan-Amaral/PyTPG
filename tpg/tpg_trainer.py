@@ -326,7 +326,7 @@ class TpgTrainer:
             ((uid, outcomes)) UID of the team, followed by the outcome dict to
             apply.
     Returns:
-        (Team[]) All of the root teams, updated with new outcomes.
+        (Team[]) All root teams, with the newly updated outcomes.
     """
     def applyScores(self, scores):
         for score in scores:
