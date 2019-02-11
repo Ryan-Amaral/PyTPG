@@ -45,12 +45,12 @@ class TpgAgent:
     Returns:
         (Int or Float[]) The action to perform.
     """
-    def act(self, obs, valActs=None, defAct=0, mem=True):
+    def act(self, obs, valActs=None, defAct=0, mem=True, vizd=False):
         regDict = None
         if mem:
             regDict = self.regDict
 
-        if self.screenIndexed is None:
+        if self.screenIndexed is None and vizd == True:
             self.screenIndexed = [0]*len(obs)
 
         vis = set() # teams visited
