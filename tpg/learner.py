@@ -105,9 +105,10 @@ class Learner:
             #progResult = self.runProgram(obs,registers)
             progResult, regDict[self.id], tmpSi = runProgram2(obs, registers, self.modes,
                     self.ops, self.dests, self.srcs, Learner.registerSize)
-            for i in range(len(tmpSi)):
-                if tmpSi[i] == 1:
-                    si[i] = 1
+            if si is not None:
+                for i in range(len(tmpSi)):
+                    if tmpSi[i] == 1:
+                        si[i] = 1
             return 1 / (1 + math.exp(-progResult))
         except:
             return 0
