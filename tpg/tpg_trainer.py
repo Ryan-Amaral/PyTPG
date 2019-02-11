@@ -499,16 +499,19 @@ class TpgTrainer:
 
         # combine scores accross all tasks
         elif fitMthd == 'combine':
+            teamTaskMap = {}
             for team in teamScoresMap.keys():
-                curFit = 0 # fitness accross tasks for individual
-                teamTotalScore = 0
+                teamFit = 0 # fitness accross tasks for individual
+                teamTaskMap[team] = {}
                 for task in tasks:
-                    curFit += 1/(1+(eliteTaskTeams[task].outcomes[task] -
+                    taskFit = 1/(1+(eliteTaskTeams[task].outcomes[task] -
                                     team.outcomes[task]))
-                    teamTotalScore += team.outcomes[task] # update how to report scores with multiple tasks
+                    teamFit += taskFit
+                    teamTaskMap[team][task] = taskFit
 
-                scores.append((team, curFit))
-                statScores.append(teamTotalScore)
+                scores.append((team, teamFit))
+                statScores.append(teamFit)
+
 
         # just use score of first task found
         elif fitMthd == 'single': # just take first outcome
@@ -517,6 +520,11 @@ class TpgTrainer:
                 statScores.append(teamScoresMap[team][0])
 
         scores.sort(key=itemgetter(1), reverse=True) # scores descending
+
+        # store tasks in descending order of top team for task selection
+        if fitMthd == 'combine':
+            self.topTeamTasks = teamTaskMap[scores[0][0]].items() # contains dictionary of tasks and scores
+            self.topTeamTasks.sort(key=itemgetter(1), reverse=True)
 
         self.saveScores(statScores) # save scores for reporting
 
