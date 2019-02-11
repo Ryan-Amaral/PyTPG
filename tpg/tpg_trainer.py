@@ -523,9 +523,9 @@ class TpgTrainer:
 
         # store tasks in descending order of top team for task selection
         if fitMthd == 'combine':
-            self.topTeamTasks = teamTaskMap[scores[0][0]].items() # contains dictionary of tasks and scores
-            self.topTeamTasks.sort(key=itemgetter(1), reverse=True)
-            self.topTeamTasks = [tsk for (tsk,scr) in self.topTeamTasks]
+            self.topTeamTasks = [
+                    tsk for (tsk,scr) in sorted(teamTaskMap[scores[0][0]].items(),
+                    key=itemgetter(1), reverse=True)]
 
         self.saveScores(statScores) # save scores for reporting
 
