@@ -103,12 +103,15 @@ class Learner:
         # math overflow error happens sometimes
         try:
             #progResult = self.runProgram(obs,registers)
-            progResult, regDict[self.id], tmpSi = runProgram2(obs, registers, self.modes,
-                    self.ops, self.dests, self.srcs, Learner.registerSize)
-            if si is not None:
-                for i in range(len(tmpSi)):
-                    if tmpSi[i] == 1:
-                        si[i] = 1
+            if si is None:
+                progResult, regDict[self.id] = runProgram2(obs, registers, self.modes,
+                        self.ops, self.dests, self.srcs, Learner.registerSize)
+            else:
+                progResult, regDict[self.id] = runProgram2(obs, registers, self.modes,
+                        self.ops, self.dests, self.srcs, Learner.registerSize)
+                #for i in range(len(tmpSi)):
+                #        if tmpSi[i] == 1:
+                #            si[i] = 1
             return 1 / (1 + math.exp(-progResult))
         except:
             return 0
@@ -248,7 +251,54 @@ Optimized version of runProgram.
 """
 @njit
 def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
-    si = [0]*len(obs)
+
+    for i in range(len(modes)):
+        # first get source
+        if modes[i] == False:
+            src = registers[srcs[i]%regSize]
+        else:
+            idx = srcs[i]%len(obs)
+            src = obs[idx]
+
+        # do operation
+        op = ops[i]
+        x = registers[dsts[i]]
+        y = src
+        if op == 0:
+            registers[dsts[i]] = x+y
+        elif op == 1:
+            registers[dsts[i]] = x-y
+        elif op == 2:
+            registers[dsts[i]] = x*y
+        elif op == 3:
+            if y != 0:
+                registers[dsts[i]] = x/y
+        elif op == 4:
+            registers[dsts[i]] = math.cos(y)
+        elif op == 5:
+            if y > 0:
+                registers[dsts[i]] = math.log(y)
+        elif op == 6:
+            registers[dsts[i]] = math.exp(y)
+        elif op == 7:
+            if x < y:
+                registers[dsts[i]] = x*(-1)
+
+        if np.isnan(registers[dsts[i]]):
+            registers[dsts[i]] = 0
+        elif registers[dsts[i]] == np.inf:
+            registers[dsts[i]] = np.finfo(np.float64).max
+        elif registers[dsts[i]] == np.NINF:
+            registers[dsts[i]] = np.finfo(np.float64).min
+
+    return registers[0], registers
+
+"""
+Optimized version of runProgram.
+"""
+@njit
+def runProgram3(obs, registers, modes, ops, dsts, srcs, regSize, si):
+
     for i in range(len(modes)):
         # first get source
         if modes[i] == False:
