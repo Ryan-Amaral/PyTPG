@@ -249,14 +249,14 @@ Optimized version of runProgram.
 @njit
 def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
     si = [0]*len(obs)
-
     for i in range(len(modes)):
         # first get source
         if modes[i] == False:
             src = registers[srcs[i]%regSize]
         else:
-            src = obs[srcs[i]%len(obs)]
-            si[srcs[i]%len(obs)] = 1
+            idx = srcs[i]%len(obs)
+            src = obs[idx]
+            si[idx] = 1
 
         # do operation
         op = ops[i]
