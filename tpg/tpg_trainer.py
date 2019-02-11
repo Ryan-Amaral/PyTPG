@@ -525,6 +525,7 @@ class TpgTrainer:
         if fitMthd == 'combine':
             self.topTeamTasks = teamTaskMap[scores[0][0]].items() # contains dictionary of tasks and scores
             self.topTeamTasks.sort(key=itemgetter(1), reverse=True)
+            self.topTeamTasks = [tsk for (tsk,scr) in self.topTeamTasks]
 
         self.saveScores(statScores) # save scores for reporting
 
