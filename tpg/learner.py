@@ -271,12 +271,12 @@ def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
             if y != 0:
                 registers[dsts[i]] = x/y
         elif op == 4:
-            registers[dsts[i]] = np.cos(y)
+            registers[dsts[i]] = math.cos(y)
         elif op == 5:
             if y > 0:
-                registers[dsts[i]] = np.log(y)
+                registers[dsts[i]] = math.log(y)
         elif op == 6:
-            registers[dsts[i]] = np.exp(y)
+            registers[dsts[i]] = math.exp(y)
         elif op == 7:
             if x < y:
                 registers[dsts[i]] = x*(-1)
