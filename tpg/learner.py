@@ -102,18 +102,15 @@ class Learner:
 
         # math overflow error happens sometimes
         try:
-            #progResult = self.runProgram(obs,registers)
             if si is None:
                 progResult, regDict[self.id] = runProgram2(obs, registers, self.modes,
                         self.ops, self.dests, self.srcs, Learner.registerSize)
             else:
-                progResult, regDict[self.id] = runProgram2(obs, registers, self.modes,
-                        self.ops, self.dests, self.srcs, Learner.registerSize)
-                #for i in range(len(tmpSi)):
-                #        if tmpSi[i] == 1:
-                #            si[i] = 1
+                progResult = self.runProgram(obs, registers, si)
             return 1 / (1 + math.exp(-progResult))
         except:
+            #print('An error!!!!!!!1')
+            #print(1/0)
             return 0
 
     """
@@ -169,14 +166,16 @@ class Learner:
                 if registers[destReg] < sourceVal:
                     registers[destReg] *= -1
             else:
-                print(operation.to01())
-                print("Invalid operation in learner.run")
+                #print(operation.to01())
+                #print("Invalid operation in learner.run")
+                pass
 
-            # default register to 0 if invalid value
-            if (math.isnan(registers[destReg]) or
-                    registers[destReg] == float('inf') or
-                    registers[destReg] == float('-inf')):
+            if math.isnan(registers[destReg]):
                 registers[destReg] = 0
+            elif registers[destReg] == np.inf:
+                registers[destReg] = np.finfo(np.float64).max
+            elif registers[destReg] == np.NINF:
+                registers[destReg] = np.finfo(np.float64).min
 
         return registers[0]
 
@@ -284,7 +283,7 @@ def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
             if x < y:
                 registers[dsts[i]] = x*(-1)
 
-        if np.isnan(registers[dsts[i]]):
+        if math.isnan(registers[dsts[i]]):
             registers[dsts[i]] = 0
         elif registers[dsts[i]] == np.inf:
             registers[dsts[i]] = np.finfo(np.float64).max
@@ -292,51 +291,3 @@ def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
             registers[dsts[i]] = np.finfo(np.float64).min
 
     return registers[0], registers
-
-"""
-Optimized version of runProgram.
-"""
-@njit
-def runProgram3(obs, registers, modes, ops, dsts, srcs, regSize, si):
-
-    for i in range(len(modes)):
-        # first get source
-        if modes[i] == False:
-            src = registers[srcs[i]%regSize]
-        else:
-            idx = srcs[i]%len(obs)
-            src = obs[idx]
-            si[idx] = 1
-
-        # do operation
-        op = ops[i]
-        x = registers[dsts[i]]
-        y = src
-        if op == 0:
-            registers[dsts[i]] = x+y
-        elif op == 1:
-            registers[dsts[i]] = x-y
-        elif op == 2:
-            registers[dsts[i]] = x*y
-        elif op == 3:
-            if y != 0:
-                registers[dsts[i]] = x/y
-        elif op == 4:
-            registers[dsts[i]] = math.cos(y)
-        elif op == 5:
-            if y > 0:
-                registers[dsts[i]] = math.log(y)
-        elif op == 6:
-            registers[dsts[i]] = math.exp(y)
-        elif op == 7:
-            if x < y:
-                registers[dsts[i]] = x*(-1)
-
-        if np.isnan(registers[dsts[i]]):
-            registers[dsts[i]] = 0
-        elif registers[dsts[i]] == np.inf:
-            registers[dsts[i]] = np.finfo(np.float64).max
-        elif registers[dsts[i]] == np.NINF:
-            registers[dsts[i]] = np.finfo(np.float64).min
-
-    return registers[0], registers, si
