@@ -256,8 +256,7 @@ def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
         if modes[i] == False:
             src = registers[srcs[i]%regSize]
         else:
-            idx = srcs[i]%len(obs)
-            src = obs[idx]
+            src = obs[srcs[i]%len(obs)]
 
         # do operation
         op = ops[i]
