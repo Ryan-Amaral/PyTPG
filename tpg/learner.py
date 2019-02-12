@@ -89,7 +89,7 @@ class Learner:
     Returns:
         (Float) The bid value.
     """
-    def bid(self, obs, regDict=None):
+    def bid(self, obs, regDict=None, si=None):
         # choose register appropriately
         registers = None
         if regDict is None:
@@ -102,11 +102,15 @@ class Learner:
 
         # math overflow error happens sometimes
         try:
-            #progResult = self.runProgram(obs,registers)
-            progResult, regDict[self.id] = runProgram2(obs, registers, self.modes,
-                    self.ops, self.dests, self.srcs, Learner.registerSize)
+            if si is None:
+                progResult, regDict[self.id] = runProgram2(obs, registers, self.modes,
+                        self.ops, self.dests, self.srcs, Learner.registerSize)
+            else:
+                progResult = self.runProgram(obs, registers, si)
             return 1 / (1 + math.exp(-progResult))
         except:
+            #print('An error!!!!!!!1')
+            #print(1/0)
             return 0
 
     """
@@ -119,7 +123,7 @@ class Learner:
     Returns:
         (Float) What the destination register's value is at the end.
     """
-    def runProgram(self, obs, registers):
+    def runProgram(self, obs, registers, si=None):
         # iterate over instructions in the program
         for inst in self.program:
             sourceVal = 0
@@ -134,6 +138,7 @@ class Learner:
                 # instruction not mode0, source value from obs
                 sourceVal = obs[Instruction.getIntVal(
                     inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)]
+                si[Instruction.getIntVal(inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)] = 1
 
             # the operation to do on the register
             operation = inst.getBitArraySeg(Instruction.slcOp)
@@ -161,14 +166,16 @@ class Learner:
                 if registers[destReg] < sourceVal:
                     registers[destReg] *= -1
             else:
-                print(operation.to01())
-                print("Invalid operation in learner.run")
+                #print(operation.to01())
+                #print("Invalid operation in learner.run")
+                pass
 
-            # default register to 0 if invalid value
-            if (math.isnan(registers[destReg]) or
-                    registers[destReg] == float('inf') or
-                    registers[destReg] == float('-inf')):
+            if math.isnan(registers[destReg]):
                 registers[destReg] = 0
+            elif registers[destReg] == np.inf:
+                registers[destReg] = np.finfo(np.float64).max
+            elif registers[destReg] == np.NINF:
+                registers[destReg] = np.finfo(np.float64).min
 
         return registers[0]
 
@@ -243,6 +250,7 @@ Optimized version of runProgram.
 """
 @njit
 def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
+
     for i in range(len(modes)):
         # first get source
         if modes[i] == False:
@@ -274,7 +282,7 @@ def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
             if x < y:
                 registers[dsts[i]] = x*(-1)
 
-        if np.isnan(registers[dsts[i]]):
+        if math.isnan(registers[dsts[i]]):
             registers[dsts[i]] = 0
         elif registers[dsts[i]] == np.inf:
             registers[dsts[i]] = np.finfo(np.float64).max

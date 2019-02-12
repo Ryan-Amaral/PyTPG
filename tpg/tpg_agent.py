@@ -23,6 +23,7 @@ class TpgAgent:
         self.teamVis = {} # times each team is visited, env not yet known
         self.envActions = {} # number of each action made in envs
         self.curEnvActions = {} # number of each action made in current env
+        self.screenIndexed = None
 
     """
     Chooses an action to perform from the team based on the input space.
@@ -44,13 +45,16 @@ class TpgAgent:
     Returns:
         (Int or Float[]) The action to perform.
     """
-    def act(self, obs, valActs=None, defAct=0, mem=True):
+    def act(self, obs, valActs=None, defAct=0, mem=True, vizd=False):
         regDict = None
         if mem:
             regDict = self.regDict
 
+        if self.screenIndexed is None and vizd == True:
+            self.screenIndexed = [0]*len(obs)
+
         vis = set() # teams visited
-        action = self.team.getAction(obs, regDict=regDict, vis=vis)
+        action = self.team.getAction(obs, regDict=regDict, vis=vis, si=self.screenIndexed)
 
         for team in vis:
             if team not in self.teamVis:
