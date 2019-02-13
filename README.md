@@ -5,6 +5,8 @@ A python implementation of Tangled Program Graphs.
 
 ### Requirements
 - bitarray: [PyPI](https://pypi.org/project/bitarray/), [Anaconda](https://anaconda.org/anaconda/bitarray).
+- numpy
+- numba
 
 ### Installing PyTPG
 - clone this repo
@@ -55,11 +57,16 @@ trainer.evolve()
 ### Other ways to use
 The above were just some of the important functions, and left out some necessary code for the environment, and a few other ways to use this API (some perhaps better). There are different ways to do things like withdrawing agents, rewarding agents, and evolving. And things become a bit tricky if you wish to work with multiprocessing, but we have some example workarounds to make it work. See [the examples page](./tpg_examples.ipynb) for details.
 
+## Some Projects PyTPG was Used in
+- https://github.com/Ryan-Amaral/general-game-playing-tpg
+- https://github.com/Ryan-Amaral/prosthetic-challenge-tpg
+- Send me a message or a pull request for your projects to be included.
+
 ## Aknowledgements
-- Dr. Malcolm Heywood: My supervisor on the summer I learned about TPG.
+- Dr. Malcolm Heywood: My undergrad research supervisor.
 - Robert Smith: Provided an initial Java implementation of TPG, whiched I based this version on.
 - [Richard Wardin](https://github.com/Shalmezad): Helped fix a few bugs.
 
-## Other implementations:
+## Other TPG implementations:
 - https://github.com/skellco/Tangled-Program-Graphs
 - https://github.com/LivinBreezy/TPG-J
