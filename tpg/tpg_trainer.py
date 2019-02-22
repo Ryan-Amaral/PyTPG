@@ -182,7 +182,7 @@ class TpgTrainer:
         self.populations[popName].curGen = 0
         self.populations[popName].tournamentsPlayed = 0
 
-        self.initPops(popName=None) # fill in the new population
+        self.initPops(popName=popName) # fill in the new population
 
         self.populations[popName].teamQueue = list(self.populations[popName].rootTeams)
         self.populations[popName].tasks = set() # set of tasks done per all individuals
