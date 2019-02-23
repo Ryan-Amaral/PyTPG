@@ -89,14 +89,14 @@ class TpgTrainer:
 
         # create initial populations if starting anew
         if singlePop == True:
-            self.createPopulation()
+            self.createNewPopulation()
 
     """
     Adds a new population to the trainer, for multi population training. popName
     must be unique among populations. If any other argument is None, the default
     value from the trainer will be taken.
     """
-    def createPopulation(self, popName=None, teamPopSize=None, rTeamPopSize=None,
+    def createNewPopulation(self, popName=None, teamPopSize=None, rTeamPopSize=None,
             gap=None, pLearnerDelete=None, pLearnerAdd=None, pMutateAction=None,
             pActionIsTeam=None, maxTeamSize=None, maxProgramSize=None,
             pProgramDelete=None, pProgramAdd=None, pProgramSwap=None,
@@ -104,75 +104,13 @@ class TpgTrainer:
 
         self.populations[popName] = lambda: None # create default population
 
-        if teamPopSize is not None: # use new val
-            self.populations[popName].teamPopSize = teamPopSize
-        else: # or take default value
-            self.populations[popName].teamPopSize = self.teamPopSize
-
-        if rTeamPopSize is not None: # use new val
-            self.populations[popName].rTeamPopSize = rTeamPopSize
-        else: # or take default value
-            self.populations[popName].rTeamPopSize = self.rTeamPopSize
-
-        if gap is not None: # use new val
-            self.populations[popName].gap = gap
-        else: # or take default value
-            self.populations[popName].gap = self.gap
-
-        if pLearnerDelete is not None: # use new val
-            self.populations[popName].pLearnerDelete = pLearnerDelete
-        else: # or take default value
-            self.populations[popName].pLearnerDelete = self.pLearnerDelete
-
-        if pLearnerAdd is not None: # use new val
-            self.populations[popName].pLearnerAdd = pLearnerAdd
-        else: # or take default value
-            self.populations[popName].pLearnerAdd = self.pLearnerAdd
-
-        if pMutateAction is not None: # use new val
-            self.populations[popName].pMutateAction = pMutateAction
-        else: # or take default value
-            self.populations[popName].pMutateAction = self.pMutateAction
-
-        if pActionIsTeam is not None: # use new val
-            self.populations[popName].pActionIsTeam = pActionIsTeam
-        else: # or take default value
-            self.populations[popName].pActionIsTeam = self.pActionIsTeam
-
-        if maxTeamSize is not None: # use new val
-            self.populations[popName].maxTeamSize = maxTeamSize
-        else: # or take default value
-            self.populations[popName].maxTeamSize = self.maxTeamSize
-
-        if maxProgramSize is not None: # use new val
-            self.populations[popName].maxProgramSize = maxProgramSize
-        else: # or take default value
-            self.populations[popName].maxProgramSize = self.maxProgramSize
-
-        if pProgramDelete is not None: # use new val
-            self.populations[popName].pProgramDelete = pProgramDelete
-        else: # or take default value
-            self.populations[popName].pProgramDelete = self.pProgramDelete
-
-        if pProgramDelete is not None: # use new val
-            self.populations[popName].pProgramAdd = pProgramAdd
-        else: # or take default value
-            self.populations[popName].pProgramAdd = self.pProgramAdd
-
-        if pProgramSwap is not None: # use new val
-            self.populations[popName].pProgramSwap = pProgramSwap
-        else: # or take default value
-            self.populations[popName].pProgramSwap = self.pProgramSwap
-
-        if pProgramMutate is not None: # use new val
-            self.populations[popName].pProgramMutate = pProgramMutate
-        else: # or take default value
-            self.populations[popName].pProgramMutate = self.pProgramMutate
-
-        if tourneyGap is not None: # use new val
-            self.populations[popName].tourneyGap = tourneyGap
-        else: # or take default value
-            self.populations[popName].tourneyGap = self.tourneyGap
+        self.setPopulationAttributes(popName=popName, teamPopSize=teamPopSize,
+                rTeamPopSize=rTeamPopSize, gap=gap, pLearnerDelete=pLearnerDelete,
+                pLearnerAdd=pLearnerAdd, pMutateAction=pMutateAction,
+                pActionIsTeam=pActionIsTeam, maxTeamSize=maxTeamSize,
+                maxProgramSize=maxProgramSize, pProgramDelete=pProgramDelete,
+                pProgramAdd=pProgramAdd, pProgramSwap=pProgramSwap,
+                pProgramMutate=pProgramMutate, tourneyGap=tourneyGap)
 
         # create populations
         self.populations[popName].teams = []
@@ -193,6 +131,54 @@ class TpgTrainer:
         self.populations[popName].scoreStats = {}
 
         self.populations[popName].elites = [] # list of elites to save
+
+    """
+    Like createNewPopulation, but the population is initialized based on the two
+    populations passed in. popName 1 and 2 are the names of the populations to
+    merge together, popName is the name of the new population. delOld means
+    whether to delete the old populations.
+    """
+    def merge2Populations(self, popName1, popName2, popName, delOld=True,
+            popName=None, teamPopSize=None, rTeamPopSize=None,
+            gap=None, pLearnerDelete=None, pLearnerAdd=None, pMutateAction=None,
+            pActionIsTeam=None, maxTeamSize=None, maxProgramSize=None,
+            pProgramDelete=None, pProgramAdd=None, pProgramSwap=None,
+            pProgramMutate=None, tourneyGap=None):
+
+        self.populations[popName] = lambda: None # create default population
+
+        self.setPopulationAttributes(popName=popName, teamPopSize=teamPopSize,
+                rTeamPopSize=rTeamPopSize, gap=gap, pLearnerDelete=pLearnerDelete,
+                pLearnerAdd=pLearnerAdd, pMutateAction=pMutateAction,
+                pActionIsTeam=pActionIsTeam, maxTeamSize=maxTeamSize,
+                maxProgramSize=maxProgramSize, pProgramDelete=pProgramDelete,
+                pProgramAdd=pProgramAdd, pProgramSwap=pProgramSwap,
+                pProgramMutate=pProgramMutate, tourneyGap=tourneyGap)
+
+        # create populations
+        self.populations[popName].teams = (self.populations[popName1].teams +
+                                           self.populations[popName2].teams)
+        self.populations[popName].rootTeams = (self.populations[popName1].rootTeams +
+                                           self.populations[popName2].rootTeams)
+        self.populations[popName].learners = (self.populations[popName1].learners +
+                                           self.populations[popName2].learners)
+
+        self.populations[popName].curGen = 0
+        self.populations[popName].tournamentsPlayed = 0
+
+        self.populations[popName].teamQueue = list(self.populations[popName].rootTeams)
+        self.populations[popName].tasks = set() # set of tasks done per all individuals
+
+        for i in range(len(self.populations[popName].teamQueue)):
+            self.populations[popName].teamQueue[i].rootNum = i
+
+        self.populations[popName].scoreStats = {}
+
+        self.populations[popName].elites = [] # list of elites to save
+
+        if delOld:
+            del self.populations[popName1]
+            del self.populations[popName1]
 
     """
     Attempts to add a task to the set of tasks. Needs to be made thread safe on
@@ -501,6 +487,20 @@ class TpgTrainer:
         self.generateNewTeams(parents=rTeams, popName=popName)
         self.nextEpoch(tourney=tourneyAgents is not None, popName=popName)
 
+
+    """
+    Perform evolution with multiple criteria.
+    Args:
+        tasks: (list of lists of tasks: [[t1,t2],[t3,t4],[t2,t4]]) Evaluate all
+            individuals on each of these list of tasks.
+        weights: (float[]) Same length as tasks, should add up to 1. Determines
+            how much of each task list to take in selection.
+    """
+    def multiEvolve(self, tasks, weights, popName=None):
+        parents = self.multiSelect(tasks=tasks, weights=weights, popName=popName)
+        self.multiGenerateNewTeams(parents=parents, method='3waymerge2', popName=popName)
+        self.nextEpoch(popName=popName)
+
     """
     Selects the individuals to keep for next generation, deletes others. The
     amount deleted will be filled in through generating new teams.
@@ -627,20 +627,115 @@ class TpgTrainer:
                 rTeams.remove(team)
 
     """
+    Selects teams on multiple criteria, multiple sets of tasks. Each with a set
+    weight of importance.
+    """
+    def multiSelect(tasks, weights, popName=None):
+        gapSz = self.populations[popName].gap
+
+        delTeams = [] # list of teams to delete
+        numKeep = int(gapSz*len(rTeams)) # number of roots to keep
+
+        rTeams = list(self.populations[popName].rootTeams)
+
+        scores = [] # scores used for fitnesses
+
+        eliteTaskTeams = {} # save which team is elite for each task
+        worstTaskTeams = {} # save worsts
+
+        # find the elites and worsts for desired tasks
+        eliteTeams = [] # teams to keep for elitism
+        for eTask in tasks[0]: # change this to be all tasks in tasks or elitist tasks ( this only good for my current research)
+            bestScore = 0
+            bestTeam = None
+            worstScore = 0
+            worstTeam = None
+            for team in rTeams:
+                if eTask in team.outcomes:
+                    if bestTeam is None: # default first to best
+                        bestScore = team.outcomes[eTask]
+                        bestTeam = team
+                    elif team.outcomes[eTask] > bestScore:
+                            bestScore = team.outcomes[eTask]
+                            bestTeam = team
+
+                    if worstTeam is None: # default first to best
+                        worstScore = team.outcomes[eTask]
+                        worstTeam = team
+                    elif team.outcomes[eTask] < worstScore:
+                            worstScore = team.outcomes[eTask]
+                            worstTeam = team
+            eliteTaskTeams[eTask] = bestTeam # save elite team of this tasks
+            worstTaskTeams[eTask] = worstTeam # save elite team of this tasks
+            if bestTeam not in eliteTeams and eTask in elitistTasks:
+                eliteTeams.append(bestTeam) # this is best team for task
+
+        self.populations[popName].elites = eliteTeams
+
+        statScores = [] # list of scores used for saving stats
+
+        for tasklist in tasks:
+            scores.append([]) # stat scores for each task list
+            statScores.append([])
+            for team in rTeams:
+                score = 0
+                for task in tasklist:
+                    score += ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
+                              / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                scores[-1].append((team, score))
+                statScores[-1].append(score)
+
+        self.saveScores(statScores[0], popName=popName) # save scores for reporting
+
+        nscores = [sorted(scoresi, key=itemgetter(1), reverse=True) for scoresi in scores]
+
+        numKeeps = [int(wgt*numKeep) for wgt in weights]
+
+        # get just teams from sorted scores
+        newParents = []
+        for i, ascores in enumerate(nscores):
+            newParents.append([])
+            for score in ascores[:numKeeps[i]]:
+                newParents[i].append(score[0])
+
+        # put into single list for easy checking
+        keepTeams = [team for teams in newParents for team in teams]
+
+        for team in rTeams:
+            if team not in keepTeams and team not in eliteTeams:
+                team.erase()
+                self.populations[popName].teams.remove(team)
+                self.populations[popName].rootTeams.remove(team)
+
+        return newParents
+
+    """
     Generates new teams from existing teams (in the root population).
     Args:
-        parents:
-            (Team[]) Parents to use, leave as None to use whole root popultaion.
+        parents: list of teams regularly, or list of lists of teams:
+            [[ta,tb,...],[tc,td,...],...] based on method (like if '3waymerge2').
+        method: (string) Method of selecting parents.
+            3waymerge2: parents must have 3 lists, where for each selection of parents,
+            one is selected from parents[0] or parents[1] and the other is selected
+            from parents[0] or parents[2].
     """
-    def generateNewTeams(self, parents=None, popName=None):
+    def generateNewTeams(self, parents=None, method='reg', popName=None):
         if parents is None:
             parents = list(self.populations[popName].rootTeams) # parents are all original root teams
+
+        if method == '3waymerge2':
+            ppool1 = parents[0] + parents[1]
+            ppool2 = parents[0] + parents[2]
+        else:
+            ppool1 = parents
+            ppool2 = parents
+
         # add teams until maxed size
         while (len(self.populations[popName].teams) < self.populations[popName].teamPopSize or (self.populations[popName].rTeamPopSize > 0 and
                 self.populations[popName].getRootTeamsSize() < self.populations[popName].rTeamPopSize)):
             # choose 2 random teams as parents
-            par1 = self.rand.choice(parents)
-            par2 = self.rand.choice([par for par in parents if par is not par1])
+            par1 = self.rand.choice(ppool1)
+            par2 = self.rand.choice([par for par in ppool2 if par is not par1])
 
             # get learners
             par1Lrns = set(par1.learners)
@@ -895,3 +990,78 @@ class TpgTrainer:
     # https://stackoverflow.com/questions/4092528/how-to-clamp-an-integer-to-some-range
     def clip(self, val, minv, maxv):
         return max(minv, min(val, maxv))
+
+    def setPopulationAttributes(self, popName=None, teamPopSize=None, rTeamPopSize=None,
+            gap=None, pLearnerDelete=None, pLearnerAdd=None, pMutateAction=None,
+            pActionIsTeam=None, maxTeamSize=None, maxProgramSize=None,
+            pProgramDelete=None, pProgramAdd=None, pProgramSwap=None,
+            pProgramMutate=None, tourneyGap=None):
+        if teamPopSize is not None: # use new val
+            self.populations[popName].teamPopSize = teamPopSize
+        else: # or take default value
+            self.populations[popName].teamPopSize = self.teamPopSize
+
+        if rTeamPopSize is not None: # use new val
+            self.populations[popName].rTeamPopSize = rTeamPopSize
+        else: # or take default value
+            self.populations[popName].rTeamPopSize = self.rTeamPopSize
+
+        if gap is not None: # use new val
+            self.populations[popName].gap = gap
+        else: # or take default value
+            self.populations[popName].gap = self.gap
+
+        if pLearnerDelete is not None: # use new val
+            self.populations[popName].pLearnerDelete = pLearnerDelete
+        else: # or take default value
+            self.populations[popName].pLearnerDelete = self.pLearnerDelete
+
+        if pLearnerAdd is not None: # use new val
+            self.populations[popName].pLearnerAdd = pLearnerAdd
+        else: # or take default value
+            self.populations[popName].pLearnerAdd = self.pLearnerAdd
+
+        if pMutateAction is not None: # use new val
+            self.populations[popName].pMutateAction = pMutateAction
+        else: # or take default value
+            self.populations[popName].pMutateAction = self.pMutateAction
+
+        if pActionIsTeam is not None: # use new val
+            self.populations[popName].pActionIsTeam = pActionIsTeam
+        else: # or take default value
+            self.populations[popName].pActionIsTeam = self.pActionIsTeam
+
+        if maxTeamSize is not None: # use new val
+            self.populations[popName].maxTeamSize = maxTeamSize
+        else: # or take default value
+            self.populations[popName].maxTeamSize = self.maxTeamSize
+
+        if maxProgramSize is not None: # use new val
+            self.populations[popName].maxProgramSize = maxProgramSize
+        else: # or take default value
+            self.populations[popName].maxProgramSize = self.maxProgramSize
+
+        if pProgramDelete is not None: # use new val
+            self.populations[popName].pProgramDelete = pProgramDelete
+        else: # or take default value
+            self.populations[popName].pProgramDelete = self.pProgramDelete
+
+        if pProgramDelete is not None: # use new val
+            self.populations[popName].pProgramAdd = pProgramAdd
+        else: # or take default value
+            self.populations[popName].pProgramAdd = self.pProgramAdd
+
+        if pProgramSwap is not None: # use new val
+            self.populations[popName].pProgramSwap = pProgramSwap
+        else: # or take default value
+            self.populations[popName].pProgramSwap = self.pProgramSwap
+
+        if pProgramMutate is not None: # use new val
+            self.populations[popName].pProgramMutate = pProgramMutate
+        else: # or take default value
+            self.populations[popName].pProgramMutate = self.pProgramMutate
+
+        if tourneyGap is not None: # use new val
+            self.populations[popName].tourneyGap = tourneyGap
+        else: # or take default value
+            self.populations[popName].tourneyGap = self.tourneyGap
