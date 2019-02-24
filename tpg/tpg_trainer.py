@@ -139,11 +139,11 @@ class TpgTrainer:
     whether to delete the old populations.
     """
     def merge2Populations(self, popName1, popName2, popName, delOld=True,
-            popName=None, teamPopSize=None, rTeamPopSize=None,
-            gap=None, pLearnerDelete=None, pLearnerAdd=None, pMutateAction=None,
-            pActionIsTeam=None, maxTeamSize=None, maxProgramSize=None,
-            pProgramDelete=None, pProgramAdd=None, pProgramSwap=None,
-            pProgramMutate=None, tourneyGap=None):
+            teamPopSize=None, rTeamPopSize=None, gap=None, pLearnerDelete=None,
+            pLearnerAdd=None, pMutateAction=None, pActionIsTeam=None,
+            maxTeamSize=None, maxProgramSize=None, pProgramDelete=None,
+            pProgramAdd=None, pProgramSwap=None, pProgramMutate=None,
+            tourneyGap=None):
 
         self.populations[popName] = lambda: None # create default population
 
@@ -178,7 +178,7 @@ class TpgTrainer:
 
         if delOld:
             del self.populations[popName1]
-            del self.populations[popName1]
+            del self.populations[popName2]
 
     """
     Attempts to add a task to the set of tasks. Needs to be made thread safe on
@@ -496,9 +496,10 @@ class TpgTrainer:
         weights: (float[]) Same length as tasks, should add up to 1. Determines
             how much of each task list to take in selection.
     """
-    def multiEvolve(self, tasks, weights, popName=None):
-        parents = self.multiSelect(tasks=tasks, weights=weights, popName=popName)
-        self.multiGenerateNewTeams(parents=parents, method='3waymerge2', popName=popName)
+    def multiEvolve(self, tasks, weights, elitistTasks=[], popName=None):
+        parents = self.multiSelect(tasks=tasks, weights=weights,
+                    elitistTasks=elitistTasks, popName=popName)
+        self.generateNewTeams(parents=parents, method='3waymerge2', popName=popName)
         self.nextEpoch(popName=popName)
 
     """
@@ -630,13 +631,14 @@ class TpgTrainer:
     Selects teams on multiple criteria, multiple sets of tasks. Each with a set
     weight of importance.
     """
-    def multiSelect(tasks, weights, popName=None):
+    def multiSelect(self, tasks, weights, elitistTasks=[], popName=None):
+
+        rTeams = list(self.populations[popName].rootTeams)
+
         gapSz = self.populations[popName].gap
 
         delTeams = [] # list of teams to delete
         numKeep = int(gapSz*len(rTeams)) # number of roots to keep
-
-        rTeams = list(self.populations[popName].rootTeams)
 
         scores = [] # scores used for fitnesses
 
