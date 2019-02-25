@@ -11,7 +11,6 @@ from tpg.tpg_agent import TpgAgent
 The main class to do training on a population of Teams.
 Created By: Ryan Amaral.
 Created On: June 29, 2018 13:44.
-Created Because: I was tired of Java.
 """
 class TpgTrainer:
 
