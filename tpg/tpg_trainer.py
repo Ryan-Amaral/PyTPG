@@ -277,22 +277,25 @@ class TpgTrainer:
     """
     def getBestAgents(self, tasks=None, trainer=None, popName=None):
         return [TpgAgent(team, trainer=trainer, popName=popName)
-                for team in getBestTeams(tasks=tasks, popName=popName)]
+                for team in self.getBestTeams(tasks=tasks, popName=popName)]
 
     def getBestTeams(self, tasks=None, popName=None):
         mins = {}
         maxs = {}
         for task in tasks:
-            minmax = getMinMaxScore(task=task, popName=popName)
+            minmax = self.getMinMaxScore(task=task, popName=popName)
             mins[task] = minmax[0]
             maxs[task] = minmax[2]
 
         scores = []
-        for rt in self.populations[popName]:
+        for rt in self.populations[popName].rootTeams:
             score = 0
             for task in tasks:
-                score += ((rt.outcomes.get(task, mins[task]) - mins[task]) /
-                          (maxs[task] - mins[task]))
+                try: # if everyone scores the same, may give an error
+                    score += ((rt.outcomes.get(task, mins[task]) - mins[task]) /
+                              (maxs[task] - mins[task]))
+                except:
+                    pass
             scores.append((rt, score))
 
         scores.sort(key=itemgetter(1), reverse=True)
