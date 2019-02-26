@@ -15,9 +15,10 @@ class TpgAgent:
         team: (Team)
         trainer: (TpgTrainer) Only pass in if training.
     """
-    def __init__(self, team, trainer=None):
+    def __init__(self, team, trainer=None, popName=None):
         self.team = team
         self.trainer = trainer
+        self.popName = popName
         self.regDict = {}
         self.teamEnvVis = {} # times that team is visited in env
         self.teamVis = {} # times each team is visited, env not yet known
@@ -85,12 +86,14 @@ class TpgAgent:
         task  :
             (Str) The task the reward is for. Leave as none for default value.
     """
-    def reward(self, reward, task=None):
+    def reward(self, reward, task=None, popName=None):
         if task is None:
             task = TpgAgent.defTaskName
         self.team.outcomes[task] = reward # track reward for task on team
         if self.trainer is not None:
-            self.trainer.addTask(task)
+            if popName is None: # change popname only if supplied
+                popName = self.popName
+            self.trainer.addTask(task, popName=popName)
 
         ###
         # all diagnostic stuff bellow

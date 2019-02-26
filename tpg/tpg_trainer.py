@@ -184,7 +184,7 @@ class TpgTrainer:
     client side if applicable.
     """
     def addTask(self, task, popName=None):
-        self.populations[popName].tasks.add(task)
+        self.populations[popName].tasks.add(task, popName=popName)
 
     """
     Clears the outcomes of all root teams.
@@ -239,7 +239,7 @@ class TpgTrainer:
 
         bestTeams = sorted(teamPoints.items(), key=itemgetter(1), reverse=True)[:amount]
 
-        return [TpgAgent(bt[0]) for bt in bestTeams]
+        return [TpgAgent(bt[0], popName=popName) for bt in bestTeams]
 
 
     """
@@ -263,7 +263,7 @@ class TpgTrainer:
         taskPosMatrix = {}
         # fill position matrix
         for task in tasks:
-            taskPosMatrix[task] = sorted([TpgAgent(rt) for rt in self.populations[popName].rootTeams if task in rt.outcomes],
+            taskPosMatrix[task] = sorted([TpgAgent(rt, popName=popName) for rt in self.populations[popName].rootTeams if task in rt.outcomes],
                     key = lambda ag: ag.team.outcomes[task], reverse=True)[:topn]
 
         return taskPosMatrix
@@ -285,7 +285,8 @@ class TpgTrainer:
             trainer = self
             if noRef:
                 trainer = None
-            agent = TpgAgent(self.populations[popName].teamQueue.pop(), trainer=trainer)
+            agent = TpgAgent(self.populations[popName].teamQueue.pop(), trainer=trainer,
+                    popName=popName)
 
         return agent
 
@@ -310,15 +311,15 @@ class TpgTrainer:
 
         if skipTasks is None:
             agents = list(reversed(
-                [TpgAgent(team, trainer=trainer) for team in self.populations[popName].teamQueue
+                [TpgAgent(team, trainer=trainer, popName=popName) for team in self.populations[popName].teamQueue
                     if TpgAgent.defTaskName not in team.outcomes]))
         else:
             if len(skipTasks) == 0:
                 agents = list(reversed(
-                    [TpgAgent(team, trainer=trainer) for team in self.populations[popName].teamQueue]))
+                    [TpgAgent(team, trainer=trainer, popName=popName) for team in self.populations[popName].teamQueue]))
             else:
                 agents = list(reversed(
-                    [TpgAgent(team, trainer=trainer) for team in self.populations[popName].teamQueue
+                    [TpgAgent(team, trainer=trainer, popName=popName) for team in self.populations[popName].teamQueue
                         if any(task not in team.outcomes for task in skipTasks)]))
 
         self.populations[popName].teamQueue = []
@@ -353,11 +354,12 @@ class TpgTrainer:
                 candidates = [team for team in self.populations[popName].teamQueue if team not in teams]
                 if len(candidates) > 0:
                     teams.append(random.choice(candidates))
-                    agents.append(TpgAgent(teams[-1], trainer=self))
+                    agents.append(TpgAgent(teams[-1], trainer=self, popName=popName))
         else: # remove team from queue
             for i in range(tourneySize):
                 if len(self.populations[popName].teamQueue) > 0:
-                    agents.append(TpgAgent(self.populations[popName].teamQueue.pop(), trainer=self))
+                    agents.append(TpgAgent(self.populations[popName].teamQueue.pop(),
+                            trainer=self, popName=popName))
                 else:
                     break # no more agents to add
 
