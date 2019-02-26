@@ -6,6 +6,7 @@ from tpg.action import Action
 from tpg.learner import Learner
 from tpg.team import Team
 from tpg.tpg_agent import TpgAgent
+from bunch import Bunch
 
 """
 The main class to do training on a population of Teams.
@@ -101,7 +102,7 @@ class TpgTrainer:
             pProgramDelete=None, pProgramAdd=None, pProgramSwap=None,
             pProgramMutate=None, tourneyGap=None):
 
-        self.populations[popName] = lambda: None # create default population
+        self.populations[popName] = Bunch() # create default population
 
         self.setPopulationAttributes(popName=popName, teamPopSize=teamPopSize,
                 rTeamPopSize=rTeamPopSize, gap=gap, pLearnerDelete=pLearnerDelete,
@@ -144,7 +145,7 @@ class TpgTrainer:
             pProgramAdd=None, pProgramSwap=None, pProgramMutate=None,
             tourneyGap=None):
 
-        self.populations[popName] = lambda: None # create default population
+        self.populations[popName] = Bunch() # create default population
 
         self.setPopulationAttributes(popName=popName, teamPopSize=teamPopSize,
                 rTeamPopSize=rTeamPopSize, gap=gap, pLearnerDelete=pLearnerDelete,
