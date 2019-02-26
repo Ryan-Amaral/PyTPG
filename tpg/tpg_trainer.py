@@ -322,8 +322,6 @@ class TpgTrainer:
                     [TpgAgent(team, trainer=trainer, popName=popName) for team in self.populations[popName].rootTeams
                         if any(task not in team.outcomes for task in skipTasks)]))
 
-        self.populations[popName].teamQueue = []
-
         return agents
 
     """
