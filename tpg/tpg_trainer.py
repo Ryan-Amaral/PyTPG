@@ -241,6 +241,7 @@ class TpgTrainer:
 
         return [TpgAgent(bt[0], popName=popName) for bt in bestTeams]
 
+    
 
     """
     Gets the topn best agents at each task.
@@ -546,22 +547,32 @@ class TpgTrainer:
         scores = [] # scores used for fitnesses
 
         eliteTaskTeams = {} # save which team is elite for each task
+        worstTaskTeams = {} # save worsts
 
-        # find the elites for desired tasks
+        # find the elites and worsts for desired tasks
         eliteTeams = [] # teams to keep for elitism
-        for eTask in elitistTasks: # change this to be all tasks in tasks or elitist tasks ( this only good for my current research)
+        for eTask in tasks[0]: # change this to be all tasks in tasks or elitist tasks ( this only good for my current research)
             bestScore = 0
             bestTeam = None
+            worstScore = 0
+            worstTeam = None
             for team in rTeams:
                 if eTask in team.outcomes:
                     if bestTeam is None: # default first to best
                         bestScore = team.outcomes[eTask]
                         bestTeam = team
-                    else: # seach for best after first
-                        if team.outcomes[eTask] > bestScore:
+                    elif team.outcomes[eTask] > bestScore:
                             bestScore = team.outcomes[eTask]
                             bestTeam = team
+
+                    if worstTeam is None: # default first to best
+                        worstScore = team.outcomes[eTask]
+                        worstTeam = team
+                    elif team.outcomes[eTask] < worstScore:
+                            worstScore = team.outcomes[eTask]
+                            worstTeam = team
             eliteTaskTeams[eTask] = bestTeam # save elite team of this tasks
+            worstTaskTeams[eTask] = worstTeam # save elite team of this tasks
             if bestTeam not in eliteTeams and eTask in elitistTasks:
                 eliteTeams.append(bestTeam) # this is best team for task
 
@@ -584,18 +595,26 @@ class TpgTrainer:
 
         # combine scores accross all tasks
         elif fitMthd == 'combine':
-            teamTaskMap = {}
-            for team in teamScoresMap.keys():
-                teamFit = 0 # fitness accross tasks for individual
-                teamTaskMap[team] = {}
+            for team in rTeams:
+                score = 0
                 for task in tasks:
-                    taskFit = 1/(1+(eliteTaskTeams[task].outcomes[task] -
-                                    team.outcomes[task]))
-                    teamFit += taskFit
-                    teamTaskMap[team][task] = taskFit
+                    score += ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
+                              / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                scores.append((team, score))
+                statScores.append(score)
 
-                scores.append((team, teamFit))
-                statScores.append(teamFit)
+            #teamTaskMap = {}
+            #for team in teamScoresMap.keys():
+            #    teamFit = 0 # fitness accross tasks for individual
+            #    teamTaskMap[team] = {}
+            #    for task in tasks:
+            #        taskFit = 1/(1+(eliteTaskTeams[task].outcomes[task] -
+            #                        team.outcomes[task]))
+            #        teamFit += taskFit
+            #        teamTaskMap[team][task] = taskFit
+
+            #    scores.append((team, teamFit))
+            #    statScores.append(teamFit)
 
 
         # just use score of first task found
