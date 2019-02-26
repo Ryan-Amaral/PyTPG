@@ -185,7 +185,7 @@ class TpgTrainer:
     client side if applicable.
     """
     def addTask(self, task, popName=None):
-        self.populations[popName].tasks.add(task, popName=popName)
+        self.populations[popName].tasks.add(task)
 
     """
     Clears the outcomes of all root teams.

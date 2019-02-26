@@ -1,4 +1,5 @@
 from tpg.team import Team
+import numpy as np
 
 """
 Class that the client gets an instance of to control a team. Essentially just a
@@ -52,7 +53,8 @@ class TpgAgent:
             regDict = self.regDict
 
         if self.screenIndexed is None and vizd == True:
-            self.screenIndexed = [0]*len(obs)
+            #self.screenIndexed = [0]*len(obs)
+            self.screenIndexed = np.zeros(len(obs))
 
         vis = set() # teams visited
         action = self.team.getAction(obs, regDict=regDict, vis=vis, si=self.screenIndexed)

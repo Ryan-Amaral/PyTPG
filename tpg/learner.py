@@ -103,84 +103,16 @@ class Learner:
         # math overflow error happens sometimes
         try:
             if si is None:
-                progResult, regDict[self.id] = runProgram2(obs, registers, self.modes,
+                progResult = runProgram1(obs, registers, self.modes,
                         self.ops, self.dests, self.srcs, Learner.registerSize)
             else:
-                progResult = self.runProgram(obs, registers, si)
+                progResult = runProgram2(obs, registers, self.modes,
+                        self.ops, self.dests, self.srcs, Learner.registerSize, si)
             return 1 / (1 + math.exp(-progResult))
         except:
             #print('Bidding error!')
             #print(1/0)
             return 0
-
-    """
-    Runs this learner's program.
-    Args:
-        obs:
-            (Float[]) The current state of the environment.
-        registers:
-            (Float[]) Registers to be used for doing calculations with.
-    Returns:
-        (Float) What the destination register's value is at the end.
-    """
-    def runProgram(self, obs, registers, si=None):
-        # iterate over instructions in the program
-        for inst in self.program:
-            sourceVal = 0
-            # first get an initial value from register or observation
-            if Instruction.equalBitArrays(
-                    inst.getBitArraySeg(Instruction.slcMode),Instruction.mode0):
-                # instruction is mode0, source value comes from register
-                sourceVal = registers[Instruction.getIntVal(
-                    inst.getBitArraySeg(Instruction.slcSrc)) %
-                        Learner.registerSize]
-            else:
-                # instruction not mode0, source value from obs
-                sourceVal = obs[Instruction.getIntVal(
-                    inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)]
-                si[Instruction.getIntVal(inst.getBitArraySeg(Instruction.slcSrc)) % len(obs)] = 1
-
-            # the operation to do on the register
-            operation = inst.getBitArraySeg(Instruction.slcOp)
-            # the register to fiddle with
-            destReg = Instruction.getIntVal(
-                inst.getBitArraySeg(Instruction.slcDest))
-
-            if Instruction.equalBitArrays(operation, Instruction.opSum):
-                registers[destReg] += sourceVal
-            elif Instruction.equalBitArrays(operation, Instruction.opDiff):
-                registers[destReg] -= sourceVal
-            elif Instruction.equalBitArrays(operation, Instruction.opProd):
-                registers[destReg] *= sourceVal
-            elif Instruction.equalBitArrays(operation, Instruction.opDiv):
-                if sourceVal != 0:
-                    registers[destReg] /= sourceVal
-            elif Instruction.equalBitArrays(operation, Instruction.opCos):
-                registers[destReg] = math.cos(sourceVal)
-            elif Instruction.equalBitArrays(operation, Instruction.opLog):
-                if sourceVal > 0:
-                    registers[destReg] = math.log(sourceVal)
-            elif Instruction.equalBitArrays(operation, Instruction.opExp):
-                registers[destReg] = math.exp(sourceVal)
-            elif Instruction.equalBitArrays(operation, Instruction.opCond):
-                if registers[destReg] < sourceVal:
-                    registers[destReg] *= -1
-            else:
-                #print(operation.to01())
-                #print("Invalid operation in learner.run")
-                pass
-
-            if math.isnan(registers[destReg]):
-                registers[destReg] = 0
-            elif registers[destReg] == np.inf:
-                registers[destReg] = np.finfo(np.float64).max
-            elif registers[destReg] == np.NINF:
-                registers[destReg] = np.finfo(np.float64).min
-
-        return registers[0]
-
-
-
 
     """
     Mutates this learners program.
@@ -246,10 +178,10 @@ class Learner:
         return not act.equals(action)
 
 """
-Optimized version of runProgram.
+Run program without screen indexing, for regular non-debug/vizualizing use.
 """
 @njit
-def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
+def runProgram1(obs, registers, modes, ops, dsts, srcs, regSize):
 
     for i in range(len(modes)):
         # first get source
@@ -289,4 +221,53 @@ def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize):
         elif registers[dsts[i]] == np.NINF:
             registers[dsts[i]] = np.finfo(np.float64).min
 
-    return registers[0], registers
+    return registers[0]
+
+"""
+Run program with screen indexing, for debug/vizualizing use.
+"""
+@njit
+def runProgram2(obs, registers, modes, ops, dsts, srcs, regSize, si):
+
+    for i in range(len(modes)):
+        # first get source
+        if modes[i] == False:
+            src = registers[srcs[i]%regSize]
+        else:
+            idx = srcs[i]%len(obs)
+            src = obs[idx]
+            if si is not None:
+                si[idx] = 1 # mark location as visited
+
+        # do operation
+        op = ops[i]
+        x = registers[dsts[i]]
+        y = src
+        if op == 0:
+            registers[dsts[i]] = x+y
+        elif op == 1:
+            registers[dsts[i]] = x-y
+        elif op == 2:
+            registers[dsts[i]] = x*y
+        elif op == 3:
+            if y != 0:
+                registers[dsts[i]] = x/y
+        elif op == 4:
+            registers[dsts[i]] = math.cos(y)
+        elif op == 5:
+            if y > 0:
+                registers[dsts[i]] = math.log(y)
+        elif op == 6:
+            registers[dsts[i]] = math.exp(y)
+        elif op == 7:
+            if x < y:
+                registers[dsts[i]] = x*(-1)
+
+        if math.isnan(registers[dsts[i]]):
+            registers[dsts[i]] = 0
+        elif registers[dsts[i]] == np.inf:
+            registers[dsts[i]] = np.finfo(np.float64).max
+        elif registers[dsts[i]] == np.NINF:
+            registers[dsts[i]] = np.finfo(np.float64).min
+
+    return registers[0]
