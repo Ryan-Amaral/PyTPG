@@ -728,6 +728,8 @@ class TpgTrainer:
             ppool1 = parents[0] + parents[1]
             ppool2 = parents[0] + parents[2]
         else:
+            if isinstance(parents[0], list):
+                parents = parents[0] # flatten list of lists of parents to list of parents
             ppool1 = parents
             ppool2 = parents
 
