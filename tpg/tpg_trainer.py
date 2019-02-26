@@ -244,7 +244,7 @@ class TpgTrainer:
     """
     Returns the minimum and maximum score and corresponding team on the given task
     """
-    def getMinMaxScore(task=None, popName=None):
+    def getMinMaxScore(self, task=None, popName=None):
         if task is None:
             task = TpgAgent.defTaskName
 
