@@ -609,7 +609,7 @@ class TpgTrainer:
 
         # find the elites and worsts for desired tasks
         eliteTeams = [] # teams to keep for elitism
-        for eTask in tasks[0]: # change this to be all tasks in tasks or elitist tasks ( this only good for my current research)
+        for eTask in tasks: # change this to be all tasks in tasks or elitist tasks ( this only good for my current research)
             bestScore = 0
             bestTeam = None
             worstScore = 0
@@ -656,8 +656,11 @@ class TpgTrainer:
             for team in rTeams:
                 score = 0
                 for task in tasks:
-                    score += ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
+                    try: # might divide by zero if all scores are same for task
+                        score += ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
                               / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                    except:
+                        pass
                 scores.append((team, score))
                 statScores.append(score)
 
@@ -684,10 +687,10 @@ class TpgTrainer:
         scores.sort(key=itemgetter(1), reverse=True) # scores descending
 
         # store tasks in descending order of top team for task selection
-        if fitMthd == 'combine':
-            self.populations[popName].topTeamTasks = [
-                    tsk for (tsk,scr) in sorted(teamTaskMap[scores[0][0]].items(),
-                    key=itemgetter(1), reverse=True)]
+        #if fitMthd == 'combine':
+        #    self.populations[popName].topTeamTasks = [
+        #            tsk for (tsk,scr) in sorted(teamTaskMap[scores[0][0]].items(),
+        #            key=itemgetter(1), reverse=True)]
 
         self.saveScores(statScores, popName=popName) # save scores for reporting
 
