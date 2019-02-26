@@ -109,7 +109,7 @@ class Learner:
                 progResult = self.runProgram(obs, registers, si)
             return 1 / (1 + math.exp(-progResult))
         except:
-            #print('An error!!!!!!!1')
+            #print('Bidding error!')
             #print(1/0)
             return 0
 
