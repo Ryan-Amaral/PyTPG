@@ -215,7 +215,7 @@ class TpgTrainer:
         (Agent[]) The agents that scored the best. Based on positions, and points
         awarded to those positions.
     """
-    def getBestAgents(self, tasks=None, amount=1, topn=3, popName=None):
+    def getBestAgentsByPos(self, tasks=None, amount=1, topn=3, popName=None):
         if tasks is None:
             tasks = self.populations[popName].tasks
         elif len(tasks) == 0:
@@ -241,7 +241,62 @@ class TpgTrainer:
 
         return [TpgAgent(bt[0], popName=popName) for bt in bestTeams]
 
-    
+    """
+    Returns the minimum and maximum score and corresponding team on the given task
+    """
+    def getMinMaxScore(task=None, popName=None):
+        if task is None:
+            task = TpgAgent.defTaskName
+
+        smin = None
+        tmin = None
+        smax = None
+        tmax = None
+        for rt in self.populations[popName].rootTeams:
+            if smin is None:
+                if task in rt.outcomes:
+                    smin = rt.outcomes[task]
+                    tmin = rt
+                    smax = rt.outcomes[task]
+                    tmax = rt
+                else:
+                    continue
+            else:
+                scur = rt.outcomes.get(task, smin)
+                if scur < smin:
+                    smin = scur
+                    tmin = rt
+                elif scur > smax:
+                    smax = scur
+                    tmax = rt
+
+        return (smin, tmin, smax, tmax)
+
+    """
+    Get top agents based on summed normalized score of each each.
+    """
+    def getBestAgents(self, tasks=None, trainer=None, popName=None):
+        return [TpgAgent(team, trainer=trainer, popName=popName)
+                for team in getBestTeams(tasks=tasks, popName=popName)]
+
+    def getBestTeams(self, tasks=None, popName=None):
+        mins = {}
+        maxs = {}
+        for task in tasks:
+            minmax = getMinMaxScore(task=task, popName=popName)
+            mins[task] = minmax[0]
+            maxs[task] = minmax[2]
+
+        scores = []
+        for rt in self.populations[popName]:
+            score = 0
+            for task in tasks:
+                score += ((rt.outcomes.get(task, mins[task]) - mins[task]) /
+                          (maxs[task] - mins[task]))
+            scores.append((rt, score))
+
+        scores.sort(key=itemgetter(1), reverse=True)
+        return [score[0] for score in scores]
 
     """
     Gets the topn best agents at each task.
