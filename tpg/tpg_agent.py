@@ -52,9 +52,9 @@ class TpgAgent:
         if mem:
             regDict = self.regDict
 
-        if self.screenIndexed is None and vizd == True:
-            #self.screenIndexed = [0]*len(obs)
+        if vizd == True and self.screenIndexed is None:
             self.screenIndexed = np.zeros(len(obs))
+
 
         vis = set() # teams visited
         action = self.team.getAction(obs, regDict=regDict, vis=vis, si=self.screenIndexed)
