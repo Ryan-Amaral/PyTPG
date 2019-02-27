@@ -91,7 +91,6 @@ class Learner:
     """
     def bid(self, obs, regDict=None, si=None):
         # choose register appropriately
-        registers = None
         if regDict is None:
             #registers = [0]*Learner.registerSize
             registers = np.zeros(Learner.registerSize)

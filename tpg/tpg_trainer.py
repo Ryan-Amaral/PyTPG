@@ -274,7 +274,7 @@ class TpgTrainer:
         return (smin, tmin, smax, tmax)
 
     """
-    Get top agents based on summed normalized score of each each.
+    Get top agents based on summed normalized score of each each. Sorted descending.
     """
     def getBestAgents(self, tasks=None, trainer=None, popName=None):
         return [TpgAgent(team, trainer=trainer, popName=popName)
@@ -810,7 +810,8 @@ class TpgTrainer:
             ppool2 = parents[0] + parents[2]
         else:
             if isinstance(parents[0], list):
-                parents = parents[0] # flatten list of lists of parents to list of parents
+                # combine all teams, get uniques only
+                parents = list(set([team for teams in parents for team in teams]))
             ppool1 = parents
             ppool2 = parents
 
