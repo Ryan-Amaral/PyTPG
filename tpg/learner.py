@@ -102,12 +102,12 @@ class Learner:
 
         # math overflow error happens sometimes
         try:
-            if si is None:
-                progResult = runProgram1(obs, registers, self.modes,
-                        self.ops, self.dests, self.srcs, Learner.registerSize)
-            else:
+            if si is not None:
                 progResult = runProgram2(obs, registers, self.modes,
                         self.ops, self.dests, self.srcs, Learner.registerSize, si)
+            else:
+                progResult = runProgram1(obs, registers, self.modes,
+                        self.ops, self.dests, self.srcs, Learner.registerSize)
             return 1 / (1 + math.exp(-progResult))
         except:
             #print('Bidding error!')
