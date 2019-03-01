@@ -554,11 +554,13 @@ class TpgTrainer:
             individuals on each of these list of tasks.
         weights: (float[]) Same length as tasks, should add up to 1. Determines
             how much of each task list to take in selection.
+        genMethod: 'reg' for regular random selection from within parents. '3waymerge2'
+            for selecting first from the first 2 groups, then from the second 2.
     """
-    def multiEvolve(self, tasks, weights, elitistTasks=[], popName=None):
+    def multiEvolve(self, tasks, weights, genMethod='reg', elitistTasks=[], popName=None):
         parents = self.multiSelect(tasks=tasks, weights=weights,
                     elitistTasks=elitistTasks, popName=popName)
-        self.generateNewTeams(parents=parents, method='3waymerge2', popName=popName)
+        self.generateNewTeams(parents=parents, method=genMethod, popName=popName)
         self.nextEpoch(popName=popName)
 
     """
