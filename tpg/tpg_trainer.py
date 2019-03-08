@@ -819,7 +819,7 @@ class TpgTrainer:
 
         # add teams until maxed size
         while (len(self.populations[popName].teams) < self.populations[popName].teamPopSize or (self.populations[popName].rTeamPopSize > 0 and
-                self.populations[popName].getRootTeamsSize() < self.populations[popName].rTeamPopSize)):
+                self.getRootTeamsSize(popName=popName) < self.populations[popName].rTeamPopSize)):
             # choose 2 random teams as parents
             par1 = self.rand.choice(ppool1)
             par2 = self.rand.choice([par for par in ppool2 if par is not par1])
