@@ -521,7 +521,7 @@ class TpgTrainer:
     Selects, creates, and preps the population for the next generation. Or called
     when a tournament is completed.
     Args:
-        fitMthd: (Str) Method to use for determining fitness. 'single' uses first
+        fitMethod: (Str) Method to use for determining fitness. 'single' uses first
             task found. 'combine' uses a combined score of all tasks. 'fitshare'
             uses the fitness sharing method among the tasks.
         tourneyAgents: (Agent[]) The agents in a current tournament if doing
@@ -535,14 +535,14 @@ class TpgTrainer:
         elitistTasks: (Str[]) List of tasks to maintain elitism on, AKA keep the
             top performing agent for every task in the list.
     """
-    def evolve(self, fitMthd='single', tourneyAgents=None, tourneyTeams=None,
+    def evolve(self, fitMethod='single', tourneyAgents=None, tourneyTeams=None,
             tasks=None, elitistTasks=[], popName=None):
         rTeams = None # root teams to get from tourneyAgents, or None
         if tourneyAgents is not None:
             rTeams = [agent.team for agent in tourneyAgents]
         elif tourneyTeams is not None:
             rTeams = tourneyTeams
-        self.select(fitMthd=fitMthd, rTeams=rTeams, tasks=tasks, elitistTasks=elitistTasks, popName=popName)
+        self.select(fitMethod=fitMethod, rTeams=rTeams, tasks=tasks, elitistTasks=elitistTasks, popName=popName)
         self.generateNewTeams(parents=rTeams, popName=popName)
         self.nextEpoch(tourney=tourneyAgents is not None, popName=popName)
 
@@ -569,7 +569,7 @@ class TpgTrainer:
     Selects the individuals to keep for next generation, deletes others. The
     amount deleted will be filled in through generating new teams.
     Args:
-        fitMthd: (Str) Method to use for determining fitness. 'single' uses first
+        fitMethod: (Str) Method to use for determining fitness. 'single' uses first
             task found. 'combine' uses a combined score of all tasks. 'fitshare'
             uses the fitness sharing method among the tasks.
         tourneyAgents: (Agent[]) The agents in a current tournament if doing
@@ -581,7 +581,7 @@ class TpgTrainer:
         elitistTasks: (Str[]) List of tasks to maintain elitism on, AKA keep the
             top performing agent for every task in the list.
     """
-    def select(self, fitMthd='single', rTeams=None, tasks=None, elitistTasks=[], popName=None):
+    def select(self, fitMethod='single', rTeams=None, tasks=None, elitistTasks=[], popName=None):
         gapSz = self.populations[popName].gap
         # if rTeams not supplied use whole root population
         if rTeams is None:
@@ -645,7 +645,7 @@ class TpgTrainer:
 
         # assign fitness to individuals by selected method
         # use fitness sharing
-        if fitMthd == 'fitShare': # fitness share across all outcomes
+        if fitMethod == 'fitShare': # fitness share across all outcomes
             for team in teamScoresMap.keys():
                 teamRelTaskScore = 0 # teams final fitness shared score
                 statScores.append(0)
@@ -657,7 +657,7 @@ class TpgTrainer:
                 scores.append((team, teamRelTaskScore))
 
         # combine scores accross all tasks
-        elif fitMthd == 'combine':
+    elif fitMethod == 'combine':
             for team in rTeams:
                 score = 0
                 for task in tasks:
@@ -669,7 +669,7 @@ class TpgTrainer:
                 scores.append((team, score))
                 statScores.append(score)
 
-        elif fitMthd == 'min':
+        elif fitMethod == 'min':
             for team in rTeams:
                 score = 1
                 for task in tasks:
@@ -687,7 +687,7 @@ class TpgTrainer:
 
 
         # just use score of first task found
-        elif fitMthd == 'single': # just take first outcome
+        elif fitMethod == 'single': # just take first outcome
             for team in teamScoresMap.keys():
                 scores.append((team, teamScoresMap[team][0]))
                 statScores.append(teamScoresMap[team][0])
