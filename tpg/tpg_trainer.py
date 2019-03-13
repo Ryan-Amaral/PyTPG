@@ -669,18 +669,21 @@ class TpgTrainer:
                 scores.append((team, score))
                 statScores.append(score)
 
-            #teamTaskMap = {}
-            #for team in teamScoresMap.keys():
-            #    teamFit = 0 # fitness accross tasks for individual
-            #    teamTaskMap[team] = {}
-            #    for task in tasks:
-            #        taskFit = 1/(1+(eliteTaskTeams[task].outcomes[task] -
-            #                        team.outcomes[task]))
-            #        teamFit += taskFit
-            #        teamTaskMap[team][task] = taskFit
+        elif fitMthd == 'min':
+            for team in rTeams:
+                score = 1
+                for task in tasklist:
+                    try:
+                        curScore = ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
+                                  / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                    except:
+                        curScore = 1
 
-            #    scores.append((team, teamFit))
-            #    statScores.append(teamFit)
+                    if curScore < score:
+                        score = curScore
+
+                scores.append((team, score))
+                statScores.append(score)
 
 
         # just use score of first task found
@@ -767,15 +770,24 @@ class TpgTrainer:
                 if fitMethod == 'sum':
                     score = 0
                     for task in tasklist:
-                        score += ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
-                                  / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                        try:
+                            score += ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
+                                      / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                        except:
+                            pass
+
                 elif fitMethod == 'min':
                     score = 1
                     for task in tasklist:
-                        curScore = ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
-                                  / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                        try:
+                            curScore = ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
+                                      / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                        except:
+                            curScore = 1
+
                         if curScore < score:
                             score = curScore
+
                 scores[-1].append((team, score))
                 statScores[-1].append(score)
 
