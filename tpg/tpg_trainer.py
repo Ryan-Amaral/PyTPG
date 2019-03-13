@@ -672,7 +672,7 @@ class TpgTrainer:
         elif fitMthd == 'min':
             for team in rTeams:
                 score = 1
-                for task in tasklist:
+                for task in tasks:
                     try:
                         curScore = ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
                                   / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
