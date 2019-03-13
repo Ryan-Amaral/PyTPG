@@ -554,11 +554,13 @@ class TpgTrainer:
             individuals on each of these list of tasks.
         weights: (float[]) Same length as tasks, should add up to 1. Determines
             how much of each task list to take in selection.
+        fitMethod: 'min' for taking minimum score in tasks as fitness, 'sum' for
+            sum of scores on tasks to be fitness.
         genMethod: 'reg' for regular random selection from within parents. '3waymerge2'
             for selecting first from the first 2 groups, then from the second 2.
     """
-    def multiEvolve(self, tasks, weights, genMethod='reg', elitistTasks=[], popName=None):
-        parents = self.multiSelect(tasks=tasks, weights=weights,
+    def multiEvolve(self, tasks, weights, fitMethod='min', genMethod='reg', elitistTasks=[], popName=None):
+        parents = self.multiSelect(tasks=tasks, weights=weights, fitMethod=fitMethod,
                     elitistTasks=elitistTasks, popName=popName)
         self.generateNewTeams(parents=parents, method=genMethod, popName=popName)
         self.nextEpoch(popName=popName)
@@ -711,9 +713,9 @@ class TpgTrainer:
 
     """
     Selects teams on multiple criteria, multiple sets of tasks. Each with a set
-    weight of importance.
+    weight of importance. fitMethod is 'min' or 'sum'.
     """
-    def multiSelect(self, tasks, weights, elitistTasks=[], popName=None):
+    def multiSelect(self, tasks, weights, fitMethod, elitistTasks=[], popName=None):
 
         rTeams = list(self.populations[popName].rootTeams)
 
@@ -762,10 +764,18 @@ class TpgTrainer:
             scores.append([]) # stat scores for each task list
             statScores.append([])
             for team in rTeams:
-                score = 0
-                for task in tasklist:
-                    score += ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
-                              / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                if fitMethod == 'sum':
+                    score = 0
+                    for task in tasklist:
+                        score += ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
+                                  / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                elif fitMethod == 'min':
+                    score = 1
+                    for task in tasklist:
+                        curScore = ((team.outcomes[task] - worstTaskTeams[task].outcomes[task])
+                                  / (eliteTaskTeams[task].outcomes[task] - worstTaskTeams[task].outcomes[task]))
+                        if curScore < score:
+                            score = curScore
                 scores[-1].append((team, score))
                 statScores[-1].append(score)
 
