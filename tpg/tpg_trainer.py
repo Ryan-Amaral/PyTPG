@@ -657,7 +657,7 @@ class TpgTrainer:
                 scores.append((team, teamRelTaskScore))
 
         # combine scores accross all tasks
-    elif fitMethod == 'combine':
+        elif fitMethod == 'combine':
             for team in rTeams:
                 score = 0
                 for task in tasks:
