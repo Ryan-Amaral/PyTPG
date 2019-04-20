@@ -498,8 +498,8 @@ class TpgTrainer:
             self.populations[popName].learners.append(learner)
 
             # add other random learners
-            #learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
-            learnerMax = self.populations[popName].maxTeamSize - 2
+            learnerMax = self.rand.randint(0, self.maxTeamSize - 2)
+            #learnerMax = self.populations[popName].maxTeamSize - 2
             for i in range(learnerMax):
                 if not self.multiAction: # choose single number
                     ac = self.rand.choice(self.actions)
