@@ -107,10 +107,9 @@ class Learner:
             else:
                 progResult = runProgram1(obs, registers, self.modes,
                         self.ops, self.dests, self.srcs, Learner.registerSize)
+            
             return 1 / (1 + math.exp(-progResult))
         except:
-            #print('Bidding error!')
-            #print(1/0)
             return 0
 
     """
