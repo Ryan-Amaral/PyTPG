@@ -1017,17 +1017,19 @@ class TpgTrainer:
         for learner in self.populations[popName].learners:
             if learnersRefByTeamsDic.get(learner,0) != learner.teamRefCount:
                 ldifs += 1
+            learner.teamRefCount = learnersRefByTeamsDic.get(learner,0)
         for team in self.populations[popName].teams:
             if teamsRefByLearnersDic.get(team,0) != team.learnerRefCount:
                 print(teamsRefByLearnersDic.get(team,0) - team.learnerRefCount)
                 tdifs += 1
+            team.learnerRefCount = teamsRefByLearnersDic.get(team,0)
 
         print('Differences in refs: ')
         print('learnersRefByTeams: ' + str(ldifs))
         print('teamsRefByLearners: ' + str(tdifs))
         if ldifs > 5 or tdifs > 5:
             print('Difference in refs!!!!!!')
-            print(1/0)
+            #print(1/0)
 
         # remove unused learners
         tmpLearners = list(self.populations[popName].learners)
