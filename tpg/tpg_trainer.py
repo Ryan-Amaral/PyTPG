@@ -995,6 +995,40 @@ class TpgTrainer:
             (Bool) Whether doing tournament selection.
     """
     def nextEpoch(self, tourney=False, popName=None):
+
+        teamsRefByLearnersDic = {}
+        for learner in self.populations[popName].learners:
+            if not learner.action.isAtomic():
+                if learner.action.act in teamsRefByLearnersDic:
+                    teamsRefByLearnersDic[learner.action.act] += 1
+                else:
+                    teamsRefByLearnersDic[learner.action.act] = 1
+
+        learnersRefByTeamsDic = {}
+        for team in self.populations[popName].teams:
+            for learner in team.learners:
+                if learner not in learnersRefByTeamsDic:
+                    learnersRefByTeamsDic[learner] = 1
+                else:
+                    learnersRefByTeamsDic[learner] += 1
+
+        ldifs = 0
+        tdifs = 0
+        for learner in self.populations[popName].learners:
+            if learnersRefByTeamsDic.get(learner,0) != learner.teamRefCount:
+                ldifs += 1
+        for team in self.populations[popName].teams:
+            if teamsRefByLearnersDic.get(team,0) != team.learnerRefCount:
+                print(teamsRefByLearnersDic.get(team,0) - team.learnerRefCount)
+                tdifs += 1
+
+        print('Differences in refs: ')
+        print('learnersRefByTeams: ' + str(ldifs))
+        print('teamsRefByLearners: ' + str(tdifs))
+        if ldifs > 5 or tdifs > 5:
+            print('Difference in refs!!!!!!')
+            print(1/0)
+
         # remove unused learners
         tmpLearners = list(self.populations[popName].learners)
         for learner in tmpLearners:
