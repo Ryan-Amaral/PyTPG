@@ -968,8 +968,7 @@ class TpgTrainer:
                     self.populations[popName].learners.append(nLearner)
                     team.addLearner(nLearner)
 
-                    while not self.mutateLearner(nLearner, popName=popName):
-                        continue
+                    self.mutateLearner(nLearner, popName=popName)
                     changed = True
 
     def mutateLearner(self, learner, popName=None):
