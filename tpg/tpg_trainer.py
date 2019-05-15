@@ -974,7 +974,7 @@ class TpgTrainer:
 
     def mutateLearner(self, learner, popName=None):
         # mutate program
-        while not mutateProgram(self.populations[popName].pProgramDelete,
+        while not learner.mutateProgram(self.populations[popName].pProgramDelete,
                                 self.populations[popName].pProgramAdd,
                                 self.populations[popName].pProgramSwap,
                                 self.populations[popName].pProgramMutate,
