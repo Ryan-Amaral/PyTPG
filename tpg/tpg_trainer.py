@@ -543,7 +543,7 @@ class TpgTrainer:
         elif tourneyTeams is not None:
             rTeams = tourneyTeams
         self.select(fitMethod=fitMethod, rTeams=rTeams, tasks=tasks, elitistTasks=elitistTasks, popName=popName)
-        self.generateNewTeams(parents=rTeams, popName=popName)
+        self.generateNewTeams2(parents=rTeams, popName=popName)
         self.nextEpoch(tourney=tourneyAgents is not None, popName=popName)
 
 
@@ -562,7 +562,7 @@ class TpgTrainer:
     def multiEvolve(self, tasks, weights, fitMethod='min', genMethod='reg', elitistTasks=[], popName=None):
         parents = self.multiSelect(tasks=tasks, weights=weights, fitMethod=fitMethod,
                     elitistTasks=elitistTasks, popName=popName)
-        self.generateNewTeams(parents=parents, method=genMethod, popName=popName)
+        self.generateNewTeams2(parents=parents, method=genMethod, popName=popName)
         self.nextEpoch(popName=popName)
 
     """
@@ -815,6 +815,34 @@ class TpgTrainer:
 
         return newParents
 
+    def generateNewTeams2(self, parents=None, method='reg', popName=None):
+        if isinstance(parents[0], list):
+            # combine all teams, get uniques only
+            parents = list(set([team for teams in parents for team in teams]))
+        ppool = parents
+
+        # add teams until maxed size
+        while (len(self.populations[popName].teams) < self.populations[popName].teamPopSize or (self.populations[popName].rTeamPopSize > 0 and
+                self.getRootTeamsSize(popName=popName) < self.populations[popName].rTeamPopSize)):
+
+            par = self.rand.choice(ppool) # get parent
+            child = Team(birthGen=self.populations[popName].curGen) # fresh team
+
+            # add all of parents learners to child (clone)
+            for learner in par.learners:
+                child.addLearner(learner)
+
+            self.mutateTeam(child, popName=popName)
+
+            # assign unique id
+            child.uid = TpgTrainer.teamIdCounter
+            TpgTrainer.teamIdCounter += 1
+
+            # add children to team populations
+            self.populations[popName].teams.append(child)
+            self.populations[popName].rootTeams.append(child)
+
+
     """
     Generates new teams from existing teams (in the root population).
     Args:
@@ -902,6 +930,73 @@ class TpgTrainer:
             self.populations[popName].teams.append(child2)
             self.populations[popName].rootTeams.append(child1)
             self.populations[popName].rootTeams.append(child2)
+
+    def mutateTeam(self, team, popName=None):
+        changed = False
+
+        # attempt learner deletions
+        p = self.populations[popName].pLearnerDelete
+        while self.rand.uniform(0,1) < p:
+            p = p*self.populations[popName].pLearnerDelete # decrease next chance
+
+            if len(team.learners) <= 2:
+                break # must have atleast 2 learners
+
+            learner = self.rand.choice(team.learners) # random learner
+            if team.numAtomicActions() == 1 and learner.action.isAtomic():
+                continue # never delete the sole atomic action
+            team.removeLearner(learner)
+
+        # attempt learner additions
+        p = self.populations[popName].pLearnerAdd
+        while self.rand.uniform(0,1) < p:
+            p = p*self.populations[popName].pLearnerAdd # decrease next chance
+            # add some learner from the learner pop
+            team.addLearner(self.rand.choice(self.populations[popName].learners))
+
+        # mutate learners
+        while not changed:
+            for learner in team.learners:
+                if self.rand.uniform(0,1) < 0.2: # add as param after
+                    # remove because mutated learner becomes new learner
+                    team.removeLearner(learner)
+                    nLearner = Learner(learner=learner, makeNew=True)
+                    team.addLearner(nLearner)
+
+                    while not self.mutateLearner(nLearner, popName=popName):
+                        continue
+                    changed = True
+
+    def mutateLearner(self, learner, popName=None):
+        # mutate program
+        while not mutateProgram(self.populations[popName].pProgramDelete,
+                                self.populations[popName].pProgramAdd,
+                                self.populations[popName].pProgramSwap,
+                                self.populations[popName].pProgramMutate,
+                                self.populations[popName].maxProgramSize):
+            continue
+
+        # mutate action
+        if self.rand.uniform(0,1) < self.populations[popName].pMutateAction:
+            action = None
+            if self.rand.uniform(0,1) < self.populations[popName].pActionIsTeam: # team action
+                actionTeam = self.rand.choice(self.populations[popName].teams)
+                action = Action(actionTeam)
+            else: # atomic action
+                if not self.multiAction: # choose single number
+                    action = Action(self.rand.choice(self.actions))
+                else: # choose list of length self.actions within range
+                    minv = self.actionRange[0]
+                    maxv = self.actionRange[1]
+                    if lrnr.action.isAtomic():
+                        act = lrnr.action.act
+                        stp = self.actionRange[2]
+                        action = Action(
+                            [self.clip(i+self.rand.choice([-stp,stp]), minv, maxv)
+                                        for i in act])
+                    else:
+                        action = Action([self.rand.uniform(minv, maxv)
+                                    for i in range(self.actions)])
 
     """
     Mutates a team and it's learners.
