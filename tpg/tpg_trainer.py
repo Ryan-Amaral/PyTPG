@@ -820,6 +820,7 @@ class TpgTrainer:
             # combine all teams, get uniques only
             parents = list(set([team for teams in parents for team in teams]))
         ppool = parents
+        oLearners = list(self.populations[popName].learners)
 
         # add teams until maxed size
         while (len(self.populations[popName].teams) < self.populations[popName].teamPopSize or (self.populations[popName].rTeamPopSize > 0 and
@@ -832,7 +833,7 @@ class TpgTrainer:
             for learner in par.learners:
                 child.addLearner(learner)
 
-            self.mutateTeam(child, popName=popName)
+            self.mutateTeam(child, oLearners, popName=popName)
 
             # assign unique id
             child.uid = TpgTrainer.teamIdCounter
@@ -931,7 +932,7 @@ class TpgTrainer:
             self.populations[popName].rootTeams.append(child1)
             self.populations[popName].rootTeams.append(child2)
 
-    def mutateTeam(self, team, popName=None):
+    def mutateTeam(self, team, oLearners, popName=None):
         changed = False
 
         # attempt learner deletions
@@ -952,7 +953,7 @@ class TpgTrainer:
         while self.rand.uniform(0,1) < p:
             p = p*self.populations[popName].pLearnerAdd # decrease next chance
             # add some learner from the learner pop
-            team.addLearner(self.rand.choice(self.populations[popName].learners))
+            team.addLearner(self.rand.choice(oLearners))
 
         # mutate learners
         while not changed:
@@ -961,6 +962,7 @@ class TpgTrainer:
                     # remove because mutated learner becomes new learner
                     team.removeLearner(learner)
                     nLearner = Learner(learner=learner, makeNew=True)
+                    self.populations[popName].learners.append(nLearner)
                     team.addLearner(nLearner)
 
                     while not self.mutateLearner(nLearner, popName=popName):
