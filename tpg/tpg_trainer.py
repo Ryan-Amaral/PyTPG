@@ -816,6 +816,9 @@ class TpgTrainer:
         return newParents
 
     def generateNewTeams2(self, parents=None, method='reg', popName=None):
+        if parents is None:
+            parents = list(self.populations[popName].rootTeams) # parents are all original root teams
+
         if isinstance(parents[0], list):
             # combine all teams, get uniques only
             parents = list(set([team for teams in parents for team in teams]))
