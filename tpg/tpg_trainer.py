@@ -823,6 +823,7 @@ class TpgTrainer:
             parents = list(set([team for teams in parents for team in teams]))
         ppool = parents
         oLearners = list(self.populations[popName].learners)
+        oTeams = list(self.populations[popName].teams)
 
         # add teams until maxed size
         while (len(self.populations[popName].teams) < self.populations[popName].teamPopSize or (self.populations[popName].rTeamPopSize > 0 and
@@ -835,7 +836,7 @@ class TpgTrainer:
             for learner in par.learners:
                 child.addLearner(learner)
 
-            self.mutateTeam(child, oLearners, popName=popName)
+            self.mutateTeam(child, oLearners, oTeams popName=popName)
 
             # assign unique id
             child.uid = TpgTrainer.teamIdCounter
@@ -845,7 +846,7 @@ class TpgTrainer:
             self.populations[popName].teams.append(child)
             self.populations[popName].rootTeams.append(child)
 
-    def mutateTeam(self, team, oLearners, popName=None):
+    def mutateTeam(self, team, oLearners, oTeams, popName=None):
         changed = False
 
         # attempt learner deletions
@@ -878,10 +879,10 @@ class TpgTrainer:
                     self.populations[popName].learners.append(nLearner)
                     team.addLearner(nLearner)
 
-                    self.mutateLearner(nLearner, popName=popName)
+                    self.mutateLearner(nLearner, oTeams, popName=popName)
                     changed = True
 
-    def mutateLearner(self, learner, popName=None):
+    def mutateLearner(self, learner, oTeams, popName=None):
         # mutate program
         while not learner.mutateProgram(self.populations[popName].pProgramDelete,
                                 self.populations[popName].pProgramAdd,
@@ -894,7 +895,7 @@ class TpgTrainer:
         if self.rand.uniform(0,1) < self.populations[popName].pMutateAction:
             action = None
             if self.rand.uniform(0,1) < self.populations[popName].pActionIsTeam: # team action
-                actionTeam = self.rand.choice(self.populations[popName].teams)
+                actionTeam = self.rand.choice(oTeams)
                 action = Action(actionTeam)
             else: # atomic action
                 if not self.multiAction: # choose single number
@@ -911,6 +912,8 @@ class TpgTrainer:
                     else:
                         action = Action([self.rand.uniform(minv, maxv)
                                     for i in range(self.actions)])
+
+            learner.mutateAction(action)
 
     """
     A sort of clean up method to prepare for a new epoch of learning.
