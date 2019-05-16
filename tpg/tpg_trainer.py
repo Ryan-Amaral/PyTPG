@@ -836,7 +836,7 @@ class TpgTrainer:
             for learner in par.learners:
                 child.addLearner(learner)
 
-            self.mutateTeam(child, oLearners, oTeams popName=popName)
+            self.mutateTeam(child, oLearners, oTeams, popName=popName)
 
             # assign unique id
             child.uid = TpgTrainer.teamIdCounter
