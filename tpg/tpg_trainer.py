@@ -543,7 +543,7 @@ class TpgTrainer:
         elif tourneyTeams is not None:
             rTeams = tourneyTeams
         self.select(fitMethod=fitMethod, rTeams=rTeams, tasks=tasks, elitistTasks=elitistTasks, popName=popName)
-        self.generateNewTeams2(parents=rTeams, popName=popName)
+        self.generateNewTeams(parents=rTeams, popName=popName)
         self.nextEpoch(tourney=tourneyAgents is not None, popName=popName)
 
 
@@ -556,13 +556,12 @@ class TpgTrainer:
             how much of each task list to take in selection.
         fitMethod: 'min' for taking minimum score in tasks as fitness, 'sum' for
             sum of scores on tasks to be fitness.
-        genMethod: 'reg' for regular random selection from within parents. '3waymerge2'
-            for selecting first from the first 2 groups, then from the second 2.
+        genMethod: Not yet implemented, possibly for merging populations later.
     """
     def multiEvolve(self, tasks, weights, fitMethod='min', genMethod='reg', elitistTasks=[], popName=None):
         parents = self.multiSelect(tasks=tasks, weights=weights, fitMethod=fitMethod,
                     elitistTasks=elitistTasks, popName=popName)
-        self.generateNewTeams2(parents=parents, method=genMethod, popName=popName)
+        self.generateNewTeams(parents=parents, popName=popName)
         self.nextEpoch(popName=popName)
 
     """
@@ -815,7 +814,7 @@ class TpgTrainer:
 
         return newParents
 
-    def generateNewTeams2(self, parents=None, method='reg', popName=None):
+    def generateNewTeams(self, parents=None, popName=None):
         if parents is None:
             parents = list(self.populations[popName].rootTeams) # parents are all original root teams
 
@@ -845,95 +844,6 @@ class TpgTrainer:
             # add children to team populations
             self.populations[popName].teams.append(child)
             self.populations[popName].rootTeams.append(child)
-
-
-    """
-    Generates new teams from existing teams (in the root population).
-    Args:
-        parents: list of teams regularly, or list of lists of teams:
-            [[ta,tb,...],[tc,td,...],...] based on method (like if '3waymerge2').
-        method: (string) Method of selecting parents.
-            3waymerge2: parents must have 3 lists, where for each selection of parents,
-            one is selected from parents[0] or parents[1] and the other is selected
-            from parents[0] or parents[2].
-    """
-    def generateNewTeams(self, parents=None, method='reg', popName=None):
-        if parents is None:
-            parents = list(self.populations[popName].rootTeams) # parents are all original root teams
-
-        if method == '3waymerge2':
-            ppool1 = parents[0] + parents[1]
-            ppool2 = parents[0] + parents[2]
-        else:
-            if isinstance(parents[0], list):
-                # combine all teams, get uniques only
-                parents = list(set([team for teams in parents for team in teams]))
-            ppool1 = parents
-            ppool2 = parents
-
-        # add teams until maxed size
-        while (len(self.populations[popName].teams) < self.populations[popName].teamPopSize or (self.populations[popName].rTeamPopSize > 0 and
-                self.getRootTeamsSize(popName=popName) < self.populations[popName].rTeamPopSize)):
-            # choose 2 random teams as parents
-            par1 = self.rand.choice(ppool1)
-            par2 = self.rand.choice([par for par in ppool2 if par is not par1])
-
-            # get learners
-            par1Lrns = set(par1.learners)
-            par2Lrns = set(par2.learners)
-
-            # make 2 children at a time
-            child1 = Team(birthGen=self.populations[popName].curGen)
-            child2 = Team(birthGen=self.populations[popName].curGen)
-
-            # new children get intersection of parents learners
-            for learner in par1Lrns.intersection(par2Lrns):
-                child1.addLearner(learner)
-                child2.addLearner(learner)
-
-            # learners unique to a parent goes to one child or other, with one
-            # child having higher priority for a learner
-            for learner in par1Lrns.symmetric_difference(par2Lrns):
-                superChild = None
-                subChild = None
-                if self.rand.choice([True,False]) == True:
-                    superChild = child1
-                    subChild = child2
-                else:
-                    superChild = child2
-                    subChild = child1
-
-                # apply learner to child if can,
-                # if not, give to other child if can
-                if (len(superChild.learners) < self.populations[popName].maxTeamSize and
-                        (len(superChild.learners) < 2 or
-                            len(subChild.learners) >= 2)):
-                    superChild.addLearner(learner)
-                else:
-                    subChild.addLearner(learner)
-
-            self.mutate(child1, popName=popName) # attempt a mutation
-            if (set(child1.learners) == set(par1.learners) or
-                    set(child1.learners) == set(par2.learners)):
-                while not self.mutate(child1, popName=popName): # attempt mutation untill it works
-                    continue
-
-            self.mutate(child2, popName=popName) # attempt a mutation
-            if (set(child2.learners) == set(par1.learners) or
-                    set(child2.learners) == set(par2.learners)):
-                while not self.mutate(child2, popName=popName): # attempt mutation untill it works
-                    continue
-
-            child1.uid = TpgTrainer.teamIdCounter
-            TpgTrainer.teamIdCounter += 1
-            child2.uid = TpgTrainer.teamIdCounter
-            TpgTrainer.teamIdCounter += 1
-
-            # add children to team populations
-            self.populations[popName].teams.append(child1)
-            self.populations[popName].teams.append(child2)
-            self.populations[popName].rootTeams.append(child1)
-            self.populations[popName].rootTeams.append(child2)
 
     def mutateTeam(self, team, oLearners, popName=None):
         changed = False
@@ -1001,91 +911,6 @@ class TpgTrainer:
                     else:
                         action = Action([self.rand.uniform(minv, maxv)
                                     for i in range(self.actions)])
-
-    """
-    Mutates a team and it's learners.
-    Args:
-        team: (Team) The team to mutate.
-    Returns: (Bool) Whether the team was successfully mutated.
-    """
-    def mutate(self, team, popName=None):
-        isTeamChanged = False # flag to track when team actually changes
-        tmpLearners = list(team.learners)
-        self.rand.shuffle(tmpLearners)
-        # delete some learners maybe
-        for learner in tmpLearners:
-            if len(team.learners) <= 2:
-                break # must have atleast 2 learners
-            if team.numAtomicActions() == 1 and learner.action.isAtomic():
-                continue # never delete the sole atomic action
-            # delete the learner
-            if self.rand.uniform(0,1) < self.populations[popName].pLearnerDelete:
-                team.removeLearner(learner)
-                isTeamChanged = True
-
-        # mutate the learners
-        isTeamChanged = self.mutateLearners(team, tmpLearners, popName=popName) or isTeamChanged
-
-        return isTeamChanged
-
-    """
-    Mutates the learners of a team.
-    Args:
-        team    : (Team) The team to mutate the learners of.
-        learners: (Learner[]) All of the learners of the team before mutation.
-    Returns:
-        (Boolean) Whether the team ended up actually being mutated.
-    """
-    def mutateLearners(self, team, learners, popName=None):
-        isTeamChanged = False
-        for learner in learners:
-            if len(team.learners) == self.populations[popName].maxTeamSize:
-                break; # limit team size
-            # maybe add a learner
-            if self.rand.uniform(0,1) < self.populations[popName].pLearnerAdd:
-                isLearnerChanged = False
-                lrnr = Learner(learner=learner, makeNew=True,
-                        birthGen=self.populations[popName].curGen)
-                # does and tells if did actually mutate program of learner
-                isLearnerChanged = lrnr.mutateProgram(self.populations[popName].pProgramDelete,
-                    self.populations[popName].pProgramAdd, self.populations[popName].pProgramSwap, self.populations[popName].pProgramMutate,
-                    self.populations[popName].maxProgramSize)
-
-                # maybe mutate the action of the learner
-                if self.rand.uniform(0,1) < self.populations[popName].pMutateAction:
-                    action = None
-                    if self.rand.uniform(0,1) < self.populations[popName].pActionIsTeam: # team action
-                        actionTeam = self.rand.choice(self.populations[popName].teams)
-                        action = Action(actionTeam)
-                    else: # atomic action
-                        if not self.multiAction: # choose single number
-                            action = Action(self.rand.choice(self.actions))
-                        else: # choose list of length self.actions within range
-                            minv = self.actionRange[0]
-                            maxv = self.actionRange[1]
-                            if lrnr.action.isAtomic():
-                                act = lrnr.action.act
-                                stp = self.actionRange[2]
-                                action = Action(
-                                    [self.clip(i+self.rand.choice([-stp,stp]), minv, maxv)
-                                                for i in act])
-                            else:
-                                action = Action([self.rand.uniform(minv, maxv)
-                                            for i in range(self.actions)])
-
-                    # try to mutate the learners action, and record whether
-                    # learner changed at all
-                    isLearnerChanged = (lrnr.mutateAction(action) or
-                                                            isLearnerChanged)
-                # apply changes
-                if isLearnerChanged:
-                    team.addLearner(lrnr)
-                    self.populations[popName].learners.append(lrnr)
-                    isTeamChanged = True
-                    if not lrnr.action.isAtomic():
-                        lrnr.action.act.learnerRefCount += 1
-
-        return isTeamChanged
 
     """
     A sort of clean up method to prepare for a new epoch of learning.
