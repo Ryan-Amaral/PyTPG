@@ -107,7 +107,7 @@ class Learner:
             else:
                 progResult = runProgram1(obs, registers, self.modes,
                         self.ops, self.dests, self.srcs, Learner.registerSize)
-            
+
             return 1 / (1 + math.exp(-progResult))
         except:
             return 0
@@ -172,6 +172,9 @@ class Learner:
         # dereference if team in original action
         if not act.isAtomic():
             act.act.learnerRefCount -= 1
+        # add reference if team in new action
+        if not self.action.isAtomic():
+            self.action.act.learnerRefCount += 1
 
         return not act.equals(action)
 
