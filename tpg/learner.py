@@ -101,14 +101,14 @@ class Learner:
 
         # math overflow error happens sometimes
         try:
-            if si is not None:
+            if si is not None: # visual debug
                 progResult = runProgram2(obs, registers, self.modes,
                         self.ops, self.dests, self.srcs, Learner.registerSize, si)
             else:
                 progResult = runProgram1(obs, registers, self.modes,
                         self.ops, self.dests, self.srcs, Learner.registerSize)
 
-            return 1 / (1 + math.exp(-progResult))
+            return progResult
         except:
             return 0
 
