@@ -4,7 +4,7 @@ setup(
     name='PyTPG',
     version='0.9',
     packages=['tpg'],
-    install_requires=['numba','numpy','bitarray'],
+    install_requires=['numba','numpy','bitarray','bunch'],
     license='MIT',
     description='Python implementation of Tangled Program Graphs.',
     long_description=open('README.md').read(),
