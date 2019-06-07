@@ -903,8 +903,8 @@ class TpgTrainer:
                 else: # choose list of length self.actions within range
                     minv = self.actionRange[0]
                     maxv = self.actionRange[1]
-                    if lrnr.action.isAtomic():
-                        act = lrnr.action.act
+                    if learner.action.isAtomic():
+                        act = learner.action.act
                         stp = self.actionRange[2]
                         action = Action(
                             [self.clip(i+self.rand.choice([-stp,stp]), minv, maxv)
