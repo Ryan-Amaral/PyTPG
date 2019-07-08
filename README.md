@@ -1,7 +1,7 @@
 # tpg-python
 A python implementation of Tangled Program Graphs.
 
-## Major Refactors to come!!!
+## New branch with refactors to replace master when done.
 
 ## Setup
 
