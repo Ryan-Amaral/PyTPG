@@ -5,7 +5,11 @@ produce the bid value for this learner's action.
 """
 class Learner:
 
-    def __init__(self):
+    """
+    Create a new learner, either copied from the original or from a program or
+    action.
+    """
+    def __init__(self, learner=None, prog=None, act=None):
         pass
 
     """

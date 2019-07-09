@@ -14,7 +14,7 @@ class Team:
     """
     Adds learner to the team and updates number of references to that program.
     """
-    def addLearner(self, learner=None, program=None, action=None):
+    def addLearner(self, learner=None, prog=None, act=None):
         pass
 
     """
