@@ -9,7 +9,7 @@ A program that is executed to help obtain the bid for a learner.
 class Program:
 
     # max amount of instructions each program can have
-    maxProgLen = 128
+    maxProgramLength = 128
 
     """
     bits for:
@@ -23,17 +23,17 @@ class Program:
     Src: At-least # of bits to store size of input. The index to take from
         input, or a register depending on Mode.
     """
-    instLens   = [1,3,3,23]
+    instructionLengths   = [1,3,3,23]
 
     idCount = 0 # unique id of each program
 
-    def __init__(self, insts=None):
-        if insts is not None: # copy from existing
-            self.insts = list(insts)
+    def __init__(self, instructions=None):
+        if instructions is not None: # copy from existing
+            self.instructions = list(instructions)
         else: # create random new
-            maxInst = 2**sum(Program.instLens)-1
-            self.insts = [random.randint(0, maxInst) for _ in
-                                   range(random.randint(1, Program.maxProgLen))]
+            maxInst = 2**sum(Program.instructionLengths)-1
+            self.instructions = [random.randint(0, maxInst) for _ in
+                            range(random.randint(1, Program.maxProgramLength))]
 
         self.id = Program.idCount
         Program.idCount += 1
@@ -92,7 +92,7 @@ class Program:
     inpts, and outs (parallel) not None, then mutates until this program is
     distinct. If update then calls update when done.
     """
-    def mutate(self, inpts=None, outs=None, update=True):
+    def mutate(self, inputs=None, outputs=None, update=True):
         # mutation code here
 
         if update:
@@ -103,23 +103,23 @@ class Program:
     efficient execution.
     """
     def update(self):
-        totalLen = sum(Program.instLens)
+        totalLen = sum(Program.instructionLengths)
         instsData = np.array([
             [
-                getIntSegment(inst, 0, Program.instLens[0], totalLen),
-                getIntSegment(inst, Program.instLens[0],
-                        Program.instLens[1], totalLen),
-                getIntSegment(inst, sum(Program.instLens[:2]),
-                        Program.instLens[2], totalLen),
-                getIntSegment(inst, sum(Program.instLens[:3]),
-                        Program.instLens[3], totalLen)
+                getIntSegment(inst, 0, Program.instructionLengths[0], totalLen),
+                getIntSegment(inst, Program.instructionLengths[0],
+                        Program.instructionLengths[1], totalLen),
+                getIntSegment(inst, sum(Program.instructionLengths[:2]),
+                        Program.instructionLengths[2], totalLen),
+                getIntSegment(inst, sum(Program.instructionLengths[:3]),
+                        Program.instructionLengths[3], totalLen)
             ]
-            for inst in self.insts])
+            for inst in self.instructions])
 
         self.modes = np.array(instsData[:,0], dtype = bool)
-        self.ops = np.array(instsData[:,1], dtype = np.int8)
-        self.dsts = np.array(instsData[:,2], dtype = np.int8)
-        self.srcs = np.array(instsData[:,3], dtype = np.int32)
+        self.operations = np.array(instsData[:,1], dtype = np.int8)
+        self.destinations = np.array(instsData[:,2], dtype = np.int8)
+        self.sources = np.array(instsData[:,3], dtype = np.int32)
 
 def getIntSegment(num, bitStart, bitLen, totalLen):
     binStr = format(num, 'b').zfill(totalLen)
