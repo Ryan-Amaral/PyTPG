@@ -53,3 +53,10 @@ class Learner:
     """
     def isActionAtomic(self):
         return isinstance(self.action, int)
+
+    """
+    Mutates either the program or the action.
+    """
+    def mutate(self):
+        # if mutate program, must reinstance program
+        pass

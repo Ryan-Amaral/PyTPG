@@ -63,3 +63,9 @@ class Team:
                 num += 1
 
         return num
+
+    """
+    Mutates the learner set of this team.
+    """
+    def mutate(self):
+        pass

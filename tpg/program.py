@@ -90,17 +90,6 @@ class Program:
                 regs[dest] = np.finfo(np.float64).min
 
     """
-    Mutates the program, by performing some operations on the instructions. If
-    inpts, and outs (parallel) not None, then mutates until this program is
-    distinct. If update then calls update when done.
-    """
-    def mutate(self, inputs=None, outputs=None, update=True):
-        # mutation code here
-
-        if update:
-            self.update()
-
-    """
     Takes instructions and converts them into np arrays for easier more
     efficient execution.
     """
@@ -122,6 +111,31 @@ class Program:
         self.operations = np.array(instsData[:,1], dtype = np.int8)
         self.destinations = np.array(instsData[:,2], dtype = np.int8)
         self.sources = np.array(instsData[:,3], dtype = np.int32)
+
+
+    """
+    Mutates the program, by performing some operations on the instructions. If
+    inpts, and outs (parallel) not None, then mutates until this program is
+    distinct. If update then calls update when done.
+    """
+    def mutate(self, inputs=None, outputs=None, update=True):
+        if inputs is not None and outputs is not None:
+            # mutate until distinct from others
+            pass
+        else:
+            self.mutateInstructions()
+
+        if update:
+            self.update()
+
+    """
+    Potentially modifies the instructions in a few ways.
+    """
+    def mutateInstructions(self):
+        changed = False
+        while not changed:
+            # attempt mutations
+            break
 
 def getIntSegment(num, bitStart, bitLen, totalLen):
     binStr = format(num, 'b').zfill(totalLen)
