@@ -38,6 +38,8 @@ class Program:
         self.id = Program.idCount
         Program.idCount += 1
 
+        self.numTeamsReferencing = 0 # amount of teams with references to this
+
         self.update()
 
 
