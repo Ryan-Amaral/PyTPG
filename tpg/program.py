@@ -2,14 +2,12 @@ import random
 import numpy as np
 from numba import njit
 import math
+from tpg.utils import flip
 
 """
 A program that is executed to help obtain the bid for a learner.
 """
 class Program:
-
-    # max amount of instructions each program can have
-    maxProgramLength = 128
 
     """
     bits for:
@@ -27,13 +25,13 @@ class Program:
 
     idCount = 0 # unique id of each program
 
-    def __init__(self, instructions=None):
+    def __init__(self, instructions=None, maxProgramLength=128):
         if instructions is not None: # copy from existing
             self.instructions = list(instructions)
         else: # create random new
             maxInst = 2**sum(Program.instructionLengths)-1
             self.instructions = [random.randint(0, maxInst) for _ in
-                            range(random.randint(1, Program.maxProgramLength))]
+                            range(random.randint(1, maxProgramLength))]
 
         self.id = Program.idCount
         Program.idCount += 1
@@ -123,6 +121,7 @@ class Program:
             # mutate until distinct from others
             pass
         else:
+            # just a single round of mutation
             self.mutateInstructions()
 
         if update:
@@ -131,12 +130,53 @@ class Program:
     """
     Potentially modifies the instructions in a few ways.
     """
-    def mutateInstructions(self):
+    def mutateInstructions(self, pDelete, pAdd, pSwap, pMutate):
         changed = False
+
         while not changed:
-            # attempt mutations
-            break
+            # maybe delete instruction
+            if len(self.instructions) > 1 and flip(pDelete):
+                del self.instructions[random.randint(0, len(self.instructions)-1)]
+                changed = True
+
+            # maybe mutate an instruction (flip a bit)
+            if flip(pMutate):
+                idx = random.randint(0, len(self.instructions)-1)
+                num = self.instructions[idx]
+                totalLen = sum(Program.instructionLengths)
+                bit = random.randint(0, totalLen-1)
+                self.instructions[idx] = bitSwap(num, bit, totalLen)
+                changed = True
+
+            # maybe swap two instructions
+            if len(self.instructions) > 1 and flip(pSwap):
+                # indices to swap
+                idx1, idx2 = random.sample(range(len(self.instructions)), 2)
+                # do swap
+                tmp = self.instructions[idx1]
+                self.instructions[idx1] = self.instructions[idx2]
+                self.instructions[idx2] = tmp
+                changed = True
+
+            # maybe add instruction
+            if flip(pAdd):
+                maxInst = 2**sum(Program.instructionLengths)-1
+                self.instructions.insert(
+                            random.randint(0, len(self.instructions)-1),
+                            random.randint(0, maxInst))
+                changed = True
+
 
 def getIntSegment(num, bitStart, bitLen, totalLen):
     binStr = format(num, 'b').zfill(totalLen)
     return int(binStr[bitStart:bitStart+bitLen], 2)
+
+def bitSwap(num, bit, totalLen):
+    binStr = format(num, 'b').zfill(totalLen)
+
+    if binStr[bit] == '0':
+        newNum = int(binStr[:bit] + '1' + binStr[bit+1:], 2)
+    else:
+        newNum = int(binStr[:bit] + '0' + binStr[bit+1:], 2)
+
+    return newNum

@@ -7,15 +7,13 @@ produce the bid value for this learner's action.
 """
 class Learner:
 
-    numRegisters = 8
-
     idCount = 0 # unique learner id
 
     """
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
     """
-    def __init__(self, learner=None, program=None, action=None):
+    def __init__(self, learner=None, program=None, action=None, numRegisters=8):
         if learner is not None:
             self.program = learner.program
             self.action = learner.action
@@ -23,7 +21,7 @@ class Learner:
             self.program = program
             self.action = action
 
-        self.registers = np.zeros(Learner.numRegisters, dtype=float)
+        self.registers = np.zeros(numRegisters, dtype=float)
 
         self.id = Learner.idCount
 
