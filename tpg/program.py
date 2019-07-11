@@ -116,13 +116,14 @@ class Program:
     inpts, and outs (parallel) not None, then mutates until this program is
     distinct. If update then calls update when done.
     """
-    def mutate(self, inputs=None, outputs=None, update=True):
+    def mutate(self, pInstDel, pInstAdd, pInstSwp, pInstMut,
+                inputs=None, outputs=None, update=True):
         if inputs is not None and outputs is not None:
             # mutate until distinct from others
             pass
         else:
             # just a single round of mutation
-            self.mutateInstructions()
+            self.mutateInstructions(pInstDel, pInstAdd, pInstSwp, pInstMut)
 
         if update:
             self.update()
@@ -130,17 +131,17 @@ class Program:
     """
     Potentially modifies the instructions in a few ways.
     """
-    def mutateInstructions(self, pDelete, pAdd, pSwap, pMutate):
+    def mutateInstructions(self, pDel, pAdd, pSwp, pMut):
         changed = False
 
         while not changed:
             # maybe delete instruction
-            if len(self.instructions) > 1 and flip(pDelete):
+            if len(self.instructions) > 1 and flip(pDel):
                 del self.instructions[random.randint(0, len(self.instructions)-1)]
                 changed = True
 
             # maybe mutate an instruction (flip a bit)
-            if flip(pMutate):
+            if flip(pMut):
                 idx = random.randint(0, len(self.instructions)-1)
                 num = self.instructions[idx]
                 totalLen = sum(Program.instructionLengths)
@@ -149,7 +150,7 @@ class Program:
                 changed = True
 
             # maybe swap two instructions
-            if len(self.instructions) > 1 and flip(pSwap):
+            if len(self.instructions) > 1 and flip(pSwp):
                 # indices to swap
                 idx1, idx2 = random.sample(range(len(self.instructions)), 2)
                 # do swap

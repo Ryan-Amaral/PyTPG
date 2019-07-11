@@ -1,5 +1,7 @@
 from tpg.program import Program
 import numpy as np
+from tpg.utils import flip
+import random
 
 """
 A team has multiple learners, each learner has a program which is executed to
@@ -17,11 +19,11 @@ class Learner:
         if learner is not None:
             self.program = learner.program
             self.action = learner.action
+            self.registers = np.zeros(len(learner.registers), dtype=float)
         elif program is not None and action is not None:
             self.program = program
             self.action = action
-
-        self.registers = np.zeros(numRegisters, dtype=float)
+            self.registers = np.zeros(numRegisters, dtype=float)
 
         self.id = Learner.idCount
 
@@ -53,8 +55,34 @@ class Learner:
         return isinstance(self.action, int)
 
     """
-    Mutates either the program or the action.
+    Mutates either the program or the action. Returns the new mutated Learner,
+    or original if no mutation.
     """
-    def mutate(self):
-        # if mutate program, must reinstance program
-        pass
+    def mutate(self, pMutProg, pMutAct, pActAtom, atomics, parentTeam, allTeams,
+                pInstDel, pInstAdd, pInstSwp, pInstMut,
+                inputs=None, outputs=None, update=True):
+
+        learner = self # fallback if no mutation
+
+        # mutate the program
+        if flip(pMutProg):
+            # clone learner and program before mutate
+            learner = Learner(program=Program(instructions=self.program.instructions),
+                              action = self.action, numRegisters=len(self.registers))
+            learner.program.mutate(pInstDel, pInstAdd, pInstSwp, pInstMut,
+                                   inputs=inputs, outputs=outputs, update=update)
+
+        # mutate the action
+        if flip(pMutAct):
+            # clone learner before mutate
+            if learner == self:
+                learner = Learner(self)
+
+            if flip(pActAtom): # atomic action
+                actions = [a for a in atomics if a is not learner.action]
+            else: # Team action
+                actions = [t for t in allTeams
+                        if t is not learner.action and t is not parentTeam]
+            learner.action = random.choice(actions)
+
+        return learner
