@@ -25,6 +25,9 @@ class Learner:
             self.action = action
             self.registers = np.zeros(numRegisters, dtype=float)
 
+        if not self.isActionAtomic():
+            self.action.numLearnersReferencing += 1
+
         self.id = Learner.idCount
 
     """
@@ -55,34 +58,38 @@ class Learner:
         return isinstance(self.action, int)
 
     """
-    Mutates either the program or the action. Returns the new mutated Learner,
-    or original if no mutation.
+    Mutates either the program or the action or both.
     """
     def mutate(self, pMutProg, pMutAct, pActAtom, atomics, parentTeam, allTeams,
-                pInstDel, pInstAdd, pInstSwp, pInstMut,
+                pDelInst, pAddInst, pSwpInst, pMutInst,
                 inputs=None, outputs=None, update=True):
 
-        learner = self # fallback if no mutation
+        changed = False
+        while not changed:
+            # mutate the program
+            if flip(pMutProg):
+                changed = True
+                self.program.mutate(pDelInst, pAddInst, pSwpInst, pMutInst,
+                                       inputs=inputs, outputs=outputs, update=update)
 
-        # mutate the program
-        if flip(pMutProg):
-            # clone learner and program before mutate
-            learner = Learner(program=Program(instructions=self.program.instructions),
-                              action = self.action, numRegisters=len(self.registers))
-            learner.program.mutate(pInstDel, pInstAdd, pInstSwp, pInstMut,
-                                   inputs=inputs, outputs=outputs, update=update)
+            # mutate the action
+            if flip(pMutAct):
+                changed = True
+                self.mutateAction(pActAtom, atomics, allTeams, parentTeam)
 
-        # mutate the action
-        if flip(pMutAct):
-            # clone learner before mutate
-            if learner == self:
-                learner = Learner(self)
+    """
+    Changes the action, into an atomic or team.
+    """
+    def mutateAction(self, pActAtom, atomics, allTeams, parentTeam):
+        if not self.isActionAtomic(): # dereference old team action
+            self.action.numLearnersReferencing -= 1
 
-            if flip(pActAtom): # atomic action
-                actions = [a for a in atomics if a is not learner.action]
-            else: # Team action
-                actions = [t for t in allTeams
-                        if t is not learner.action and t is not parentTeam]
-            learner.action = random.choice(actions)
+        if flip(pActAtom): # atomic action
+            actions = [a for a in atomics if a is not self.action]
+        else: # Team action
+            actions = [t for t in allTeams
+                    if t is not self.action and t is not parentTeam]
+        self.action = random.choice(actions)
 
-        return learner
+        if not self.isActionAtomic(): # add reference for new team action
+            self.action.numLearnersReferencing += 1

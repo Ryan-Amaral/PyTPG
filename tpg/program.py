@@ -116,14 +116,14 @@ class Program:
     inpts, and outs (parallel) not None, then mutates until this program is
     distinct. If update then calls update when done.
     """
-    def mutate(self, pInstDel, pInstAdd, pInstSwp, pInstMut,
+    def mutate(self, pDelInst, pAddInst, pSwpInst, pMutInst,
                 inputs=None, outputs=None, update=True):
         if inputs is not None and outputs is not None:
             # mutate until distinct from others
             pass
         else:
             # just a single round of mutation
-            self.mutateInstructions(pInstDel, pInstAdd, pInstSwp, pInstMut)
+            self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
 
         if update:
             self.update()
@@ -146,7 +146,7 @@ class Program:
                 num = self.instructions[idx]
                 totalLen = sum(Program.instructionLengths)
                 bit = random.randint(0, totalLen-1)
-                self.instructions[idx] = bitSwap(num, bit, totalLen)
+                self.instructions[idx] = bitFlip(num, bit, totalLen)
                 changed = True
 
             # maybe swap two instructions
@@ -167,12 +167,17 @@ class Program:
                             random.randint(0, maxInst))
                 changed = True
 
-
+"""
+Takes an int and returns another int made of some bits of the original.
+"""
 def getIntSegment(num, bitStart, bitLen, totalLen):
     binStr = format(num, 'b').zfill(totalLen)
     return int(binStr[bitStart:bitStart+bitLen], 2)
 
-def bitSwap(num, bit, totalLen):
+"""
+Flip a bit in the provided int.
+"""
+def bitFlip(num, bit, totalLen):
     binStr = format(num, 'b').zfill(totalLen)
 
     if binStr[bit] == '0':

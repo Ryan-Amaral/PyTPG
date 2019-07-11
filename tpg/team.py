@@ -1,3 +1,6 @@
+from tpg.utils import flip
+from tpg.learner import Learner
+import random
 
 """
 The main building block of TPG. Each team has multiple learning which decide the
@@ -67,5 +70,41 @@ class Team:
     """
     Mutates the learner set of this team.
     """
-    def mutate(self):
-        pass
+    def mutate(self, pDelLrn, pAddLrn, pMutLrn, allLearners, maxLearnerSize,
+                pMutProg, pMutAct, pActAtom, atomics, allTeams,
+                pDelInst, pAddInst, pSwpInst, pMutInst,
+                inputs=None, outputs=None, update=True):
+
+        # delete some learners
+        p = pDelLrn
+        while flip(p) and len(self.learners) > 2: # must have >= 2 learners
+            p *= pDelLrn # decrease next chance
+
+            # choose non-atomic learners if only one atomic remaining
+            learner = random.choice([l for l in self.learners
+                                     if not l.isActionAtomic() or
+                                        not self.numAtomicActions() < 2])
+            self.removeLearner(learner)
+
+        # add some learners
+        p = pAddLrn
+        while flip(p) and len(self.learners) < maxLearnerSize:
+            p *= pAddLrn # decrease next chance
+
+            learner = random.choice([l for l in allLearners
+                                     if l not in self.learners and
+                                        l.action is not self])
+            self.addLearner(learner)
+
+        # give chance to mutate all learners
+        oLearners = list(self.learners)
+        for learner in oLearners:
+            if flip(pMutLrn):
+                # must remove then re-add fresh mutated learner
+                self.removeLearner(learner)
+                newLearner = Learner(learner=learner)
+                newLearner.mutate(
+                        pMutProg, pMutAct, pActAtom, atomics, self, allTeams,
+                        pDelInst, pAddInst, pSwpInst, pMutInst,
+                        inputs=inputs, outputs=outputs, update=update)
+                self.addLearner(newLearner)
