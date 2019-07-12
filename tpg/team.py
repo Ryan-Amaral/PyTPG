@@ -13,7 +13,10 @@ class Team:
     def __init__(self):
         self.learners = []
         self.outcomes = {} # scores at various tasks
+        self.fitness = None
         self.numLearnersReferencing = 0 # number of learners that reference this
+        self.id = Team.idCount
+        Team.idCount += 1
 
     """
     Returns an action to use based on the current state.
@@ -52,9 +55,8 @@ class Team:
     Bulk removes learners from teams.
     """
     def removeLearners(self):
-        for lrnr in self.learners:
-            lrnr.program.numTeamsReferencing -= 1
-        self.learners = []
+        for lrnr in list(self.learners):
+            self.removeLearner(lrnr)
 
     """
     Number of learners with atomic actions on this team.
@@ -70,7 +72,7 @@ class Team:
     """
     Mutates the learner set of this team.
     """
-    def mutate(self, pDelLrn, pAddLrn, pMutLrn, allLearners, maxLearnerSize,
+    def mutate(self, pDelLrn, pAddLrn, pMutLrn, allLearners,
                 pMutProg, pMutAct, pActAtom, atomics, allTeams,
                 pDelInst, pAddInst, pSwpInst, pMutInst,
                 inputs=None, outputs=None, update=True):
@@ -88,7 +90,7 @@ class Team:
 
         # add some learners
         p = pAddLrn
-        while flip(p) and len(self.learners) < maxLearnerSize:
+        while flip(p):
             p *= pAddLrn # decrease next chance
 
             learner = random.choice([l for l in allLearners
