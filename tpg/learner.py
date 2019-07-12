@@ -28,6 +28,8 @@ class Learner:
         if not self.isActionAtomic():
             self.action.numLearnersReferencing += 1
 
+        self.numTeamsReferencing = 0 # amount of teams with references to this
+
         self.id = Learner.idCount
 
     """

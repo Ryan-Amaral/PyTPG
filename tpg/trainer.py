@@ -1,6 +1,7 @@
 from tpg.program import Program
 from tpg.learner import Learner
 from tpg.team import Team
+from tpg.agent import Agent
 import random
 
 """
@@ -19,9 +20,9 @@ class Trainer:
         # store all necessary params
         self.actions = actions
 
-        self.teamPopSize = 360
-        self.rTeamPopSize = 360
-        self.gap = 0.5
+        self.teamPopSize = teamPopSize
+        self.rTeamPopSize = rTeamPopSize
+        self.gap = gap
 
         self.pDelLrn = pDelLrn
         self.pAddLrn = pAddLrn
@@ -47,9 +48,9 @@ class Trainer:
     atomic actions.
     """
     def initializePopulations(self, initMaxTeamSize, initMaxProgSize, registerSize):
-        for i in range(teamPopSize):
+        for i in range(self.teamPopSize):
             # create 2 unique actions and learners
-            a1,a2 = random.sample(range(self.actions), 2)
+            a1,a2 = random.sample(self.actions, 2)
             l1 = Learner(program=Program(maxProgramLength=initMaxProgSize),
                                          action=a1, numRegisters=registerSize)
             l2 = Learner(program=Program(maxProgramLength=initMaxProgSize),
@@ -77,122 +78,127 @@ class Trainer:
             self.teams.append(team)
             self.rootTeams.append(team)
 
-        """
-        Gets all rootTeams/agents.
-        """
-        def getAgents(self):
-            return list(self.rootTeams)
+    """
+    Gets all rootTeams/agents.
+    """
+    def getAgents(self):
+        agents = []
+        for i,t in enumerate(self.rootTeams):
+            a = Agent(t, num=i)
+            agents.append(a)
 
-        """
-        Apply saved scores from list to the agents.
-        """
-        def applyScores(self, scores): # used when multiprocessing
-            for score in scores:
-                for rt in self.rootTeams:
-                    if score[0] == rt.id:
-                        for task, outcome in score[1].items():
-                            rt.outcomes[task] = outcome
-                        break # on to next score
+        return agents
 
-            return self.rootTeams
-
-        """
-        Evolve the populations for improvements.
-        """
-        def evolve(self, task='task'):
-            self.scoreIndividuals(task) # assign scores to individuals
-            self.saveFitnessStats() # save fitness stats
-            self.select() # select individuals to keep
-            self.generate() # create new individuals from those kept
-            self.nextEpoch() # set up for next generation
-
-        """
-        Assigns a fitness to each agent based on performance at the task.
-        """
-        def scoreIndividuals(self, task):
+    """
+    Apply saved scores from list to the agents.
+    """
+    def applyScores(self, scores): # used when multiprocessing
+        for score in scores:
             for rt in self.rootTeams:
-                rt.fitness = rt.outcomes[task]
+                if score[0] == rt.id:
+                    for task, outcome in score[1].items():
+                        rt.outcomes[task] = outcome
+                    break # on to next score
 
-        """
-        Save some stats on the fitness.
-        """
-        def saveFitnessStats(self):
-            fitnesses = []
-            for rt in self.rootTeams:
-                fitnesses.append(rt.fitness)
+        return self.rootTeams
 
-            self.fitnessStats = {}
-            self.fitnessStats['fitnesses'] = fitnesses
-            self.fitnessStats['min'] = min(fitnesses)
-            self.fitnessStats['max'] = max(fitnesses)
-            self.fitnessStats['average'] = sum(fitnesses)/len(fitnesses)
+    """
+    Evolve the populations for improvements.
+    """
+    def evolve(self, task='task'):
+        self.scoreIndividuals(task) # assign scores to individuals
+        self.saveFitnessStats() # save fitness stats
+        self.select() # select individuals to keep
+        self.generate() # create new individuals from those kept
+        self.nextEpoch() # set up for next generation
 
-        """
-        Delete a portion of the population according to gap size.
-        """
-        def select(self):
-            rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
-            numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
-            deleteTeams = rankedTeams[numKeep:]
+    """
+    Assigns a fitness to each agent based on performance at the task.
+    """
+    def scoreIndividuals(self, task):
+        for rt in self.rootTeams:
+            rt.fitness = rt.outcomes[task]
 
-            for team in deleteTeams:
-                team.removeLearners()
-                self.teams.remove(team)
-                self.rootTeams.remove(team)
+    """
+    Save some stats on the fitness.
+    """
+    def saveFitnessStats(self):
+        fitnesses = []
+        for rt in self.rootTeams:
+            fitnesses.append(rt.fitness)
 
-        """
-        Generates new rootTeams based on existing teams.
-        """
-        def generate(self):
+        self.fitnessStats = {}
+        self.fitnessStats['fitnesses'] = fitnesses
+        self.fitnessStats['min'] = min(fitnesses)
+        self.fitnessStats['max'] = max(fitnesses)
+        self.fitnessStats['average'] = sum(fitnesses)/len(fitnesses)
 
-            oLearners = list(self.learners)
-            oTeams = list(self.teams)
+    """
+    Delete a portion of the population according to gap size.
+    """
+    def select(self):
+        rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
+        numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
+        deleteTeams = rankedTeams[numKeep:]
 
-            while len(self.teams) < self.teamPopSize or
-                    self.countRootTeams() < self.rTeamPopSize:
+        for team in deleteTeams:
+            team.removeLearners()
+            self.teams.remove(team)
+            self.rootTeams.remove(team)
 
-                # get parent root team, and child to be based on that
-                parent = random.choice(self.rootTeams)
-                child = Team()
+    """
+    Generates new rootTeams based on existing teams.
+    """
+    def generate(self):
 
-                # child starts just like parent
-                for learner in parent.learners:
-                    child.addLearner(learner)
-                # then mutates
-                child.mutate(self.pDelLrn, self.pAddLrn, self.pMutLrn, oLearners,
-                            self.pMutProg, self.pMutAct, self.pActAtom,
-                            self.actions, oTeams,
-                            self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
-                            inputs=None, outputs=None, update=True)
+        oLearners = list(self.learners)
+        oTeams = list(self.teams)
 
-                self.teams.append(child)
-                self.rootTeams.append(child)
+        while (len(self.teams) < self.teamPopSize or
+                self.countRootTeams() < self.rTeamPopSize):
 
-        def nextEpoch(self):
-            # delete now unused learners
-            for learner in list(self.learners):
-                if learner.numTeamsReferencing == 0:
-                    self.learners.remove(learner)
-                    # dereference if action is team
-                    if not learner.isActionAtomic():
-                        learner.action.numLearnersReferencing -= 1
+            # get parent root team, and child to be based on that
+            parent = random.choice(self.rootTeams)
+            child = Team()
 
-            # add in newly added learners, and decide root teams
-            self.rootTeams = []
-            for team in self.teams:
-                # add any new learners to the population
-                for learner in team.learners:
-                    if learner not in self.learners:
-                        self.learners.append(learner)
+            # child starts just like parent
+            for learner in parent.learners:
+                child.addLearner(learner)
+            # then mutates
+            child.mutate(self.pDelLrn, self.pAddLrn, self.pMutLrn, oLearners,
+                        self.pMutProg, self.pMutAct, self.pActAtom,
+                        self.actions, oTeams,
+                        self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
+                        inputs=None, outputs=None, update=True)
 
-                # maybe make root team
-                if team.numLearnersReferencing == 0:
-                    self.rootTeams.append(team)
+            self.teams.append(child)
+            self.rootTeams.append(child)
 
-        def countRootTeams(self):
-            numRTeams = 0
-            for team in self.teams:
-                if team.numLearnersReferencing == 0:
-                    numRTeams += 1
+    def nextEpoch(self):
+        # delete now unused learners
+        for learner in list(self.learners):
+            if learner.numTeamsReferencing == 0:
+                self.learners.remove(learner)
+                # dereference if action is team
+                if not learner.isActionAtomic():
+                    learner.action.numLearnersReferencing -= 1
 
-            return numRTeams
+        # add in newly added learners, and decide root teams
+        self.rootTeams = []
+        for team in self.teams:
+            # add any new learners to the population
+            for learner in team.learners:
+                if learner not in self.learners:
+                    self.learners.append(learner)
+
+            # maybe make root team
+            if team.numLearnersReferencing == 0:
+                self.rootTeams.append(team)
+
+    def countRootTeams(self):
+        numRTeams = 0
+        for team in self.teams:
+            if team.numLearnersReferencing == 0:
+                numRTeams += 1
+
+        return numRTeams

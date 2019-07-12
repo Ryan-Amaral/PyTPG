@@ -29,17 +29,14 @@ class Team:
     """
     Adds learner to the team and updates number of references to that program.
     """
-    def addLearner(self, learner=None, program=None, action=None):
-        if learner is not None:
-            program = learner.program
-        elif program is not None and action is not None:
-            learner = Learner(program=program, action=action)
-
+    def addLearner(self, learner=None):
+        program = learner.program
+        # don't add duplicate program
         if any([lrnr.program == program for lrnr in self.learners]):
-            return False # don't add duplicate program
+            return False
 
         self.learners.append(learner)
-        program.numTeamsReferencing += 1
+        learner.numTeamsReferencing += 1
 
         return True
 
@@ -48,7 +45,7 @@ class Team:
     """
     def removeLearner(self, learner):
         if learner in self.learners:
-            learner.program.numTeamsReferencing -= 1
+            learner.numTeamsReferencing -= 1
             self.learners.remove(learner)
 
     """
