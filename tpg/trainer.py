@@ -13,7 +13,7 @@ class Trainer:
     Create a trainer to store the various evolutionary parameters.
     """
     def __init__(self, actions, teamPopSize=360, rTeamPopSize=360, gap=0.5,
-        initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
+        uniqueProgThresh=1e-5, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0):
 
@@ -22,7 +22,8 @@ class Trainer:
 
         self.teamPopSize = teamPopSize
         self.rTeamPopSize = rTeamPopSize
-        self.gap = gap
+        self.gap = gap # portion of root teams to remove each generation
+        self.uniqueProgThresh = uniqueProgThresh # threshold to accept mutated programs
 
         self.pDelLrn = pDelLrn
         self.pAddLrn = pAddLrn
@@ -103,13 +104,14 @@ class Trainer:
         return self.rootTeams
 
     """
-    Evolve the populations for improvements.
+    Evolve the populations for improvements. States taken from environment to
+    ensure unique programs are created from mutations.
     """
-    def evolve(self, task='task'):
+    def evolve(self, task='task', states=None):
         self.scoreIndividuals(task) # assign scores to individuals
         self.saveFitnessStats() # save fitness stats
         self.select() # select individuals to keep
-        self.generate() # create new individuals from those kept
+        self.generate(states) # create new individuals from those kept
         self.nextEpoch() # set up for next generation
 
     """
@@ -149,7 +151,7 @@ class Trainer:
     """
     Generates new rootTeams based on existing teams.
     """
-    def generate(self):
+    def generate(self, states=None):
 
         oLearners = list(self.learners)
         oTeams = list(self.teams)
@@ -164,12 +166,18 @@ class Trainer:
             # child starts just like parent
             for learner in parent.learners:
                 child.addLearner(learner)
+
+            if states is not None:
+                outputs = getLearnerOutputs(oLearners, states)
+            else:
+                inputs = None
+                outputs = None
             # then mutates
             child.mutate(self.pDelLrn, self.pAddLrn, self.pMutLrn, oLearners,
                         self.pMutProg, self.pMutAct, self.pActAtom,
                         self.actions, oTeams,
                         self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
-                        inputs=None, outputs=None, update=True)
+                        uniqueProgThresh, inputs=states, outputs=outputs, update=True)
 
             self.teams.append(child)
             self.rootTeams.append(child)
@@ -202,3 +210,20 @@ class Trainer:
                 numRTeams += 1
 
         return numRTeams
+
+    """
+    Returns the output of each learner bid in each state. Output as [state/input, lrnr].
+    """
+    def getLearnerOutputs(self, learners, states):
+        outputs = []
+        for state in states:
+            outs = []
+            for lrnr in learners:
+                regs = np.zeros(len(lrnr.registers))
+                Program.execute(state, regs,
+                                lrnr.program.modes, lrnr.program.operations,
+                                lrnr.program.destinations, lrnr.program.sources)
+                outs.append(regs[0])
+            outputs.append(outs)
+
+        return outputs

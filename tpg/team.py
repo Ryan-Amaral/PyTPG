@@ -72,7 +72,7 @@ class Team:
     def mutate(self, pDelLrn, pAddLrn, pMutLrn, allLearners,
                 pMutProg, pMutAct, pActAtom, atomics, allTeams,
                 pDelInst, pAddInst, pSwpInst, pMutInst,
-                inputs=None, outputs=None, update=True):
+                uniqueProgThresh, inputs=None, outputs=None, update=True):
 
         # delete some learners
         p = pDelLrn
@@ -105,5 +105,5 @@ class Team:
                 newLearner.mutate(
                         pMutProg, pMutAct, pActAtom, atomics, self, allTeams,
                         pDelInst, pAddInst, pSwpInst, pMutInst,
-                        inputs=inputs, outputs=outputs, update=update)
+                        uniqueProgThresh, inputs=inputs, outputs=outputs, update=update)
                 self.addLearner(newLearner)

@@ -115,10 +115,29 @@ class Program:
     distinct. If update then calls update when done.
     """
     def mutate(self, pDelInst, pAddInst, pSwpInst, pMutInst,
-                inputs=None, outputs=None, update=True):
+                regSize, uniqueProgThresh, inputs=None, outputs=None, update=True):
         if inputs is not None and outputs is not None:
             # mutate until distinct from others
-            pass
+            unique = False
+            while not unique:
+                unique = True # assume unique until shown not
+                self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
+                self.update()
+                # check unique on all inputs from all learners outputs
+                for input in inputs:
+                    regs = np.zeros(len(regSize))
+                    Program.execute(state, regs, self.modes, self.operations,
+                                    self.destinations, self.sources)
+                    myOut = regs[0]
+                    for output in outputs:
+                        for curOut in output:
+                            if abs(curOut-myOut) < uniqueProgThresh:
+                                unique = False
+                                break
+                        if unique == False:
+                            break
+                    if unique == False:
+                        break
         else:
             # just a single round of mutation
             self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
