@@ -215,7 +215,7 @@ class Trainer:
     Returns the input and output of each learner bid in each state.
     As [learner, stateNum]. Inputs being states, outputs being floats (bid values)
     """
-    def getLearnersInsOuts(self, learners):
+    def getLearnersInsOuts(self, learners, clearStates=True):
         inputs = []
         outputs = []
         for lrnr in learners:
@@ -228,6 +228,10 @@ class Trainer:
                                 lrnr.program.destinations, lrnr.program.sources)
                 lrnrInputs.append(state)
                 lrnrOutputs.append(regs[0])
+
+            if clearStates: # free up some space
+                lrnr.states = []
+
             inputs.append(lrnrInputs)
             outputs.append(lrnrOutputs)
 
