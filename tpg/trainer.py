@@ -3,6 +3,7 @@ from tpg.learner import Learner
 from tpg.team import Team
 from tpg.agent import Agent
 import random
+import numpy as np
 
 """
 Functionality for actually growing TPG and evolving it to be functional.
@@ -104,14 +105,13 @@ class Trainer:
         return self.rootTeams
 
     """
-    Evolve the populations for improvements. States taken from environment to
-    ensure unique programs are created from mutations.
+    Evolve the populations for improvements.
     """
-    def evolve(self, task='task', states=None):
+    def evolve(self, task='task'):
         self.scoreIndividuals(task) # assign scores to individuals
         self.saveFitnessStats() # save fitness stats
         self.select() # select individuals to keep
-        self.generate(states) # create new individuals from those kept
+        self.generate() # create new individuals from those kept
         self.nextEpoch() # set up for next generation
 
     """
@@ -151,7 +151,7 @@ class Trainer:
     """
     Generates new rootTeams based on existing teams.
     """
-    def generate(self, states=None):
+    def generate(self):
 
         oLearners = list(self.learners)
         oTeams = list(self.teams)
@@ -167,8 +167,8 @@ class Trainer:
             for learner in parent.learners:
                 child.addLearner(learner)
 
-            if states is not None:
-                outputs = getLearnerOutputs(oLearners, states)
+            if self.uniqueProgThresh > 0:
+                inputs, outputs = self.getLearnersInsOuts(oLearners)
             else:
                 inputs = None
                 outputs = None
@@ -177,7 +177,7 @@ class Trainer:
                         self.pMutProg, self.pMutAct, self.pActAtom,
                         self.actions, oTeams,
                         self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
-                        uniqueProgThresh, inputs=states, outputs=outputs, update=True)
+                        self.uniqueProgThresh, inputs=inputs, outputs=outputs, update=True)
 
             self.teams.append(child)
             self.rootTeams.append(child)
@@ -212,18 +212,23 @@ class Trainer:
         return numRTeams
 
     """
-    Returns the output of each learner bid in each state. Output as [state/input, lrnr].
+    Returns the input and output of each learner bid in each state.
+    As [learner, stateNum]. Inputs being states, outputs being floats (bid values)
     """
-    def getLearnerOutputs(self, learners, states):
+    def getLearnersInsOuts(self, learners):
+        inputs = []
         outputs = []
-        for state in states:
-            outs = []
-            for lrnr in learners:
+        for lrnr in learners:
+            lrnrInputs = []
+            lrnrOutputs = []
+            for state in lrnr.states:
                 regs = np.zeros(len(lrnr.registers))
                 Program.execute(state, regs,
                                 lrnr.program.modes, lrnr.program.operations,
                                 lrnr.program.destinations, lrnr.program.sources)
-                outs.append(regs[0])
-            outputs.append(outs)
+                lrnrInputs.append(state)
+                lrnrOutputs.append(regs[0])
+            inputs.append(lrnrInputs)
+            outputs.append(lrnrOutputs)
 
-        return outputs
+        return inputs, outputs

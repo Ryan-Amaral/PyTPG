@@ -28,6 +28,8 @@ class Learner:
         if not self.isActionAtomic():
             self.action.numLearnersReferencing += 1
 
+        self.states = []
+
         self.numTeamsReferencing = 0 # amount of teams with references to this
 
         self.id = Learner.idCount
@@ -96,3 +98,10 @@ class Learner:
 
         if not self.isActionAtomic(): # add reference for new team action
             self.action.numLearnersReferencing += 1
+
+    """
+    Saves visited states for mutation uniqueness purposes.
+    """
+    def saveState(self, state, numStates=50):
+        self.states.append(state)
+        self.states = self.states[-numStates:]

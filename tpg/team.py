@@ -27,6 +27,25 @@ class Team:
         return topLearner.getAction(state, visited=visited)
 
     """
+    Same as act, but with additional features. Use act for performance.
+    """
+    def act2(self, state, visited=set(), numStates=50):
+        visited.add(self) # track visited teams
+
+        # break down getting bids to do more stuff to learners
+        topLearner = self.learners[0]
+        topBid = self.learners[0].bid(state)
+        self.learners[0].saveState(state, numStates=numStates)
+        for lrnr in self.learners[1:]:
+            bid = lrnr.bid(state)
+            lrnr.saveState(state, numStates=numStates)
+            if bid > topBid:
+                topLearner = lrnr
+                topBid = bid
+
+        return topLearner.getAction(state, visited=visited)
+
+    """
     Adds learner to the team and updates number of references to that program.
     """
     def addLearner(self, learner=None):

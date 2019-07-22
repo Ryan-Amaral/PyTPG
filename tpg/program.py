@@ -124,18 +124,20 @@ class Program:
                 self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
                 self.update()
                 # check unique on all inputs from all learners outputs
-                for input in inputs:
-                    regs = np.zeros(len(regSize))
-                    Program.execute(state, regs, self.modes, self.operations,
-                                    self.destinations, self.sources)
-                    myOut = regs[0]
-                    for output in outputs:
-                        for curOut in output:
-                            if abs(curOut-myOut) < uniqueProgThresh:
-                                unique = False
-                                break
-                        if unique == False:
+                # input and outputs of i'th learner
+                for i, lrnrInputs in enumerate(inputs):
+                    lrnrOutputs = outputs[i]
+
+                    for j, input in enumerate(lrnrInputs):
+                        output = lrnrOutputs[j]
+                        regs = np.zeros(regSize)
+                        Program.execute(input, regs, self.modes, self.operations,
+                                        self.destinations, self.sources)
+                        myOut = regs[0]
+                        if abs(output-myOut) < uniqueProgThresh:
+                            unique = False
                             break
+
                     if unique == False:
                         break
         else:
