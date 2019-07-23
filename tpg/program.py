@@ -115,11 +115,16 @@ class Program:
     distinct. If update then calls update when done.
     """
     def mutate(self, pDelInst, pAddInst, pSwpInst, pMutInst,
-                regSize, uniqueProgThresh, inputs=None, outputs=None, update=True):
+                regSize, uniqueProgThresh, inputs=None, outputs=None, update=True,
+                maxMuts=100):
         if inputs is not None and outputs is not None:
             # mutate until distinct from others
             unique = False
             while not unique:
+                if maxMuts <= 0:
+                    break # too much
+                maxMuts -= 1
+                
                 unique = True # assume unique until shown not
                 self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
                 self.update()
