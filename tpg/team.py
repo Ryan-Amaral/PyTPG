@@ -124,13 +124,15 @@ class Team:
         for learner in oLearners:
             if flip(pMutLrn):
                 if self.numAtomicActions() == 1 and learner.isActionAtomic():
-                    pActAtom = 1 # action must be kept atomic if only one
+                    pActAtom0 = 1 # action must be kept atomic if only one
+                else:
+                    pActAtom0 = pActAtom
 
                 # must remove then re-add fresh mutated learner
                 self.removeLearner(learner)
                 newLearner = Learner(learner=learner)
                 newLearner.mutate(
-                        pMutProg, pMutAct, pActAtom, atomics, self, allTeams,
+                        pMutProg, pMutAct, pActAtom0, atomics, self, allTeams,
                         pDelInst, pAddInst, pSwpInst, pMutInst,
                         uniqueProgThresh, inputs=inputs, outputs=outputs, update=update)
                 self.addLearner(newLearner)
