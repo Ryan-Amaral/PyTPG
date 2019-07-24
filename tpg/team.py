@@ -23,7 +23,9 @@ class Team:
     """
     def act(self, state, visited=set()):
         visited.add(self) # track visited teams
-        topLearner = max(self.learners, key=lambda lrnr: lrnr.bid(state))
+        topLearner = max([lrnr for lrnr in self.learners
+                if lrnr.action not in visited],
+            key=lambda lrnr: lrnr.bid(state))
         return topLearner.getAction(state, visited=visited)
 
     """
@@ -32,11 +34,14 @@ class Team:
     def act2(self, state, visited=set(), numStates=50):
         visited.add(self) # track visited teams
 
+        # first get candidate (unvisited) learners
+        learners = [lrnr for lrnr in self.learners
+                if lrnr.action not in visited]
         # break down getting bids to do more stuff to learners
-        topLearner = self.learners[0]
-        topBid = self.learners[0].bid(state)
-        self.learners[0].saveState(state, numStates=numStates)
-        for lrnr in self.learners[1:]:
+        topLearner = learners[0]
+        topBid = learners[0].bid(state)
+        learners[0].saveState(state, numStates=numStates)
+        for lrnr in learners[1:]:
             bid = lrnr.bid(state)
             lrnr.saveState(state, numStates=numStates)
             if bid > topBid:
@@ -121,6 +126,8 @@ class Team:
                 # must remove then re-add fresh mutated learner
                 self.removeLearner(learner)
                 newLearner = Learner(learner=learner)
+                if self.numAtomicActions() == 1 and newLearner.isActionAtomic():
+                    pActAtom = 1 # action must be kept atomic if only one
                 newLearner.mutate(
                         pMutProg, pMutAct, pActAtom, atomics, self, allTeams,
                         pDelInst, pAddInst, pSwpInst, pMutInst,
