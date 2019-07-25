@@ -14,7 +14,7 @@ class Trainer:
     Create a trainer to store the various evolutionary parameters.
     """
     def __init__(self, actions, teamPopSize=360, rTeamPopSize=360, gap=0.5,
-        uniqueProgThresh=1e-5, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
+        uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0):
 
@@ -24,7 +24,8 @@ class Trainer:
         self.teamPopSize = teamPopSize
         self.rTeamPopSize = rTeamPopSize
         self.gap = gap # portion of root teams to remove each generation
-        self.uniqueProgThresh = uniqueProgThresh # threshold to accept mutated programs
+        # threshold to accept mutated programs
+        self.uniqueProgThresh = uniqueProgThresh # about 1e-5 is good
 
         self.pDelLrn = pDelLrn
         self.pAddLrn = pAddLrn
@@ -144,6 +145,12 @@ class Trainer:
         deleteTeams = rankedTeams[numKeep:]
 
         for team in deleteTeams:
+            # delete learners from population if this is last team referencing
+            for learner in team.learners:
+                if learner.numTeamsReferencing == 1:
+                    self.learners.remove(learner)
+
+            # remove learners from team and delete team from populations
             team.removeLearners()
             self.teams.remove(team)
             self.rootTeams.remove(team)
