@@ -114,7 +114,7 @@ class Program:
     inpts, and outs (parallel) not None, then mutates until this program is
     distinct. If update then calls update when done.
     """
-    def mutate(self, pDelInst, pAddInst, pSwpInst, pMutInst,
+    def mutate(self, pMutRep, pDelInst, pAddInst, pSwpInst, pMutInst,
                 regSize, uniqueProgThresh, inputs=None, outputs=None, update=True,
                 maxMuts=100):
         if inputs is not None and outputs is not None:
@@ -124,7 +124,7 @@ class Program:
                 if maxMuts <= 0:
                     break # too much
                 maxMuts -= 1
-                
+
                 unique = True # assume unique until shown not
                 self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
                 self.update()
@@ -146,8 +146,11 @@ class Program:
                     if unique == False:
                         break
         else:
-            # just a single round of mutation
-            self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
+            # mutations repeatedly, random amount
+            mutated = False
+            while not mutated or flip(pMutRep):
+                self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
+                mutated = True
 
         if update:
             self.update()

@@ -42,6 +42,8 @@ class Trainer:
         self.rootTeams = []
         self.learners = []
 
+        self.elites = [] # save best at each task
+
         self.generation = 0
 
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
@@ -143,6 +145,7 @@ class Trainer:
         rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
         numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
         deleteTeams = rankedTeams[numKeep:]
+        self.elites.append(rankedTeams[0])
 
         for team in deleteTeams:
             # delete learners from population if this is last team referencing
@@ -207,7 +210,7 @@ class Trainer:
                     self.learners.append(learner)
 
             # maybe make root team
-            if team.numLearnersReferencing == 0:
+            if team.numLearnersReferencing == 0 or team in self.elites:
                 self.rootTeams.append(team)
 
     def countRootTeams(self):

@@ -17,7 +17,7 @@ class Learner:
     """
     def __init__(self, learner=None, program=None, action=None, numRegisters=8):
         if learner is not None:
-            self.program = learner.program
+            self.program = Program(instructions=learner.program.instructions)
             self.action = learner.action
             self.registers = np.zeros(len(learner.registers), dtype=float)
         elif program is not None and action is not None:
@@ -73,7 +73,7 @@ class Learner:
             # mutate the program
             if flip(pMutProg):
                 changed = True
-                self.program.mutate(pDelInst, pAddInst, pSwpInst, pMutInst,
+                self.program.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
                     len(self.registers), uniqueProgThresh,
                     inputs=inputs, outputs=outputs, update=update)
 
