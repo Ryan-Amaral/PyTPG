@@ -24,14 +24,10 @@ class Team:
     def act(self, state, visited=set()):
         visited.add(self) # track visited teams
 
-        try:
-            topLearner = max([lrnr for lrnr in self.learners
+        topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.action not in visited],
             key=lambda lrnr: lrnr.bid(state))
-        except:
-            print(visited)
-            print([lrnr.action for lrnr in self.learners])
-            quit()
+            
         return topLearner.getAction(state, visited=visited)
 
     """
