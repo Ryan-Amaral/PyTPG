@@ -148,10 +148,14 @@ class Trainer:
         self.elites.append(rankedTeams[0])
 
         for team in deleteTeams:
-            # delete learners from population if this is last team referencing
             for learner in team.learners:
+                # delete learner from population if this is last team referencing
                 if learner.numTeamsReferencing == 1:
-                    self.learners.remove(learner)
+                    # remove reference to team if applicable
+                    if not learner.isActionAtomic():
+                        learner.action.numLearnersReferencing -= 1
+
+                    self.learners.remove(learner) # permanently remove
 
             # remove learners from team and delete team from populations
             team.removeLearners()
@@ -193,14 +197,6 @@ class Trainer:
             self.rootTeams.append(child)
 
     def nextEpoch(self):
-        # delete now unused learners
-        for learner in list(self.learners):
-            if learner.numTeamsReferencing == 0:
-                self.learners.remove(learner)
-                # dereference if action is team
-                if not learner.isActionAtomic():
-                    learner.action.numLearnersReferencing -= 1
-
         # add in newly added learners, and decide root teams
         self.rootTeams = []
         for team in self.teams:

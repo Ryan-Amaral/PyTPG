@@ -27,7 +27,7 @@ class Team:
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.action not in visited],
             key=lambda lrnr: lrnr.bid(state))
-            
+
         return topLearner.getAction(state, visited=visited)
 
     """
@@ -107,8 +107,8 @@ class Team:
 
             # choose non-atomic learners if only one atomic remaining
             learner = random.choice([l for l in self.learners
-                                     if not l.isActionAtomic() or
-                                        not self.numAtomicActions() < 2])
+                                     if not l.isActionAtomic()
+                                        or self.numAtomicActions() > 1])
             self.removeLearner(learner)
 
         # add some learners
