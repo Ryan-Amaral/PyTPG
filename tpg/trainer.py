@@ -121,8 +121,15 @@ class Trainer:
     Assigns a fitness to each agent based on performance at the task.
     """
     def scoreIndividuals(self, task):
+        self.elites = [] # empty out elites
+        elite = None
         for rt in self.rootTeams:
             rt.fitness = rt.outcomes[task]
+            if elite is None or rt.fitness > elite.fitness:
+                elite = rt
+
+        # save best, even if no longer root after mutate
+        self.elites.append(elite)
 
     """
     Save some stats on the fitness.
@@ -145,9 +152,10 @@ class Trainer:
         rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
         numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
         deleteTeams = rankedTeams[numKeep:]
-        self.elites.append(rankedTeams[0])
 
-        for team in deleteTeams:
+        # delete the team unless it is an elite (best at some task at-least)
+        # don't delete elites because they may not be root
+        for team in [t for t in deleteTeams if t not in self.elites]:
             for learner in team.learners:
                 # delete learner from population if this is last team referencing
                 if learner.numTeamsReferencing == 1:
