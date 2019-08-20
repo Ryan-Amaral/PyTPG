@@ -11,15 +11,19 @@ Functionality for actually growing TPG and evolving it to be functional.
 class Trainer:
 
     """
-    Create a trainer to store the various evolutionary parameters.
+    Create a trainer to store the various evolutionary parameters. Actions are
+    either a list of discrete (int) actions, or a number (int) of actions, each
+    of which will be between 0 and 1.
     """
     def __init__(self, actions, teamPopSize=360, rTeamPopSize=360, gap=0.5,
         uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
-        pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0):
+        pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
+        pSwapMultiAct=0.66, pChangeMultiAct=0.40):
 
         # store all necessary params
         self.actions = actions
+        self.multiAction = isinstance(self.actions, int)
 
         self.teamPopSize = teamPopSize
         self.rTeamPopSize = rTeamPopSize
@@ -55,7 +59,11 @@ class Trainer:
     def initializePopulations(self, initMaxTeamSize, initMaxProgSize, registerSize):
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
-            a1,a2 = random.sample(self.actions, 2)
+            if self.multiAction == False:
+                a1,a2 = random.sample(self.actions, 2)
+            else:
+                a1 = [random.uniform(0,1) for _ in range(self.actions)]
+                a2 = [random.uniform(0,1) for _ in range(self.actions)]
             l1 = Learner(program=Program(maxProgramLength=initMaxProgSize),
                                          action=a1, numRegisters=registerSize)
             l2 = Learner(program=Program(maxProgramLength=initMaxProgSize),
@@ -73,8 +81,14 @@ class Trainer:
             # add more learners
             moreLearners = random.randint(0, initMaxTeamSize-2)
             for i in range(moreLearners):
+                # select action
+                if self.multiAction == False:
+                    act = random.choice(self.actions)
+                else:
+                    act = [random.uniform(0,1) for _ in range(self.actions)]
+                # create new learner
                 learner = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                  action=random.choice(self.actions),
+                                  action=act,
                                   numRegisters=registerSize)
                 team.addLearner(learner)
                 self.learners.append(learner)
@@ -178,6 +192,15 @@ class Trainer:
         oLearners = list(self.learners)
         oTeams = list(self.teams)
 
+        # multiActs for action pool for multiaction mutation
+        if self.multiAction:
+            multiActs = []
+            for learner in oLearners:
+                if learner.isActionAtomic():
+                    multiActs.append(list(learner.action))
+        else:
+            multiActs = None
+
         while (len(self.teams) < self.teamPopSize or
                 self.countRootTeams() < self.rTeamPopSize):
 
@@ -199,6 +222,7 @@ class Trainer:
                         self.pMutProg, self.pMutAct, self.pActAtom,
                         self.actions, oTeams,
                         self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
+                        multiActs, self.pSwapMultiAct, self.pChangeMultiAct
                         self.uniqueProgThresh, inputs=inputs, outputs=outputs, update=True)
 
             self.teams.append(child)

@@ -59,13 +59,14 @@ class Learner:
     Returns true if the action is atomic, otherwise the action is a team.
     """
     def isActionAtomic(self):
-        return isinstance(self.action, int)
+        return isinstance(self.action, (int, list))
 
     """
     Mutates either the program or the action or both.
     """
     def mutate(self, pMutProg, pMutAct, pActAtom, atomics, parentTeam, allTeams,
                 pDelInst, pAddInst, pSwpInst, pMutInst,
+                multiActs, pSwapMultiAct, pChangeMultiAct,
                 uniqueProgThresh, inputs=None, outputs=None, update=True):
 
         changed = False
@@ -80,21 +81,38 @@ class Learner:
             # mutate the action
             if flip(pMutAct):
                 changed = True
-                self.mutateAction(pActAtom, atomics, allTeams, parentTeam)
+                self.mutateAction(pActAtom, atomics, allTeams, parentTeam,
+                                  multiActs, pSwapMultiAct, pChangeMultiAct)
 
     """
     Changes the action, into an atomic or team.
     """
-    def mutateAction(self, pActAtom, atomics, allTeams, parentTeam):
+    def mutateAction(self, pActAtom, atomics, allTeams, parentTeam,
+                     multiActs, pSwapMultiAct, pChangeMultiAct):
         if not self.isActionAtomic(): # dereference old team action
             self.action.numLearnersReferencing -= 1
 
         if flip(pActAtom): # atomic action
-            actions = [a for a in atomics if a is not self.action]
+            if not multiAct:
+                self.action = random.choice(
+                                [a for a in atomics if a is not self.action])
+            else:
+                swap = flip(pSwapMultiAct)
+                if swap: # totally swap action for another
+                    self.action = list(random.choice(multiActs))
+
+                # change some value in action
+                if not swap or flip(pChangeMultiAct):
+                    changed = False
+                    while not changed or flip(pChangeMultiAct):
+                        index = random.randint(0, len(self.action)-1)
+                        self.action[index] += random.gauss(0, .15)
+                        self.action = list(np.clip(self.action))
+                        changed = True
+
         else: # Team action
-            actions = [t for t in allTeams
-                    if t is not self.action and t is not parentTeam]
-        self.action = random.choice(actions)
+            self.action = random.choice([t for t in allTeams
+                    if t is not self.action and t is not parentTeam])
 
         if not self.isActionAtomic(): # add reference for new team action
             self.action.numLearnersReferencing += 1
