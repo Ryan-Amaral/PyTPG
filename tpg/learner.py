@@ -93,12 +93,12 @@ class Learner:
             self.action.numLearnersReferencing -= 1
 
         if flip(pActAtom): # atomic action
-            if not multiAct:
+            if multiActs is None:
                 self.action = random.choice(
                                 [a for a in atomics if a is not self.action])
             else:
                 swap = flip(pSwapMultiAct)
-                if swap: # totally swap action for another
+                if swap or not self.isActionAtomic(): # totally swap action for another
                     self.action = list(random.choice(multiActs))
 
                 # change some value in action
@@ -107,7 +107,7 @@ class Learner:
                     while not changed or flip(pChangeMultiAct):
                         index = random.randint(0, len(self.action)-1)
                         self.action[index] += random.gauss(0, .15)
-                        self.action = list(np.clip(self.action))
+                        self.action = list(np.clip(self.action, 0, 1))
                         changed = True
 
         else: # Team action
