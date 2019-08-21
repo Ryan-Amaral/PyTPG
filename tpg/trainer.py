@@ -241,6 +241,8 @@ class Trainer:
             if team.numLearnersReferencing == 0 or team in self.elites:
                 self.rootTeams.append(team)
 
+        self.generation += 1
+
     def countRootTeams(self):
         numRTeams = 0
         for team in self.teams:
