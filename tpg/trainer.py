@@ -41,6 +41,8 @@ class Trainer:
         self.pAddInst = pAddInst
         self.pSwpInst = pSwpInst
         self.pMutInst = pMutInst
+        self.pSwapMultiAct = pSwapMultiAct
+        self.pChangeMultiAct = pChangeMultiAct
 
         self.teams = []
         self.rootTeams = []

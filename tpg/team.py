@@ -25,7 +25,7 @@ class Team:
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
-                if lrnr.action not in visited],
+                if lrnr.isActionAtomic() or lrnr.action not in visited],
             key=lambda lrnr: lrnr.bid(state))
 
         return topLearner.getAction(state, visited=visited)
