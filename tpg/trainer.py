@@ -222,7 +222,7 @@ class Trainer:
                         self.pMutProg, self.pMutAct, self.pActAtom,
                         self.actions, oTeams,
                         self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
-                        multiActs, self.pSwapMultiAct, self.pChangeMultiAct
+                        multiActs, self.pSwapMultiAct, self.pChangeMultiAct,
                         self.uniqueProgThresh, inputs=inputs, outputs=outputs, update=True)
 
             self.teams.append(child)
