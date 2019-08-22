@@ -107,7 +107,8 @@ class Trainer:
     def getAgents(self, sortTasks=[], multiTaskType='min', skipTasks=[]):
         # remove those that get skipped
         rTeams = [team for team in self.rootTeams
-                if any(task not in team.outcomes for task in skipTasks)]
+                if len(skipTasks) == 0
+                        or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
             return [Agent(team) for team in rTeams]
@@ -163,9 +164,9 @@ class Trainer:
             # assign fitness to each agent based on tasks and score type
             if 'pareto' not in multiTaskType:
                 self.simpleScorer(tasks, multiTaskType=multiTaskType)
-            elif scoreType == 'paretoDominate':
+            elif multiTaskType == 'paretoDominate':
                 self.paretoDominateScorer(tasks)
-            elif scoreType == 'paretoNonDominated':
+            elif multiTaskType == 'paretoNonDominated':
                 self.paretoNonDominatedScorer(tasks)
 
     """
@@ -237,6 +238,22 @@ class Trainer:
         self.fitnessStats['min'] = min(fitnesses)
         self.fitnessStats['max'] = max(fitnesses)
         self.fitnessStats['average'] = sum(fitnesses)/len(fitnesses)
+
+    """
+    Gets stats on some task.
+    """
+    def getTaskStats(self, task):
+        scores = []
+        for rt in self.rootTeams:
+            scores.append(rt.outcomes[task])
+
+        scoreStats = {}
+        scoreStats['scores'] = scores
+        scoreStats['min'] = min(scores)
+        scoreStats['max'] = max(scores)
+        scoreStats['average'] = sum(scores)/len(scores)
+
+        return scoreStats
 
     """
     Delete a portion of the population according to gap size.
