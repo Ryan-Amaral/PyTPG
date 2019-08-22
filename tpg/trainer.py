@@ -19,7 +19,7 @@ class Trainer:
         uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
-        pSwapMultiAct=0.66, pChangeMultiAct=0.40):
+        pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True):
 
         # store all necessary params
         self.actions = actions
@@ -43,6 +43,7 @@ class Trainer:
         self.pMutInst = pMutInst
         self.pSwapMultiAct = pSwapMultiAct
         self.pChangeMultiAct = pChangeMultiAct
+        self.doElites = doElites
 
         self.teams = []
         self.rootTeams = []
@@ -100,15 +101,23 @@ class Trainer:
             self.rootTeams.append(team)
 
     """
-    Gets all rootTeams/agents.
+    Gets rootTeams/agents. Sorts decending by sortTasks, and skips individuals
+    who don't have scores for all skipTasks.
     """
-    def getAgents(self):
-        agents = []
-        for i,t in enumerate(self.rootTeams):
-            a = Agent(t, num=i)
-            agents.append(a)
+    def getAgents(self, sortTasks=[], multiTaskType='min', skipTasks=[]):
+        # remove those that get skipped
+        rTeams = [team for team in self.rootTeams
+                if any(task not in team.outcomes for task in skipTasks)]
 
-        return agents
+        if len(sortTasks) == 0: # just get all
+            return [Agent(team) for team in rTeams]
+        else:
+            # apply scores/fitness to root teams
+            self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType,
+                                                                doElites=False)
+            # return teams sorted by fitness
+            return [Agent(team) for team in
+                    sorted(rTeams, key=lambda tm: tm.fitness, reverse=True)]
 
     """
     Apply saved scores from list to the agents.
@@ -126,26 +135,94 @@ class Trainer:
     """
     Evolve the populations for improvements.
     """
-    def evolve(self, task='task'):
-        self.scoreIndividuals(task) # assign scores to individuals
+    def evolve(self, tasks=['task'], multiTaskType='min'):
+        self.scoreIndividuals(tasks, multiTaskType=multiTaskType,
+                doElites=self.doElites) # assign scores to individuals
         self.saveFitnessStats() # save fitness stats
         self.select() # select individuals to keep
         self.generate() # create new individuals from those kept
         self.nextEpoch() # set up for next generation
 
     """
-    Assigns a fitness to each agent based on performance at the task.
+    Assigns a fitness to each agent based on performance at the tasks. Assigns
+    fitness values, or just returns sorted root teams.
     """
-    def scoreIndividuals(self, task):
-        self.elites = [] # empty out elites
-        elite = None
-        for rt in self.rootTeams:
-            rt.fitness = rt.outcomes[task]
-            if elite is None or rt.fitness > elite.fitness:
-                elite = rt
+    def scoreIndividuals(self, tasks, multiTaskType='min', doElites=True):
+        # handle generation of new elites, typically just done in evolution
+        if doElites:
+            # get the best agent at each task
+            self.elites = [] # clear old elites
+            for task in tasks:
+                self.elites.append(max([team for team in self.rootTeams],
+                                        key=lambda t: t.outcomes[task]))
 
-        # save best, even if no longer root after mutate
-        self.elites.append(elite)
+        if len(tasks) == 1: # single fitness
+            for team in self.rootTeams:
+                team.fitness = team.outcomes[tasks[0]]
+        else: # multi fitness
+            # assign fitness to each agent based on tasks and score type
+            if 'pareto' not in multiTaskType:
+                self.simpleScorer(tasks, multiTaskType=multiTaskType)
+            elif scoreType == 'paretoDominate':
+                self.paretoDominateScorer(tasks)
+            elif scoreType == 'paretoNonDominated':
+                self.paretoNonDominatedScorer(tasks)
+
+    """
+    Gets either the min, max, or average score from each individual for ranking.
+    """
+    def simpleScorer(self, tasks, multiTaskType='min'):
+        # first find min and max in each task
+        mins = []
+        maxs = []
+        for task in tasks:
+            mins.append(min([team.outcomes[task] for team in self.rootTeams]))
+            maxs.append(max([team.outcomes[task] for team in self.rootTeams]))
+
+        # assign fitness
+        if multiTaskType == 'min':
+            for rt in self.rootTeams:
+                rt.fitness = min([(rt.outcomes[task]-mins[i])/(maxs[i]-mins[i])
+                        for i,task in enumerate(tasks)])
+        elif multiTaskType == 'max':
+            for rt in self.rootTeams:
+                rt.fitness = max([(rt.outcomes[task]-mins[i])/(maxs[i]-mins[i])
+                        for i,task in enumerate(tasks)])
+        elif multiTaskType == 'average':
+            for rt in self.rootTeams:
+                scores = [(rt.outcomes[task]-mins[i])/(maxs[i]-mins[i])
+                            for i,task in enumerate(tasks)]
+                rt.fitness = sum(scores)/len(scores)
+
+    """
+    Rank agents based on how many other agents it dominates
+    """
+    def paretoDominateScorer(self, tasks):
+        for t1 in self.rootTeams:
+            t1.fitness = 0
+            for t2 in self.rootTeams:
+                if t1 == t2:
+                    continue # don't compare to self
+
+                # compare on all tasks
+                if all([t1.outcomes[task] >= t2.outcomes[task]
+                         for task in tasks]):
+                    t1.fitness += 1
+
+    """
+    Rank agents based on how many other agents don't dominate it
+    """
+    def paretoNonDominatedScorer(self, tasks):
+        for t1 in self.rootTeams:
+            t1.fitness = 0
+            for t2 in self.rootTeams:
+                if t1 == t2:
+                    continue # don't compare to self
+
+                # compare on all tasks
+                if all([t1.outcomes[task] < t2.outcomes[task]
+                         for task in tasks]):
+                    t1.fitness -= 1
 
     """
     Save some stats on the fitness.
@@ -230,6 +307,9 @@ class Trainer:
             self.teams.append(child)
             self.rootTeams.append(child)
 
+    """
+    Finalize populations and prepare for next generation/epoch.
+    """
     def nextEpoch(self):
         # add in newly added learners, and decide root teams
         self.rootTeams = []
@@ -245,6 +325,9 @@ class Trainer:
 
         self.generation += 1
 
+    """
+    Get the number of root teams currently residing in the teams population.
+    """
     def countRootTeams(self):
         numRTeams = 0
         for team in self.teams:
