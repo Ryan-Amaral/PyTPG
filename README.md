@@ -1,5 +1,5 @@
 # tpg-python
-A python implementation of Tangled Program Graphs. A major refactor was recently implemented to clean up the API and improve performance, the old more feature filled version can be found [here](https://github.com/Ryan-Amaral/PyTPG/tree/93fb031f88a724087a80c0447f69f87ed25a3e04). This version will be gradually updated to contain features as described in TODO below.
+A python implementation of Tangled Program Graphs. A major refactor was recently implemented to clean up the API and improve performance.
 
 ## Setup
 
@@ -23,7 +23,8 @@ from tpg.agent import Agent
 
 **Trainer** is the class used for training, to do all the standard tasks of an evolutionary algorithm. Such as getting individuals, evolving, and reporting stats. **Agent** is essentially a wrapper for an individual of the population that the user (you) gets access to. Its API allows for things like selecting an action based on the world state, and giving a reward.
 
-Create an instance of the trainer, which initializes the necessary populations for the algorithm. There are many parameters to choose for the initializer, `actions` is the only required one, which is a list of actions available to you from the chosen environment (only support for int so far).
+Create an instance of the trainer, which initializes the necessary populations for the algorithm. There are many parameters to choose for the initializer, `actions` is the only required one, which is a list of actions available to you from the chosen environment, or an int representing the number of continuous action ranging from
+0-1.
 
 ```python
 trainer = Trainer(actions=range(7))
@@ -47,24 +48,23 @@ TPG works with final score only (for now), so track the score of whatever enviro
 agent.reward(score, environmentName)
 ```
 
-After all agents performed, call evolution on the trainer, and repeat for next generation if desired.
+After all agents performed, call evolution on the trainer, and repeat for next generation if desired. `environmentName` must be in a list because there is support for multiple environments/tasks to consider when evolving.
 
 ```python
-trainer.evolve(environmentName)
+trainer.evolve([environmentName])
 ```
 
 ### Other ways to use
-The above were just some of the important functions, and left out some necessary code for the environment, and a few other ways to use this API (some perhaps better). There are different ways to do things like withdrawing agents, rewarding agents, and evolving. And things become a bit tricky if you wish to work with multiprocessing, but we have some example workarounds to make it work. See [the examples page](./tpg_examples.ipynb) for details.
+The above were just some of the important functions, and left out some necessary code for the environment, and a few other ways to use this API (some perhaps better). There are different ways to do things like withdrawing agents, rewarding agents, and evolving. And things become a bit tricky if you wish to work with multiprocessing, but its relatively straight forward to make it work. See [the examples page](./tpg_examples.ipynb) for details.
 
 ## TODO
-- Implement the ability to evolve using scores from multiple tasks, to get a pareto front, or average/max relative performance, etc.
-- Implement more functionality into `getAgets()` such as sorting by task or tasks, skipping certain tasks that we already complete, etc.
 - Implement a sort of memory module with some learners reading and some writing.
 - Add convenience code to the utils file, such a simple method to run an agent in a gym environment with certain parameters, a method to transform the state, etc.
 
 ## Some Projects PyTPG was Used in
-- https://github.com/Ryan-Amaral/general-game-playing-tpg
-- https://github.com/Ryan-Amaral/prosthetic-challenge-tpg
+- https://github.com/Ryan-Amaral/general-game-playing-tpg (old API version)
+- https://github.com/Ryan-Amaral/prosthetic-challenge-tpg (old API version)
+- https://github.com/Ryan-Amaral/nips-l2m-2019 (private untill competition end)
 - Send me a message or a pull request for your projects to be included.
 
 ## Other TPG implementations:
@@ -72,6 +72,6 @@ The above were just some of the important functions, and left out some necessary
 - https://github.com/LivinBreezy/TPG-J
 
 ## Aknowledgements
-- Dr. Malcolm Heywood: My undergrad research supervisor.
+- Dr. Malcolm Heywood: My undergrad and Masters research supervisor.
 - Robert Smith: Provided an initial Java implementation of TPG, whiched I based this version on.
 - [Richard Wardin](https://github.com/Shalmezad): Helped fix a few bugs in early development.
