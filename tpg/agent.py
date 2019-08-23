@@ -1,3 +1,6 @@
+from tpg.program import Program
+import pickle
+
 """
 Simplified wrapper around a (root) team for easier interface for user.
 """
@@ -33,3 +36,21 @@ class Agent:
     """
     def taskDone(self, task):
         return task in self.team.outcomes
+
+    """
+    Save the agent to the file, saving any relevant class values to the instance.
+    """
+    def saveToFile(self, fileName):
+        self.programInstructionLengths = Program.instructionLengths
+
+        pickle.dump(self, open(fileName, 'wb'))
+
+"""
+Load some agent from the file, returning it and repopulate class values.
+"""
+def loadAgent(fileName):
+    agent = pickle.load(open(fileName, 'rb'))
+
+    Program.instructionLengths = list(agent.programInstructionLengths)
+
+    return agent

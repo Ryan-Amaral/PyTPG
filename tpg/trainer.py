@@ -4,6 +4,7 @@ from tpg.team import Team
 from tpg.agent import Agent
 import random
 import numpy as np
+import pickle
 
 """
 Functionality for actually growing TPG and evolving it to be functional.
@@ -378,3 +379,27 @@ class Trainer:
             outputs.append(lrnrOutputs)
 
         return inputs, outputs
+
+    """
+    Save the trainer to the file, saving any class values to the instance.
+    """
+    def saveToFile(self, fileName):
+        self.teamIdCount = Team.idCount
+        self.learnerIdCount = Learner.idCount
+        self.programIdCount = Program.idCount
+        self.programInstructionLengths = Program.instructionLengths
+
+        pickle.dump(self, open(fileName, 'wb'))
+
+"""
+Load some trainer from the file, returning it and repopulate class values.
+"""
+def loadTrainer(fileName):
+    trainer = pickle.load(open(fileName, 'rb'))
+
+    Team.idCount = trainer.teamIdCount
+    Learner.idCount = trainer.learnerIdCount
+    Program.idCount = trainer.programIdCount
+    Program.instructionLengths = list(trainer.programInstructionLengths)
+
+    return trainer
