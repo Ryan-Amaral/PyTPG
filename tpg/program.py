@@ -12,10 +12,10 @@ class Program:
     """
     bits for:
     mode   op    dest       src
-    1      111   11111...   11111111111...
-    Mode: Always 1 bit, whether to use register or input.
-    Op: Always 3 bits, one of 8 math operations (add, sub, mult, div, cos, log,
-        exp, neg).
+    1      1111   11111...   11111111111...
+    Mode: Always 1 bit, whether to use register or obs for input.
+    Op: Now 4 bits, one of 8 math operations (add, sub, mult, div, cos, log,
+        exp, neg) + memory read/write.
     Dest: At-least # of bits to store # of registers. The register to place the
         result of the instruction into.
     Src: At-least # of bits to store size of input. The index to take from
