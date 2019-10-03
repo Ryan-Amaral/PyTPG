@@ -1,6 +1,11 @@
 # tpg-python
 A python implementation of Tangled Program Graphs. A major refactor was recently implemented to clean up the API and improve performance.
 
+## Branch: Memory
+This branch contains an implementation of an external persistent memory module as
+described here: https://www.researchgate.net/publication/332327816_A_Model_of_External_Memory_for_Navigation_in_Partially_Observable_Visual_Reinforcement_Learning_Tasks. This branch is being kept separate from master until a clean way
+of selecting whether to use memory or not is implemented.
+
 ## Setup
 
 ### Requirements
