@@ -21,7 +21,7 @@ class Program:
     Src: At-least # of bits to store size of input. The index to take from
         input, or a register depending on Mode.
     """
-    instructionLengths   = [1,3,3,23]
+    instructionLengths   = [1,4,3,23]
 
     idCount = 0 # unique id of each program
 
@@ -58,18 +58,18 @@ class Program:
             x = regs[dsts[i]]
             y = src
             dest = dsts[i]%regSize
-            if op == 0:
+            if op == 0 or op == 10:
                 regs[dest] = x+y
-            elif op == 1:
+            elif op == 1 or op == 11:
                 regs[dest] = x-y
-            elif op == 2:
+            elif op == 2 or op == 12:
                 regs[dest] = x*y
-            elif op == 3:
+            elif op == 3 or op == 13:
                 if y != 0:
                     regs[dest] = x/y
-            elif op == 4:
+            elif op == 4 or op == 14:
                 regs[dest] = math.cos(y)
-            elif op == 5:
+            elif op == 5 or op == 15:
                 if y > 0:
                     regs[dest] = math.log(y)
             elif op == 6:
@@ -77,6 +77,10 @@ class Program:
             elif op == 7:
                 if x < y:
                     regs[dest] = x*(-1)
+            elif op == 8: # read from memory
+                pass
+            elif op == 9: # write to memory
+                pass
 
             if math.isnan(regs[dest]):
                 regs[dest] = 0
