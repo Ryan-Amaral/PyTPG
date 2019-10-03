@@ -2,6 +2,7 @@ from tpg.program import Program
 from tpg.learner import Learner
 from tpg.team import Team
 from tpg.agent import Agent
+from tpg.memory import Memory
 import random
 import numpy as np
 import pickle
@@ -55,6 +56,9 @@ class Trainer:
         self.generation = 0
 
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
+
+        # create the memory module
+        self.memory = Memory(100, registerSize)
 
     """
     Initializes a popoulation of teams and learners generated randomly with only
@@ -112,13 +116,13 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            return [Agent(team, num=i) for i,team in enumerate(rTeams)]
+            return [Agent(team, self.memory, num=i) for i,team in enumerate(rTeams)]
         else:
             # apply scores/fitness to root teams
             self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType,
                                                                 doElites=False)
             # return teams sorted by fitness
-            return [Agent(team, num=i) for i,team in
+            return [Agent(team, self.memory, num=i) for i,team in
                     enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 

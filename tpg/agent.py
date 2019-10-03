@@ -9,15 +9,16 @@ class Agent:
     """
     Create an agent with a team.
     """
-    def __init__(self, team, num=1):
+    def __init__(self, team, memory, num=1):
         self.team = team
+        self.memory = memory
         self.agentNum = num
 
     """
     Gets an action from the root team of this agent / this agent.
     """
     def act(self, state):
-        return self.team.act(state)
+        return self.team.act(state, self.memory)
 
     """
     Same as act, but with additional features. Use act for performance.

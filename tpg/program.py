@@ -12,7 +12,7 @@ class Program:
     """
     bits for:
     mode   op    dest       src
-    1      1111   11111...   11111111111...
+    1      1111   111...   11111111111...
     Mode: Always 1 bit, whether to use register or obs for input.
     Op: Now 4 bits, one of 8 math operations (add, sub, mult, div, cos, log,
         exp, neg) + memory read/write.
@@ -21,7 +21,7 @@ class Program:
     Src: At-least # of bits to store size of input. The index to take from
         input, or a register depending on Mode.
     """
-    instructionLengths   = [1,4,3,23]
+    instructionLengths = [1,4,3,23]
 
     idCount = 0 # unique id of each program
 
@@ -42,8 +42,8 @@ class Program:
     """
     Executes the program which returns a single final value.
     """
-    @njit
-    def execute(inpt, regs, modes, ops, dsts, srcs):
+    #@njit can't pre compile when accessing memory
+    def execute(inpt, regs, modes, ops, dsts, srcs, memory):
         regSize = len(regs)
         inptLen = len(inpt)
         for i in range(len(modes)):
@@ -58,28 +58,31 @@ class Program:
             x = regs[dsts[i]]
             y = src
             dest = dsts[i]%regSize
-            if op == 0 or op == 10:
-                regs[dest] = x+y
-            elif op == 1 or op == 11:
-                regs[dest] = x-y
-            elif op == 2 or op == 12:
-                regs[dest] = x*y
-            elif op == 3 or op == 13:
-                if y != 0:
-                    regs[dest] = x/y
-            elif op == 4 or op == 14:
-                regs[dest] = math.cos(y)
-            elif op == 5 or op == 15:
-                if y > 0:
-                    regs[dest] = math.log(y)
-            elif op == 6:
-                regs[dest] = math.exp(y)
-            elif op == 7:
-                if x < y:
-                    regs[dest] = x*(-1)
-            elif op == 8: # read from memory
-                pass
-            elif op == 9: # write to memory
+            try:
+                if op == 0 or op == 10:
+                    regs[dest] = x+y
+                elif op == 1 or op == 11:
+                    regs[dest] = x-y
+                elif op == 2 or op == 12:
+                    regs[dest] = x*y
+                elif op == 3 or op == 13:
+                    if y != 0:
+                        regs[dest] = x/y
+                elif op == 4 or op == 14:
+                    regs[dest] = math.cos(y)
+                elif op == 5 or op == 15:
+                    if y > 0:
+                        regs[dest] = math.log(y)
+                elif op == 6:
+                    regs[dest] = math.exp(y)
+                elif op == 7:
+                    if x < y:
+                        regs[dest] = x*(-1)
+                elif op == 8: # read from memory
+                    regs[dest] = memory.read(srcs[i])
+                elif op == 9: # write to memory
+                    memory.write(regs)
+            except:
                 pass
 
             if math.isnan(regs[dest]):
