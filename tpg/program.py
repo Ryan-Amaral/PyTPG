@@ -42,8 +42,8 @@ class Program:
     """
     Executes the program which returns a single final value.
     """
-    #@njit can't pre compile when accessing memory
-    def execute(inpt, regs, modes, ops, dsts, srcs, memory):
+    @njit
+    def execute(inpt, regs, modes, ops, dsts, srcs, memMatrix, memRows, memCols):
         regSize = len(regs)
         inptLen = len(inpt)
         for i in range(len(modes)):
@@ -58,32 +58,49 @@ class Program:
             x = regs[dsts[i]]
             y = src
             dest = dsts[i]%regSize
-            try:
-                if op == 0 or op == 10:
-                    regs[dest] = x+y
-                elif op == 1 or op == 11:
-                    regs[dest] = x-y
-                elif op == 2 or op == 12:
-                    regs[dest] = x*y
-                elif op == 3 or op == 13:
-                    if y != 0:
-                        regs[dest] = x/y
-                elif op == 4 or op == 14:
-                    regs[dest] = math.cos(y)
-                elif op == 5 or op == 15:
-                    if y > 0:
-                        regs[dest] = math.log(y)
-                elif op == 6:
-                    regs[dest] = math.exp(y)
-                elif op == 7:
-                    if x < y:
-                        regs[dest] = x*(-1)
-                elif op == 8: # read from memory
-                    regs[dest] = memory.read(srcs[i])
-                elif op == 9: # write to memory
-                    memory.write(regs)
-            except:
-                pass
+
+            if op == 0 or op == 10:
+                regs[dest] = x+y
+            elif op == 1 or op == 11:
+                regs[dest] = x-y
+            elif op == 2 or op == 12:
+                regs[dest] = x*y
+            elif op == 3 or op == 13:
+                if y != 0:
+                    regs[dest] = x/y
+            elif op == 4 or op == 14:
+                regs[dest] = math.cos(y)
+            elif op == 5 or op == 15:
+                if y > 0:
+                    regs[dest] = math.log(y)
+            elif op == 6:
+                regs[dest] = math.exp(y)
+            elif op == 7:
+                if x < y:
+                    regs[dest] = x*(-1)
+            elif op == 8: # read from memory
+                index = srcs[i]
+                index %= (memRows*memCols)
+                row = int(index / memRows)
+                col = index % memCols
+
+                regs[dest] = memMatrix[row, col]
+            elif op == 9: # write to memory
+                # row offset (start from center, go to edges)
+                for i in range(int(memRows/2)):
+                    # probability to write (gets smaller as i increases)
+                    # need to modify to be more robust with different # of rows
+                    writeProb = 0.25 - (0.01*i)**2
+                    # column to maybe write corresponding value into
+                    for col in range(memCols):
+                        # try write to lower half
+                        if np.random.rand(1)[0] < writeProb:
+                            row = (int(memRows/2) - i) - 1
+                            memMatrix[row,col] = regs[col]
+                        # try write to upper half
+                        if np.random.rand(1)[0] < writeProb:
+                            row = int(memRows/2) + i
+                            memMatrix[row,col] = regs[col]
 
             if math.isnan(regs[dest]):
                 regs[dest] = 0

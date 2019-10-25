@@ -41,7 +41,7 @@ class Learner:
         Program.execute(state, self.registers,
                         self.program.modes, self.program.operations,
                         self.program.destinations, self.program.sources,
-                        memory)
+                        memory.memMatrix, memory.rows, memory.columns)
 
         return self.registers[0]
 
