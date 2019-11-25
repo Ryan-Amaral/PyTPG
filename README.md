@@ -1,5 +1,5 @@
 # tpg-python
-A python implementation of Tangled Program Graphs. A major refactor was recently implemented to clean up the API and improve performance.
+A python implementation of Tangled Program Graphs.
 
 ## Branch: Memory
 This branch contains an implementation of an external persistent memory module as

@@ -21,14 +21,14 @@ class Team:
     """
     Returns an action to use based on the current state.
     """
-    def act(self, state, memory, visited=set()):
+    def act(self, state, memMatrix, memrows, memcolumns, visited=set()):
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or lrnr.action not in visited],
-            key=lambda lrnr: lrnr.bid(state, memory))
+            key=lambda lrnr: lrnr.bid(state, memMatrix, memrows, memcolumns))
 
-        return topLearner.getAction(state, visited=visited)
+        return topLearner.getAction(state, memMatrix, memrows, memcolumns, visited=visited)
 
     """
     Same as act, but with additional features. Use act for performance.

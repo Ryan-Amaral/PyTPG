@@ -18,7 +18,7 @@ class Agent:
     Gets an action from the root team of this agent / this agent.
     """
     def act(self, state):
-        return self.team.act(state, self.memory)
+        return self.team.act(state, self.memory.memMatrix, self.memory.rows, self.memory.columns)
 
     """
     Same as act, but with additional features. Use act for performance.
