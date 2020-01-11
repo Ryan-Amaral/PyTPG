@@ -20,7 +20,8 @@ class Trainer:
         uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
-        pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True):
+        pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
+        operationRange=6, sourceRange=30720):
 
         # store all necessary params
         self.actions = actions
@@ -53,6 +54,10 @@ class Trainer:
         self.elites = [] # save best at each task
 
         self.generation = 0
+
+        Program.operationRange = operationRange
+        Program.destinationRange = registerSize
+        Program.sourceRange = sourceRange
 
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
 
@@ -321,7 +326,7 @@ class Trainer:
                         self.actions, oTeams,
                         self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
                         multiActs, self.pSwapMultiAct, self.pChangeMultiAct,
-                        self.uniqueProgThresh, inputs=inputs, outputs=outputs, update=True)
+                        self.uniqueProgThresh, inputs=inputs, outputs=outputs)
 
             self.teams.append(child)
             self.rootTeams.append(child)
@@ -388,7 +393,9 @@ class Trainer:
         self.teamIdCount = Team.idCount
         self.learnerIdCount = Learner.idCount
         self.programIdCount = Program.idCount
-        self.programInstructionLengths = Program.instructionLengths
+        self.operationRange = Program.operationRange
+        self.destinationRange = Program.destinationRange
+        self.sourceRange = Program.sourceRange
 
         pickle.dump(self, open(fileName, 'wb'))
 
@@ -401,6 +408,8 @@ def loadTrainer(fileName):
     Team.idCount = trainer.teamIdCount
     Learner.idCount = trainer.learnerIdCount
     Program.idCount = trainer.programIdCount
-    Program.instructionLengths = list(trainer.programInstructionLengths)
+    Program.operationRange = trainer.operationRange
+    Program.destinationRange = trainer.destinationRange
+    Program.sourceRange = trainer.sourceRange
 
     return trainer

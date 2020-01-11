@@ -99,7 +99,7 @@ class Team:
                 pMutProg, pMutAct, pActAtom, atomics, allTeams,
                 pDelInst, pAddInst, pSwpInst, pMutInst,
                 multiActs, pSwapMultiAct, pChangeMultiAct,
-                uniqueProgThresh, inputs=None, outputs=None, update=True):
+                uniqueProgThresh, inputs=None, outputs=None):
 
         # delete some learners
         p = pDelLrn
@@ -138,5 +138,5 @@ class Team:
                         pMutProg, pMutAct, pActAtom0, atomics, self, allTeams,
                         pDelInst, pAddInst, pSwpInst, pMutInst,
                         multiActs, pSwapMultiAct, pChangeMultiAct,
-                        uniqueProgThresh, inputs=inputs, outputs=outputs, update=update)
+                        uniqueProgThresh, inputs=inputs, outputs=outputs)
                 self.addLearner(newLearner)

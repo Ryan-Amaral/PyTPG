@@ -67,7 +67,7 @@ class Learner:
     def mutate(self, pMutProg, pMutAct, pActAtom, atomics, parentTeam, allTeams,
                 pDelInst, pAddInst, pSwpInst, pMutInst,
                 multiActs, pSwapMultiAct, pChangeMultiAct,
-                uniqueProgThresh, inputs=None, outputs=None, update=True):
+                uniqueProgThresh, inputs=None, outputs=None):
 
         changed = False
         while not changed:
@@ -76,7 +76,7 @@ class Learner:
                 changed = True
                 self.program.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
                     len(self.registers), uniqueProgThresh,
-                    inputs=inputs, outputs=outputs, update=update)
+                    inputs=inputs, outputs=outputs)
 
             # mutate the action
             if flip(pMutAct):
