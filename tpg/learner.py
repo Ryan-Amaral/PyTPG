@@ -39,8 +39,8 @@ class Learner:
     """
     def bid(self, state):
         Program.execute(state, self.registers,
-                        self.program.modes, self.program.operations,
-                        self.program.destinations, self.program.sources)
+                        self.program.instructions[:,0], self.program.instructions[:,1],
+                        self.program.instructions[:,2], self.program.instructions[:,3])
 
         return self.registers[0]
 

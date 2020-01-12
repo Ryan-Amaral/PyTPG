@@ -20,7 +20,7 @@ class Program:
 
     def __init__(self, instructions=None, maxProgramLength=128):
         if instructions is not None: # copy from existing
-            self.instructions = np.array(instructions, dtype=int32)
+            self.instructions = np.array(instructions, dtype=np.int32)
         else: # create random new
             self.instructions = np.array([
                 (random.randint(0,1),
