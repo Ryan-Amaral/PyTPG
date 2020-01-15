@@ -169,12 +169,16 @@ class Trainer:
                 team.fitness = team.outcomes[tasks[0]]
         else: # multi fitness
             # assign fitness to each agent based on tasks and score type
-            if 'pareto' not in multiTaskType:
+            if 'pareto' not in multiTaskType or 'lexicase' not in multiTaskType:
                 self.simpleScorer(tasks, multiTaskType=multiTaskType)
             elif multiTaskType == 'paretoDominate':
                 self.paretoDominateScorer(tasks)
             elif multiTaskType == 'paretoNonDominated':
                 self.paretoNonDominatedScorer(tasks)
+            elif multiTaskType == 'lexicaseStatic':
+                self.lexicaseStaticScorer(tasks)
+            elif multiTaskType == 'lexicaseDynamic':
+                self.lexicaseDynamicScorer(tasks)
 
     """
     Gets either the min, max, or average score from each individual for ranking.
@@ -231,6 +235,17 @@ class Trainer:
                 if all([t1.outcomes[task] < t2.outcomes[task]
                          for task in tasks]):
                     t1.fitness -= 1
+
+    def lexicaseStaticScorer(self, tasks):
+        stasks = list(tasks)
+        random.shuffle(stasks)
+
+        for rt in self.rootTeams:
+            rt.fitness = rt.outcomes[tasks[0]]
+
+
+    def lexicaseDynamicScorer(self, tasks):
+        pass
 
     """
     Save some stats on the fitness.
