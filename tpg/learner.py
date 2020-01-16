@@ -37,10 +37,11 @@ class Learner:
     """
     Get the bid value, highest gets its action selected.
     """
-    def bid(self, state):
+    def bid(self, state, memMatrix):
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
-                        self.program.instructions[:,2], self.program.instructions[:,3])
+                        self.program.instructions[:,2], self.program.instructions[:,3],
+                        memMatrix, memMatrix.shape[0], memMatrix.shape[1])
 
         return self.registers[0]
 
@@ -48,11 +49,11 @@ class Learner:
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction(self, state, visited):
+    def getAction(self, state, memMatrix, visited):
         if self.isActionAtomic():
             return self.action
         else:
-            return self.action.act(state, visited)
+            return self.action.act(state, memMatrix, visited)
 
 
     """

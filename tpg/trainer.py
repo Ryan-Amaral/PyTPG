@@ -21,7 +21,7 @@ class Trainer:
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
         pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
-        operationRange=6, sourceRange=30720):
+        sourceRange=30720, sharedMemory=False, memMatrixShape=(100,8)):
 
         # store all necessary params
         self.actions = actions
@@ -55,11 +55,18 @@ class Trainer:
 
         self.generation = 0
 
-        Program.operationRange = operationRange
+        # extra operations if memory
+        if not sharedMemory:
+            Program.operationRange = 6
+        else:
+            Program.operationRange = 8
+
         Program.destinationRange = registerSize
         Program.sourceRange = sourceRange
 
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
+
+        self.memMatrix = np.zeros(shape=memMatrixShape)
 
     """
     Initializes a popoulation of teams and learners generated randomly with only
@@ -117,13 +124,13 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            return [Agent(team, num=i) for i,team in enumerate(rTeams)]
+            return [Agent(team, self.memMatrix, num=i) for i,team in enumerate(rTeams)]
         else:
             # apply scores/fitness to root teams
             self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType,
                                                                 doElites=False)
             # return teams sorted by fitness
-            return [Agent(team, num=i) for i,team in
+            return [Agent(team, self.memMatrix, num=i) for i,team in
                     enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 

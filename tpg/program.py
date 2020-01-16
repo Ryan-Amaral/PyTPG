@@ -37,7 +37,7 @@ class Program:
     Executes the program which returns a single final value.
     """
     @njit
-    def execute(inpt, regs, modes, ops, dsts, srcs):
+    def execute(inpt, regs, modes, ops, dsts, srcs, memMatrix, memRows, memCols):
         regSize = len(regs)
         inptLen = len(inpt)
         for i in range(len(modes)):
@@ -68,9 +68,27 @@ class Program:
                 if x < y:
                     regs[dest] = x*(-1)
             elif op == 6:
-                pass # read mem
+                index = srcs[i]
+                index %= (memRows*memCols)
+                row = int(index / memRows)
+                col = index % memCols
+                regs[dest] = memMatrix[row, col]
             elif op == 7:
-                pass # write mem
+                # row offset (start from center, go to edges)
+                for i in range(int(memRows/2)):
+                    # probability to write (gets smaller as i increases)
+                    # need to modify to be more robust with different # of rows
+                    writeProb = 0.25 - (0.01*i)**2
+                    # column to maybe write corresponding value into
+                    for col in range(memCols):
+                        # try write to lower half
+                        if np.random.rand(1)[0] < writeProb:
+                            row = (int(memRows/2) - i) - 1
+                            memMatrix[row,col] = regs[col]
+                        # try write to upper half
+                        if np.random.rand(1)[0] < writeProb:
+                            row = int(memRows/2) + i
+                            memMatrix[row,col] = regs[col]
 
             if math.isnan(regs[dest]):
                 regs[dest] = 0
