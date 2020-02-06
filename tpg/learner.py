@@ -33,7 +33,7 @@ class Learner:
         self.numTeamsReferencing = 0 # amount of teams with references to this
 
         self.id = Learner.idCount
-        Leaner.idCount += 1
+        Learner.idCount += 1
 
     """
     Get the bid value, highest gets its action selected.
