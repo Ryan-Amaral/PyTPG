@@ -20,7 +20,8 @@ class Trainer:
         uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
-        pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True):
+        pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
+        sourceRange=30720, sharedMemory=False, memMatrixShape=(100,8)):
 
         # store all necessary params
         self.actions = actions
@@ -54,7 +55,18 @@ class Trainer:
 
         self.generation = 0
 
+        # extra operations if memory
+        if not sharedMemory:
+            Program.operationRange = 6
+        else:
+            Program.operationRange = 8
+
+        Program.destinationRange = registerSize
+        Program.sourceRange = sourceRange
+
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
+
+        self.memMatrix = np.zeros(shape=memMatrixShape)
 
     """
     Initializes a popoulation of teams and learners generated randomly with only
@@ -112,13 +124,13 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            return [Agent(team, num=i) for i,team in enumerate(rTeams)]
+            return [Agent(team, self.memMatrix, num=i) for i,team in enumerate(rTeams)]
         else:
             # apply scores/fitness to root teams
             self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType,
                                                                 doElites=False)
             # return teams sorted by fitness
-            return [Agent(team, num=i) for i,team in
+            return [Agent(team, self.memMatrix, num=i) for i,team in
                     enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 
@@ -164,12 +176,16 @@ class Trainer:
                 team.fitness = team.outcomes[tasks[0]]
         else: # multi fitness
             # assign fitness to each agent based on tasks and score type
-            if 'pareto' not in multiTaskType:
+            if 'pareto' not in multiTaskType or 'lexicase' not in multiTaskType:
                 self.simpleScorer(tasks, multiTaskType=multiTaskType)
             elif multiTaskType == 'paretoDominate':
                 self.paretoDominateScorer(tasks)
             elif multiTaskType == 'paretoNonDominated':
                 self.paretoNonDominatedScorer(tasks)
+            elif multiTaskType == 'lexicaseStatic':
+                self.lexicaseStaticScorer(tasks)
+            elif multiTaskType == 'lexicaseDynamic':
+                self.lexicaseDynamicScorer(tasks)
 
     """
     Gets either the min, max, or average score from each individual for ranking.
@@ -226,6 +242,17 @@ class Trainer:
                 if all([t1.outcomes[task] < t2.outcomes[task]
                          for task in tasks]):
                     t1.fitness -= 1
+
+    def lexicaseStaticScorer(self, tasks):
+        stasks = list(tasks)
+        random.shuffle(stasks)
+
+        for rt in self.rootTeams:
+            rt.fitness = rt.outcomes[tasks[0]]
+
+
+    def lexicaseDynamicScorer(self, tasks):
+        pass
 
     """
     Save some stats on the fitness.
@@ -321,7 +348,7 @@ class Trainer:
                         self.actions, oTeams,
                         self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
                         multiActs, self.pSwapMultiAct, self.pChangeMultiAct,
-                        self.uniqueProgThresh, inputs=inputs, outputs=outputs, update=True)
+                        self.uniqueProgThresh, inputs=inputs, outputs=outputs)
 
             self.teams.append(child)
             self.rootTeams.append(child)
@@ -388,7 +415,9 @@ class Trainer:
         self.teamIdCount = Team.idCount
         self.learnerIdCount = Learner.idCount
         self.programIdCount = Program.idCount
-        self.programInstructionLengths = Program.instructionLengths
+        self.operationRange = Program.operationRange
+        self.destinationRange = Program.destinationRange
+        self.sourceRange = Program.sourceRange
 
         pickle.dump(self, open(fileName, 'wb'))
 
@@ -401,6 +430,8 @@ def loadTrainer(fileName):
     Team.idCount = trainer.teamIdCount
     Learner.idCount = trainer.learnerIdCount
     Program.idCount = trainer.programIdCount
-    Program.instructionLengths = list(trainer.programInstructionLengths)
+    Program.operationRange = trainer.operationRange
+    Program.destinationRange = trainer.destinationRange
+    Program.sourceRange = trainer.sourceRange
 
     return trainer

@@ -33,14 +33,16 @@ class Learner:
         self.numTeamsReferencing = 0 # amount of teams with references to this
 
         self.id = Learner.idCount
+        Learner.idCount += 1
 
     """
     Get the bid value, highest gets its action selected.
     """
-    def bid(self, state):
+    def bid(self, state, memMatrix):
         Program.execute(state, self.registers,
-                        self.program.modes, self.program.operations,
-                        self.program.destinations, self.program.sources)
+                        self.program.instructions[:,0], self.program.instructions[:,1],
+                        self.program.instructions[:,2], self.program.instructions[:,3],
+                        memMatrix, memMatrix.shape[0], memMatrix.shape[1])
 
         return self.registers[0]
 
@@ -48,11 +50,11 @@ class Learner:
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction(self, state, visited):
+    def getAction(self, state, memMatrix, visited):
         if self.isActionAtomic():
             return self.action
         else:
-            return self.action.act(state, visited)
+            return self.action.act(state, memMatrix, visited)
 
 
     """
@@ -67,7 +69,7 @@ class Learner:
     def mutate(self, pMutProg, pMutAct, pActAtom, atomics, parentTeam, allTeams,
                 pDelInst, pAddInst, pSwpInst, pMutInst,
                 multiActs, pSwapMultiAct, pChangeMultiAct,
-                uniqueProgThresh, inputs=None, outputs=None, update=True):
+                uniqueProgThresh, inputs=None, outputs=None):
 
         changed = False
         while not changed:
@@ -76,7 +78,7 @@ class Learner:
                 changed = True
                 self.program.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
                     len(self.registers), uniqueProgThresh,
-                    inputs=inputs, outputs=outputs, update=update)
+                    inputs=inputs, outputs=outputs)
 
             # mutate the action
             if flip(pMutAct):
