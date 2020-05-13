@@ -104,3 +104,4 @@ venv.bak/
 .mypy_cache/
 
 tpg_examples-Copy1.ipynb
+*.pkl
