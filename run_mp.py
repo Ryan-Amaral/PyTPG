@@ -14,6 +14,7 @@ import requests
 #Import tpg
 from tpg.util.mp_utils import doRun
 from tpg.util.mp_utils import runAgent
+from tpg.util.mp_utils import writeRunInfo
 from tpg.util.ms_graph_utils import getMSGraphToken 
 from tpg.util.ms_graph_utils import uploadFile
 from tpg.util.ms_graph_utils import getShareableLink
@@ -70,22 +71,6 @@ else:
     sys.exit()
 
 
-
-#MS Graph Wizardry
-msGraphConfig = json.load(open(msGraphConfigPath))
-
-
-# Create a preferably long-lived app instance that maintains a token cache.
-app = msal.ConfidentialClientApplication(
-    msGraphConfig["client_id"], authority=msGraphConfig["authority"],
-    client_credential=msGraphConfig["secret"],
-    # token_cache=...  # Default cache is in memory only.
-                       # You can learn how to use SerializableTokenCache from
-                       # https://msal-python.rtfd.io/en/latest/#msal.SerializableTokenCache
-    )
-
-msGraphToken = getMSGraphToken(app, msGraphConfig)
-
 #Start timestmap
 tStart = time.time()
 runInfo['tStart'] = tStart
@@ -119,11 +104,11 @@ Path(resultsPath).mkdir(parents=True, exist_ok=True)
 
 # RunInfo.txt - Program arguments, loaded configurations, implicit configurations
 # RunStats.csv - Stats of interest collected during the generation loop
-# RunFitnessStats.csv - Fitness scores of the generations, collected after the generation loop
 # FinalRootTeamsFitness.csv - Fitness each team in the root team after the run is complete. 
 runInfoFile = open(runInfo['resultsPath'] + runInfo['runInfoFileName'], "a")
 #TODO - print Program arguments, loaded configurations, implicit configurations. Don't print sensitive garbage!!
 runInfoFile.close()
+writeRunInfo(runInfo)
 
 runStatsFile = open(runInfo['resultsPath'] + runInfo['runStatsFileName'], "a")
 runStatsFile.write("Generation #, time taken, min fitness, max fitness, avg fitness, # of learners, # of teams in root team, # of instructions, add, sub, mult, div, neg, memRead, memWrite \n")
@@ -147,6 +132,21 @@ for rt in trainer.rootTeams:
     if rt.fitness is not None:
         finalRootFitnessFile.write(str(rt.id) + "," + str(rt.fitness) + '\n')
 finalRootFitnessFile.close()
+
+#MS Graph Wizardry
+msGraphConfig = json.load(open(msGraphConfigPath))
+
+
+# Create a preferably long-lived app instance that maintains a token cache.
+app = msal.ConfidentialClientApplication(
+    msGraphConfig["client_id"], authority=msGraphConfig["authority"],
+    client_credential=msGraphConfig["secret"],
+    # token_cache=...  # Default cache is in memory only.
+                       # You can learn how to use SerializableTokenCache from
+                       # https://msal-python.rtfd.io/en/latest/#msal.SerializableTokenCache
+    )
+
+msGraphToken = getMSGraphToken(app, msGraphConfig)
 
 # Upload RunStats #TODO replace this with zip of full results
 driveItem = uploadFile(

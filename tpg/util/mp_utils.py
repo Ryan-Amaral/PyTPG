@@ -80,8 +80,9 @@ def doRun(runInfo):
     if runInfo['loadPath'] is not None:
         trainer = loadTrainer(runInfo['loadPath'])
     else:
-        trainer = Trainer(actions=range(numActions), teamPopSize=runInfo['teamPopulationSize'], rTeamPopSize=runInfo['teamPopulationSize'], sharedMemory=runInfo['useMemory'])
+        trainer = Trainer(actions=range(numActions), teamPopSize=runInfo['teamPopulationSize'], rTeamPopSize=runInfo['teamPopulationSize'], sharedMemory=runInfo['useMemory'], traversal=runInfo['traversalType'])
 
+    runInfo['trainer'] = trainer #Save the trainer for run details later
     man = mp.Manager()
     pool = mp.Pool(processes=runInfo['numThreads'], maxtasksperchild=1)
 
@@ -107,34 +108,27 @@ def doRun(runInfo):
         '''
         Gather statistics 
         '''
-        # Total learners in that root team
-        learnerCount = len(trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.learners)
+        stats = {
+            'learnerCount': len(trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.learners),
+            'instructionCount': 0,
+            'add': 0,
+            'subtract': 0,
+            'multiply': 0,
+            'divide': 0,
+            'neg':0,
+            'memRead':0,
+            'memWrite':0,
+        }
 
          #Total instructions in the best root team
-        instructionCount = 0
-        allOperations = []
-        addOperations = 0
-        subtractOperations = 0
-        multiplyOperations = 0
-        divideOperations = 0
-        negOperations = 0
-        memReadOperations = 0
-        memWriteOperations = 0
         learners = []
 
         #Collect instruction info!
         trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.compileLearnerStats(
             learners,
-            allOperations,
-            addOperations,
-            subtractOperations, 
-            multiplyOperations,
-            divideOperations,
-            negOperations, 
-            memReadOperations,
-            memWriteOperations
+            stats
             )
-                    
+     
             
         teams = []
         trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.size(teams)
@@ -168,18 +162,41 @@ def doRun(runInfo):
         str(scoreStats['min']) + "," +
         str(scoreStats['max']) + "," +
         str(scoreStats['average']) + "," +
-        str(learnerCount) + "," +
+        str(len(learners)) + "," +
         str(len(teams)) + "," + 
-        str(instructionCount) + "," +
-        str(addOperations) + "," +
-        str(subtractOperations) + "," +
-        str(multiplyOperations) + "," +
-        str(divideOperations) + "," + 
-        str(negOperations) + "," +
-        str(memReadOperations) + "," +
-        str(memWriteOperations) + "\n"
+        str(stats['instructionCount']) + "," +
+        str(stats['add']) + "," +
+        str(stats['subtract']) + "," +
+        str(stats['multiply']) + "," +
+        str(stats['divide']) + "," + 
+        str(stats['neg']) + "," +
+        str(stats['memRead']) + "," +
+        str(stats['memWrite']) + "\n"
         )
         runStatsFile.close()
 
     #Return scores and trainer for additional metrics post-run
     return allScores, trainer
+
+def writeRunInfo(runInfo):
+
+    file = open(runInfo['resultsPath']+runInfo['runInfoFileName'], 'w')
+    file.write("host = " + runInfo['hostname']+ "\n")
+    file.write("startTime = " + runInfo['startTime']+ "\n")
+    file.write("tStart = " + str(runInfo['tStart'])+ "\n")
+    file.write("environmentName = " + runInfo['environmentName']+ "\n")
+    file.write("maxGenerations = " + str(runInfo['maxGenerations'])+ "\n")
+    file.write("episodes = " + str(runInfo['episodes'])+ "\n")
+    file.write("numFrames = " + str(runInfo['numFrames'])+ "\n")
+    file.write("threads = " + str(runInfo['numThreads'])+ "\n")
+    file.write("teamPopulationSize = " + str(runInfo['teamPopulationSize'])+ "\n")
+    file.write("useMemory = " + str(runInfo['useMemory'])+ "\n")
+    file.write("traversalType = " + str(runInfo['traversalType'])+ "\n")
+    file.write("resultsPath = " + str(runInfo['resultsPath'])+ "\n")
+    file.write("msGraphConfigPath = " + str(runInfo['msGraphConfigPath'])+ "\n")
+    file.write("emailListPath = " + runInfo['emailListPath']+ "\n")
+    file.write("emailList: \n")
+    for email in runInfo['emailList']:
+        file.write("\t" + email+ "\n")
+    file.write("loadPath = " + str(runInfo['loadPath'])+ "\n")
+    file.close()

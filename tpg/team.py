@@ -19,16 +19,24 @@ class Team:
         Team.idCount += 1
 
     """
-    Returns an action to use based on the current state.
+    Returns an action to use based on the current state and traversal type.
     """
     def act(self, state, memMatrix, visited=set(),):
         visited.add(self) # track visited teams
 
-        topLearner = max([lrnr for lrnr in self.learners
-                if lrnr.isActionAtomic() or lrnr.action not in visited],
-            key=lambda lrnr: lrnr.bid(state, memMatrix))
+        if self.traversal == 'team':
+            topLearner = max([lrnr for lrnr in self.learners
+                    if lrnr.isActionAtomic() or lrnr.action not in visited],
+                key=lambda lrnr: lrnr.bid(state, memMatrix))
 
-        return topLearner.getAction(state, memMatrix, visited=visited)
+            return topLearner.getAction(state, memMatrix, visited=visited)
+        
+        if self.traversal == 'learner':
+            topLearner = max([lrnr for lrnr in self.learners
+                    if lrnr.isActionAtomic() or lrnr not in visited],
+                key=lambda lrnr: lrnr.bid(state, memMatrix))
+
+            return topLearner.getAction(state, memMatrix, visited=visited)
 
     """
     Same as act, but with additional features. Use act for performance.
@@ -67,28 +75,28 @@ class Team:
     """
     Returns the number of learners and instructions in the graph 
     """
-    def compileLearnerStats(self, learners, allOperations, addOperations, subtractOperations, multiplyOperations, divideOperations, negOperations, memReadOperations, memWriteOperations):
+    def compileLearnerStats(self, learners, stats):
         for l in self.learners:
             if l not in learners:
                 learners.append(l)
                 for instruction in l.program.instructions:
-                    allOperations.append(instruction)
+                    stats['instructionCount'] += 1
                     if instruction[1] == 0:
-                        addOperations += 1
+                        stats['add'] += 1
                     elif instruction[1] == 1:
-                        subtractOperations += 1
+                        stats['subtract'] += 1
                     elif instruction[1] == 2:
-                        multiplyOperations += 1
+                        stats['multiply'] += 1
                     elif instruction[1] == 3:
-                        divideOperations += 1
+                        stats['divide'] += 1
                     elif instruction[1] == 4:
-                        negOperations += 1
+                        stats['neg'] += 1
                     elif instruction[1] == 5:
-                        memReadOperations += 1
+                        stats['memRead'] += 1
                     elif instruction[1] == 6:
-                        memWriteOperations += 1
+                        stats['memWrite'] += 1
                 if not l.isActionAtomic():
-                    l.action.compileLearnerStats( learners, allOperations, addOperations, subtractOperations, multiplyOperations, divideOperations, negOperations, memReadOperations, memWriteOperations)
+                    l.action.compileLearnerStats( learners, stats)
 
                 
 

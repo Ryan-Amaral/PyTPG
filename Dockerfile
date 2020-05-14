@@ -27,4 +27,4 @@ RUN pip install -e .
 ENTRYPOINT [ "/bin/sh", "-c"]
 CMD ["/bin/bash"]
 #python run_mp.py Boxing-v0 1 10 18000 4 600 true test ./results/ test no
-#python run_mp.py Boxing-v0 1 1 18000 4 50 true test ./results/ ms_graph_config.json notify.json
+#python run_mp.py Boxing-v0 1 1 18000 4 50 true learner ./results/ ms_graph_config.json notify.json

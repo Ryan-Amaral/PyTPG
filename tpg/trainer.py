@@ -21,12 +21,17 @@ class Trainer:
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
         pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
-        sourceRange=30720, sharedMemory=False, memMatrixShape=(100,8)):
+        sourceRange=30720, sharedMemory=False, memMatrixShape=(100,8), traversal='team'):
+
+        # store init parameters for telemetry
+        self.initMaxTeamSize = initMaxTeamSize
+        self.initMaxProgSize = initMaxProgSize
 
         # store all necessary params
         self.actions = actions
         self.multiAction = isinstance(self.actions, int)
 
+        self.traversal = traversal
         self.teamPopSize = teamPopSize
         self.rTeamPopSize = rTeamPopSize
         self.gap = gap # portion of root teams to remove each generation
@@ -89,10 +94,11 @@ class Trainer:
             self.learners.append(l1)
             self.learners.append(l2)
 
-            # create team and add initial learners
+            # create team, add initial learners, set traversal type
             team = Team()
             team.addLearner(l1)
             team.addLearner(l2)
+            team.traversal = self.traversal
 
             # add more learners
             moreLearners = random.randint(0, initMaxTeamSize-2)
