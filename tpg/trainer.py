@@ -57,9 +57,9 @@ class Trainer:
 
         # extra operations if memory
         if not sharedMemory:
-            Program.operationRange = 6
+            Program.operationRange = 5
         else:
-            Program.operationRange = 8
+            Program.operationRange = 7
 
         Program.destinationRange = registerSize
         Program.sourceRange = sourceRange

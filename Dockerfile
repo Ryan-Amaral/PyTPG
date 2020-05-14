@@ -16,8 +16,13 @@ RUN sudo apt-get -y install llvm
 RUN pip install numpy
 RUN pip install matplotlib
 RUN pip install llvmlite
-RUN pip install IPython
+RUN pip install pathlib
+RUN pip install msal
 RUN pip install gym['atari']
 RUN pip install -e .
 
-ENTRYPOINT ["python", "run_mp.py"]
+#ENTRYPOINT ["python", "run_mp.py", "Boxing-v0", "1", "10", "18000", "4", "600", "true", "test", "./results/","test","no"]
+ENTRYPOINT [ "/bin/sh", "-c"]
+CMD ["/bin/bash"]
+#python run_mp.py Boxing-v0 1 10 18000 4 600 true test ./results/ test no
+#python run_mp.py Boxing-v0 1 1 18000 4 50 true test ./results/ test 

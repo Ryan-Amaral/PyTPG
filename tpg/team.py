@@ -54,6 +54,48 @@ class Team:
         return topLearner.getAction(state, memMatrix, visited=visited)
 
     """
+    Returns the size of this team in the graph
+    """
+    def size(self, visited):
+        if self in visited:
+            return 
+        visited.append(self)
+        for l in self.learners:
+            if not l.isActionAtomic():
+                l.action.size(visited)
+
+    """
+    Returns the number of learners and instructions in the graph 
+    """
+    def compileLearnerStats(self, learners, allOperations, addOperations, subtractOperations, multiplyOperations, divideOperations, negOperations, memReadOperations, memWriteOperations):
+        for l in self.learners:
+            if l not in learners:
+                learners.append(l)
+                for instruction in l.program.instructions:
+                    allOperations.append(instruction)
+                    if instruction[1] == 0:
+                        addOperations += 1
+                    elif instruction[1] == 1:
+                        subtractOperations += 1
+                    elif instruction[1] == 2:
+                        multiplyOperations += 1
+                    elif instruction[1] == 3:
+                        divideOperations += 1
+                    elif instruction[1] == 4:
+                        negOperations += 1
+                    elif instruction[1] == 5:
+                        memReadOperations += 1
+                    elif instruction[1] == 6:
+                        memWriteOperations += 1
+                if not l.isActionAtomic():
+                    l.action.compileLearnerStats( learners, allOperations, addOperations, subtractOperations, multiplyOperations, divideOperations, negOperations, memReadOperations, memWriteOperations)
+
+                
+
+
+
+
+    """
     Adds learner to the team and updates number of references to that program.
     """
     def addLearner(self, learner=None):
