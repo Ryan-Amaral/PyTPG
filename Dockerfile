@@ -18,6 +18,8 @@ RUN pip install matplotlib
 RUN pip install llvmlite
 RUN pip install pathlib
 RUN pip install msal
+RUN pip install microsoftgraph-python 
+RUN pip install requests
 RUN pip install gym['atari']
 RUN pip install -e .
 
@@ -25,4 +27,4 @@ RUN pip install -e .
 ENTRYPOINT [ "/bin/sh", "-c"]
 CMD ["/bin/bash"]
 #python run_mp.py Boxing-v0 1 10 18000 4 600 true test ./results/ test no
-#python run_mp.py Boxing-v0 1 1 18000 4 50 true test ./results/ test 
+#python run_mp.py Boxing-v0 1 1 18000 4 50 true test ./results/ ms_graph_config.json 
