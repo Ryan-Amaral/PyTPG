@@ -12,23 +12,37 @@ Functionality for actually growing TPG and evolving it to be functional.
 class Trainer:
 
     """
-    Create a trainer to store the various evolutionary parameters. Actions are
-    either a list of discrete (int) actions, or a number (int) of actions, each
-    of which will be between 0 and 1.
+    Create a trainer to store the various evolutionary parameters, and runs under
+    them.
+
+    Important parameters:
+
+    actions: List of actions, typically just set as 'range(n)' (n=18 for Atari).
+
+    teamPopSize: Initial number of teams / root teams, to be maintained through
+    evolution.
+
+    rootBasedPop: Whether population size is based on root teams. If true there
+    are always roughly the same amount of root teams (uses more RAM).
+    Else it ensures the total team population size is 'teamPopSize' (uses
+    less RAM).
+
+    sharedMemory: Whether to use the shared memory module to have more long term
+    memory.
     """
-    def __init__(self, actions, teamPopSize=360, rTeamPopSize=360, gap=0.5,
-        uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
+    def __init__(self, actions, teamPopSize=360, rootBasedPop=True, sharedMemory=False,
+        gap=0.5, uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
         pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
-        sourceRange=30720, sharedMemory=False, memMatrixShape=(100,8)):
+        sourceRange=30720, memMatrixShape=(100,8)):
 
         # store all necessary params
         self.actions = actions
         self.multiAction = isinstance(self.actions, int)
 
         self.teamPopSize = teamPopSize
-        self.rTeamPopSize = rTeamPopSize
+        self.rootBasedPop = rootBasedPop
         self.gap = gap # portion of root teams to remove each generation
         # threshold to accept mutated programs
         self.uniqueProgThresh = uniqueProgThresh # about 1e-5 is good
@@ -327,7 +341,7 @@ class Trainer:
             multiActs = None
 
         while (len(self.teams) < self.teamPopSize or
-                self.countRootTeams() < self.rTeamPopSize):
+                (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
 
             # get parent root team, and child to be based on that
             parent = random.choice(self.rootTeams)
