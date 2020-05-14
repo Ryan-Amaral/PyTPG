@@ -3,6 +3,7 @@ import time
 import sys
 import random
 import numpy as np
+import platform
 from distutils import util
 from pathlib import Path
 from microsoftgraph.client import Client
@@ -14,12 +15,12 @@ import requests
 from tpg.util.mp_utils import doRun
 from tpg.util.mp_utils import runAgent
 from tpg.util.ms_graph_utils import getMSGraphToken 
+from tpg.util.ms_graph_utils import uploadFile
+from tpg.util.ms_graph_utils import getShareableLink
+from tpg.util.ms_graph_utils import sendEmailWithResultsLink
 from tpg.trainer import Trainer
 from tpg.agent import Agent
 import json
-
- 
-
 
 
 #Read program arguments
@@ -34,15 +35,43 @@ if len(sys.argv) > 1:
     traversalType = sys.argv[8]
     resultsPath = sys.argv[9]
     msGraphConfigPath = sys.argv[10]
-    if len(sys.argv) > 11:
-        loadPath = sys.argv[11]
+    emailList = json.load(open(sys.argv[11]))
+    if len(sys.argv) > 12:
+        loadPath = sys.argv[12]
     else:
         loadPath = None
+
+    #Collect some other stuff
+    hostname = platform.node()
+    strStartTime = time.ctime()
+
+    runInfo = {
+        'hostname': hostname,
+        'startTime': strStartTime,
+        'environmentName':environmentName,
+        'maxGenerations':maxGenerations,
+        'episodes':episodes,
+        'numFrames':numFrames,
+        'numThreads':numThreads,
+        'teamPopulationSize': teamPopulationSize,
+        'useMemory': useMemory,
+        'traversalType': traversalType,
+        'resultsPath': resultsPath,
+        'msGraphConfigPath': msGraphConfigPath,
+        'emailListPath': sys.argv[11],
+        'emailList': emailList,
+        'loadPath':loadPath,
+        'runInfoFileName': "RunInfo.txt",
+        'runStatsFileName':"RunStats.csv",
+        'finalRootTeamFitnessFileName':"FinalRootTeamsFitness.csv"
+    }
 else:
-    print("python run_mp.py <environmentName> <maxGenerations> <episodes> <numFrames> <numThreads> <teamPopulationSize> <useMemory> <traversalType> <resultsPath> <msGraphConfigPath> <loadPath>")
+    print("python run_mp.py <environmentName> <maxGenerations> <episodes> <numFrames> <numThreads> <teamPopulationSize> <useMemory> <traversalType> <resultsPath> <msGraphConfigPath> <emailListPath> <loadPath>")
     sys.exit()
 
-#MS Grap Wizardry
+
+
+#MS Graph Wizardry
 msGraphConfig = json.load(open(msGraphConfigPath))
 
 
@@ -57,46 +86,31 @@ app = msal.ConfidentialClientApplication(
 
 msGraphToken = getMSGraphToken(app, msGraphConfig)
 
-endpoint = "https://graph.microsoft.com/v1.0/drives/"+msGraphConfig['drive_id']+"/root/children"
-http_headers = {
-    'Authorization': 'Bearer ' + msGraphToken['access_token'],
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-}
-data = requests.get(endpoint, headers=http_headers, stream=False).json()
-
-print(data)
-
-
-
-
-
-
-
-#client = Client(msGraphConfig['client_id'], msGraphConfig['secret'], account_type=msGraphConfig['tenant_id'])
-
-#client.set_token(msGraphToken)
-
-#print(client.drive_specific_folder("01A5CO2OYH4EJROVUEA5EZPOUTJQ4MNVPV"))
-
-#print(client.drive_root_children_items())
-
-
-print("Starting run with args:")
-print("environmentName = " + environmentName)
-print("maxGenerations = " + str(maxGenerations))
-print("episodes = " + str(episodes))
-print("numFrames = " + str(numFrames))
-print("threads = " + str(numThreads))
-print("teamPopulationSize = " + str(teamPopulationSize))
-print("useMemory = " + str(useMemory))
-print("traversalType = " + str(traversalType))
-print("resultsPath = " + str(resultsPath))
-print("msGraphConfigPath = " + str(msGraphConfigPath))
-print("loadPath = " + str(loadPath))
-
 #Start timestmap
 tStart = time.time()
+runInfo['tStart'] = tStart
+
+print("Starting run with args:")
+print("host = " + runInfo['hostname'])
+print("startTime = " + runInfo['startTime'])
+print("tStart = " + str(runInfo['tStart']))
+print("environmentName = " + runInfo['environmentName'])
+print("maxGenerations = " + str(runInfo['maxGenerations']))
+print("episodes = " + str(runInfo['episodes']))
+print("numFrames = " + str(runInfo['numFrames']))
+print("threads = " + str(runInfo['numThreads']))
+print("teamPopulationSize = " + str(runInfo['teamPopulationSize']))
+print("useMemory = " + str(runInfo['useMemory']))
+print("traversalType = " + str(runInfo['traversalType']))
+print("resultsPath = " + str(runInfo['resultsPath']))
+print("msGraphConfigPath = " + str(runInfo['msGraphConfigPath']))
+print("emailListPath = " + runInfo['emailListPath'])
+print("emailList: ")
+for email in runInfo['emailList']:
+    print("\t" + email)
+print("loadPath = " + str(runInfo['loadPath']))
+
+
 
 # Setup output files
 
@@ -107,32 +121,22 @@ Path(resultsPath).mkdir(parents=True, exist_ok=True)
 # RunStats.csv - Stats of interest collected during the generation loop
 # RunFitnessStats.csv - Fitness scores of the generations, collected after the generation loop
 # FinalRootTeamsFitness.csv - Fitness each team in the root team after the run is complete. 
-runInfoFile = open(resultsPath + "RunInfo.txt", "a")
+runInfoFile = open(runInfo['resultsPath'] + runInfo['runInfoFileName'], "a")
 #TODO - print Program arguments, loaded configurations, implicit configurations. Don't print sensitive garbage!!
 runInfoFile.close()
 
-runStatsFile = open(resultsPath + "RunStats.csv", "a")
+runStatsFile = open(runInfo['resultsPath'] + runInfo['runStatsFileName'], "a")
 runStatsFile.write("Generation #, time taken, min fitness, max fitness, avg fitness, # of learners, # of teams in root team, # of instructions, add, sub, mult, div, neg, memRead, memWrite \n")
 runStatsFile.close()
 
-finalRootTeamsFitnessFile = open(resultsPath + "FinalRootTeamsFitness.csv","a")
+finalRootTeamsFitnessFile = open(runInfo['resultsPath'] + runInfo['finalRootTeamFitnessFileName'],"a")
 finalRootTeamsFitnessFile.write("team id, fitness \n")
 finalRootTeamsFitnessFile.close()
 
-allScores, trainer = doRun(
-    tStart,
-    environmentName,
-    maxGenerations, 
-    teamPopulationSize, 
-    episodes, 
-    numFrames,
-    useMemory,
-    numThreads, 
-    resultsPath,
-    loadPath)
+allScores, trainer = doRun(runInfo)
 
 
-print('Time Taken (Hours): ' + str((time.time() - tStart)/3600))
+print('Time Taken (Hours): ' + str((time.time() - runInfo['tStart'])/3600))
 print('Results:\nMin, Max, Avg')
 for score in allScores:
     print(score[0],score[1],score[2])
@@ -144,60 +148,30 @@ for rt in trainer.rootTeams:
         finalRootFitnessFile.write(str(rt.id) + "," + str(rt.fitness) + '\n')
 finalRootFitnessFile.close()
 
-http_headers = {
-    'Authorization': 'Bearer ' + msGraphToken['access_token'],
-    'Accept': 'application/json',
-    'ContentType':'text/csv'
-}
+# Upload RunStats #TODO replace this with zip of full results
+driveItem = uploadFile(
+    msGraphToken['access_token'],
+    msGraphConfig['drive_id'],
+    msGraphConfig['tpg_runs_folder_id'],
+    runInfo['runStatsFileName'],
+    "text/csv",
+    runInfo['resultsPath'] + runInfo['runStatsFileName']
+)
 
-endpoint = "https://graph.microsoft.com/v1.0/drives/"+msGraphConfig['drive_id']+"/items/"+msGraphConfig['tpg_runs_folder_id']+":/RunStats.csv:/content"
-fileData = open(resultsPath+'RunStats.csv', 'rb').read()
-request = requests.put(endpoint, headers=http_headers, data=fileData)
-print(request.status_code)
+# Get a shareable link to the results
+link = getShareableLink(
+    msGraphToken['access_token'],
+    msGraphConfig['drive_id'],
+    driveItem['id']
+)
 
-data = request.json()
-print(data)
+# Send emails
+if len(emailList) > 0:
+    sendEmailWithResultsLink(
+        msGraphToken['access_token'],
+        msGraphConfig['user_id'],
+        link['webUrl'],
+        runInfo['emailList'],
+        runInfo
+    )
 
-itemId = data['id']
-
-endpoint = "https://graph.microsoft.com/v1.0/drives/"+msGraphConfig['drive_id']+"/items/" + data['id']
-http_headers = {
-    'Authorization': 'Bearer ' + msGraphToken['access_token'],
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-}
-data = requests.get(endpoint, headers=http_headers, stream=False).json()
-print(data)
-
-endpoint = "https://graph.microsoft.com/v1.0/drives/"+msGraphConfig['drive_id']+"/items/"+itemId+"/createLink"
-payload = {
-    'type':'edit',
-    'scope': 'anonymous'
-}
-data = requests.post(endpoint, headers=http_headers, json=payload).json()
-print(data)
-link = data['link']
-
-endpoint = "https://graph.microsoft.com/v1.0/users/"+msGraphConfig['user_id']+"/sendMail"
-payload = {
-    'message': {
-        'subject':'Py-TPG test email',
-        'importance': 'Normal',
-        'body': {
-            'contentType':'HTML',
-            'content':'Your run is <b>done</b>! <a href="'+link['webUrl']+'">link</a>'
-        },
-        'toRecipients':[
-            {
-                "emailAddress":{
-                    "address":"aianta@dal.ca"
-                }
-            }
-        ]
-    }
-}
-request = requests.post(endpoint, headers=http_headers, stream=False, json=payload)
-print(request.status_code)
-if request.status_code != 202: 
-    errData = request.json()
-    print(errData)

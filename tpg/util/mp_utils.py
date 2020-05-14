@@ -69,25 +69,25 @@ def runAgent(args):
     agent.reward(scoreTotal, envName)
     scoreList.append((agent.team.id, agent.team.outcomes))
 
-def doRun(tStart,environmentName, maxGenerations, teamPopulationSize, episodes, numFrames, useMemory, numThreads, resultsPath, loadPath):
+def doRun(runInfo):
 
     #get num actions
-    env = gym.make(environmentName)
+    env = gym.make(runInfo['environmentName'])
     numActions = env.action_space.n
     del env
 
     # Load trainer if one was passed
-    if loadPath is not None:
-        trainer = loadTrainer(loadPath)
+    if runInfo['loadPath'] is not None:
+        trainer = loadTrainer(runInfo['loadPath'])
     else:
-        trainer = Trainer(actions=range(numActions), teamPopSize=teamPopulationSize, rTeamPopSize=teamPopulationSize, sharedMemory=useMemory)
+        trainer = Trainer(actions=range(numActions), teamPopSize=runInfo['teamPopulationSize'], rTeamPopSize=runInfo['teamPopulationSize'], sharedMemory=runInfo['useMemory'])
 
     man = mp.Manager()
-    pool = mp.Pool(processes=numThreads, maxtasksperchild=1)
+    pool = mp.Pool(processes=runInfo['numThreads'], maxtasksperchild=1)
 
     allScores = [] #Track all scores each generation
 
-    for gen in range(maxGenerations): #do maxGenerations of training
+    for gen in range(runInfo['maxGenerations']): #do maxGenerations of training
         scoreList = man.list()
 
         # get agents, noRef to not hold reference to trainer in each one
@@ -96,7 +96,7 @@ def doRun(tStart,environmentName, maxGenerations, teamPopulationSize, episodes, 
 
         #run the agents
         pool.map(runAgent,
-            [(agent, environmentName, scoreList, episodes, numFrames)
+            [(agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'])
             for agent in agents])
 
         # apply scores, must do this when multiprocessing
@@ -108,7 +108,7 @@ def doRun(tStart,environmentName, maxGenerations, teamPopulationSize, episodes, 
         Gather statistics 
         '''
         # Total learners in that root team
-        learnerCount = len(trainer.getAgents(sortTasks=[environmentName])[0].team.learners)
+        learnerCount = len(trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.learners)
 
          #Total instructions in the best root team
         instructionCount = 0
@@ -123,7 +123,7 @@ def doRun(tStart,environmentName, maxGenerations, teamPopulationSize, episodes, 
         learners = []
 
         #Collect instruction info!
-        trainer.getAgents(sortTasks=[environmentName])[0].team.compileLearnerStats(
+        trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.compileLearnerStats(
             learners,
             allOperations,
             addOperations,
@@ -137,34 +137,34 @@ def doRun(tStart,environmentName, maxGenerations, teamPopulationSize, episodes, 
                     
             
         teams = []
-        trainer.getAgents(sortTasks=[environmentName])[0].team.size(teams)
+        trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.size(teams)
         print("root team size: " + str(len(teams)))
 
         #Save best root team each generation
-        Path(resultsPath+"teams/").mkdir(parents=True, exist_ok=True)
-        trainer.getAgents(sortTasks=[environmentName])[0].saveToFile(resultsPath + "teams/root_team_gen_" + str(gen))
+        Path(runInfo['resultsPath']+"teams/").mkdir(parents=True, exist_ok=True)
+        trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].saveToFile(runInfo['resultsPath'] + "teams/root_team_gen_" + str(gen))
 
         #Save the trainer as a 'checkpoint' should we want to restart the run from this generation
-        Path(resultsPath+"trainers/").mkdir(parents=True, exist_ok=True)
-        trainer.saveToFile(resultsPath+"trainers/gen_" + str(gen))
+        Path(runInfo['resultsPath']+"trainers/").mkdir(parents=True, exist_ok=True)
+        trainer.saveToFile(runInfo['resultsPath']+"trainers/gen_" + str(gen))
 
         # important to remember to set tasks right, unless not using task names
         # task name set in runAgent()
-        trainer.evolve(tasks=[environmentName]) # go into next gen
+        trainer.evolve(tasks=[runInfo['environmentName']]) # go into next gen
         
         # an easier way to track stats than the above example
         scoreStats = trainer.fitnessStats
         allScores.append((scoreStats['min'], scoreStats['max'], scoreStats['average']))
         
        
-        print('Time Taken (Hours): ' + str((time.time() - tStart)/3600))
+        print('Time Taken (Hours): ' + str((time.time() - runInfo['tStart'])/3600))
         print('Gen: ' + str(gen))
         print('Results so far: ' + str(allScores))
 
-        runStatsFile = open(resultsPath + "RunStats.csv","a")
+        runStatsFile = open(runInfo['resultsPath'] + runInfo['runStatsFileName'],"a")
         
         runStatsFile.write(str(gen) + "," +
-        str((time.time() - tStart)/3600) + "," + 
+        str((time.time() - runInfo['tStart'])/3600) + "," + 
         str(scoreStats['min']) + "," +
         str(scoreStats['max']) + "," +
         str(scoreStats['average']) + "," +
