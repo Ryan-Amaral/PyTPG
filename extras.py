@@ -58,8 +58,8 @@ def runAgentParallel(args):
             if isDone:
                 break # end early if losing state
 
-        print('Agent #' + str(agent.agentNum) +
-              ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
+        #print('Agent #' + str(agent.agentNum) +
+        #      ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
         scoreTotal += scoreEp
 
     scoreTotal /= numEpisodes
@@ -106,9 +106,10 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         scoreStats = trainer.fitnessStats
         allScores.append((scoreStats['min'], scoreStats['max'], scoreStats['average']))
 
-        print('Time Taken (Hours): ' + str((time.time() - tStart)/3600))
-        print('Gen: ' + str(gen))
-        print('Results so far: ' + str(allScores))
+        #print('Time Taken (Hours): ' + str((time.time() - tStart)/3600))
+        #print('Gen: ' + str(gen))
+        #print('Results so far: ' + str(allScores))
+        print(f"Gen: {gen}, Best Score: {scoreStats['max']}, Time: {str((time.time() - tStart)/3600)}")
 
     print('Time Taken (Hours): ' + str((time.time() - tStart)/3600))
     print('Results:\nMin, Max, Avg')
