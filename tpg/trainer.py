@@ -26,6 +26,7 @@ class Trainer:
         # store init parameters for telemetry
         self.initMaxTeamSize = initMaxTeamSize
         self.initMaxProgSize = initMaxProgSize
+        self.registerSize = registerSize
 
         # store all necessary params
         self.actions = actions
