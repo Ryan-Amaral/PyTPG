@@ -98,7 +98,7 @@ def sendEmailWithResultsLink(access_token, sender_id, resultsUrl, recipientEmail
     content +="loadPath = " + str(runInfo['loadPath'])+ "<br>"
 
     trainer = runInfo['trainer']
-    content +="<h3>Trainer Info</h3> <br>"
+    content +="<h2>Trainer Info</h2> <br>"
     content +="teamPopSize = " + str(trainer.teamPopSize) + "<br>"
     content +="rTeamPopSize = "+ str(trainer.rTeamPopSize) + "<br>"
     content +="gap = " + str(trainer.gap) + "<br>"
@@ -116,7 +116,7 @@ def sendEmailWithResultsLink(access_token, sender_id, resultsUrl, recipientEmail
     content +="pAddInst = "+ str(trainer.pAddInst) + "<br>"
     content +="pSwpInst = " + str(trainer.pSwpInst) + "<br>"
     content +="pMutInst = " + str(trainer.pMutInst) + "<br>"
-    content +="pSwapMutliAct = "+str(trainer.pSwapMutliAct) + "<br>"
+    content +="pSwapMutliAct = "+str(trainer.pSwapMultiAct ) + "<br>"
     content +="pChangeMultiAct = "+ str(trainer.pChangeMultiAct) + "<br>"
     content +="doElites = " + str(trainer.doElites) + "<br>"
     content +="sourceRange = " + str(trainer.sourceRange) + "<br>"

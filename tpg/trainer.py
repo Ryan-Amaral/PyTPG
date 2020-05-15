@@ -27,6 +27,8 @@ class Trainer:
         self.initMaxTeamSize = initMaxTeamSize
         self.initMaxProgSize = initMaxProgSize
         self.registerSize = registerSize
+        self.sharedMemory = sharedMemory
+        self.memMatrixShape = memMatrixShape
 
         # store all necessary params
         self.actions = actions
@@ -96,10 +98,9 @@ class Trainer:
             self.learners.append(l2)
 
             # create team, add initial learners, set traversal type
-            team = Team()
+            team = Team(self.traversal)
             team.addLearner(l1)
             team.addLearner(l2)
-            team.traversal = self.traversal
 
             # add more learners
             moreLearners = random.randint(0, initMaxTeamSize-2)
@@ -338,7 +339,7 @@ class Trainer:
 
             # get parent root team, and child to be based on that
             parent = random.choice(self.rootTeams)
-            child = Team()
+            child = Team(self.traversal)
 
             # child starts just like parent
             for learner in parent.learners:

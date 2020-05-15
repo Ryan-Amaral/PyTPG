@@ -57,6 +57,18 @@ trainer.evolve([environmentName])
 ### Other ways to use
 The above were just some of the important functions, and left out some necessary code for the environment, and a few other ways to use this API (some perhaps better). There are different ways to do things like withdrawing agents, rewarding agents, and evolving. And things become a bit tricky if you wish to work with multiprocessing, but its relatively straight forward to make it work. See [the examples page](./tpg_examples.ipynb) for details.
 
+# Docker 
+
+Use the following command to run PyTPG as a standalone docker container
+
+```
+sudo docker run --hostname <host> -d nimslab/tpg-v2:latest "<environment-name>" <generations> <episodes> <max frames> <threads> <teamStartPop> <useMemory> <traversalType> "<results path>" <outputName> "<ms graph config path>" "<email list path>"
+```
+Example:
+```
+sudo docker run --hostname harry-docker -d nimslab/tpg-v2:latest "Boxing-v0" 25 1 18000 40 600 true team "./harry25test/" harry_tpg_boxing_25 "conf.json" "notify.json"
+```
+
 ## MS Graph Integration
 PyTPG will automatically upload results to your one drive account and send email notifications to desired addresses. 
 
@@ -64,7 +76,7 @@ To use this feature provide an json config file with the following:
 
 ```
 {
-    "authority":"",
+    "authority":"<your_authority_uri>",
     "client_id":"<your_client_id>",
     "scope":["https://graph.microsoft.com/.default"],
     "secret":"<client secret>",

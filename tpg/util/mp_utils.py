@@ -4,6 +4,8 @@ import gym
 import random
 from pathlib import Path
 import multiprocessing as mp
+import matplotlib.pyplot as plt
+import pandas as pd
 
 from tpg.trainer import Trainer
 from tpg.trainer import loadTrainer
@@ -52,7 +54,7 @@ def runAgent(args):
                 env.step(env.action_space.sample())
                 continue
 
-            act = agent.act(getState(np.array(state, dtype=np.int32)))
+            act = agent.act(frameNumber=i,state=getState(np.array(state, dtype=np.int32)))
 
             # feedback from env
             state, reward, isDone, debug = env.step(act)
@@ -173,6 +175,7 @@ def doRun(runInfo):
         str(stats['memRead']) + "," +
         str(stats['memWrite']) + "\n"
         )
+        runStatsFile.flush()
         runStatsFile.close()
 
     #Return scores and trainer for additional metrics post-run
@@ -200,3 +203,210 @@ def writeRunInfo(runInfo):
         file.write("\t" + email+ "\n")
     file.write("loadPath = " + str(runInfo['loadPath'])+ "\n")
     file.close()
+
+def generateGraphs(runInfo):
+    runData = pd.read_csv(
+        runInfo['resultsPath'] + runInfo['runStatsFileName'],
+        sep=',',
+        header=0,
+        dtype={
+            'generation':'np.uint32',
+            'time taken':'np.float64',
+            'min fitness':'np.float32',
+            'avg fitness':'np.float32',
+            'max fitness':'np.float32',
+            'num learners':'np.uint32',
+            'num teams in root team':'np.uint32',
+            'num instructions':'np.uint32',
+            'add':'np.uint32',
+            'sub':'np.uint32',
+            'mult':'np.uint32',
+            'div':'np.uint32',
+            'neg':'np.uint32',
+            'memRead':'np.uint32',
+            'memWrite':'np.uint32'
+        }
+        ).to_numpy()
+
+    print(runData.dtype.names)
+    print(runData.shape)
+    print(runData[:,:])
+
+    #Max Fitness Graph
+    plt.figure()
+    x = runData[:,0]
+    y = runData[:,3]
+    plt.plot(
+        x, #x
+        y #y
+        )
+    plt.xlabel("Generation #")
+    print('shape of x ' + str(x.shape))
+    print('shape of y ' + str(y.shape))
+    plt.xticks( np.linspace(min(x), max(x), 20))
+    plt.ylabel("Max Fitness")
+    plt.yticks ( np.linspace(min(y),max(y),20))
+    plt.title("Max Fitness")
+
+    plt.savefig(runInfo['resultsPath']+runInfo['maxFitnessFile'], format='svg')
+
+    #Avg Fitness Graph
+    plt.figure()
+    x = runData[:,0]
+    y = runData[:,4]
+    plt.scatter(
+        x=x,
+        y=y
+    )
+    plt.xlabel("Generation #")
+    plt.xticks( np.linspace(min(x), max(x), 20))
+    plt.ylabel("Avg Fitness")
+    plt.yticks ( np.linspace(min(y),max(y),20))
+    plt.title("Avg Fitness")
+
+    plt.savefig(runInfo['resultsPath']+runInfo['avgFitnessFile'], format='svg')
+
+    #Min Fitness Graph
+    plt.figure()
+    x = runData[:,0]
+    y = runData[:,2]
+    plt.plot(
+        x,
+        y
+    )
+    plt.xlabel("Generation #")
+    plt.xticks( np.linspace(min(x), max(x), 20))
+    plt.ylabel("Min Fitness")
+    plt.yticks ( np.linspace(min(y),max(y),20))
+    plt.title("Min Fitness")
+
+    plt.savefig(runInfo['resultsPath']+runInfo['minFitnessFile'], format='svg')
+
+    #Time Taken Graph
+    plt.figure()
+    x = runData[:,0]
+    y = runData[:,1]
+    plt.scatter(
+        x=x,
+        y=y   
+    )
+    plt.xlabel("Generation #")
+    plt.xticks( np.linspace(min(x), max(x), 20))
+    plt.ylabel("Time Taken (hours)")
+    plt.yticks ( np.linspace(min(y),max(y),20))
+    plt.title("Time Taken")
+
+    plt.savefig(runInfo['resultsPath']+runInfo['timeTakenFile'], format='svg')
+
+    #Instructions Composition Graph
+    plt.figure()
+
+    generations = runData[:,0]
+
+    adds = runData[:,8]
+    subs = runData[:,9]
+    mults = runData[:,10]
+    divs = runData[:,11]
+    negs = runData[:,12]
+    memReads = runData[:,13]
+    memWrites = runData[:,14]
+    ind = [x for x, _ in enumerate(generations)]
+
+    plt.bar(ind, memWrites, label="memWrites", bottom=memReads+negs+divs+mults+subs+adds)
+    plt.bar(ind, memReads, label="memReads", bottom=negs+divs+mults+subs+adds)
+    plt.bar(ind, negs, label="negs",bottom=divs+mults+subs+adds)
+    plt.bar(ind, divs, label="div",bottom=mults+subs+adds)
+    plt.bar(ind, mults, label="mult", bottom=subs+adds)
+    plt.bar(ind, subs, label="sub",bottom=adds)
+    plt.bar(ind, adds, label="add")
+
+    plt.xticks(ind, generations)
+    plt.ylabel("# of Instructions")
+    plt.xlabel("Generation #")
+    plt.legend(loc="upper right")
+    plt.title("Instruction Composition")
+
+    plt.savefig(runInfo['resultsPath']+runInfo['instructionCompositionFile'], format='svg')
+
+    #Learners in Root Team
+    plt.figure()
+    generations = runData[:,0]
+    learners = runData[:,5]
+    ind = [x for x, _ in enumerate(generations)]
+
+    plt.bar(ind, learners)
+    plt.xlabel("Generation #")
+    plt.ylabel("# of Learners in Root Team")
+    plt.title("Learners in Root Teams")
+    plt.xticks(ind, generations)
+
+    plt.savefig(runInfo['resultsPath']+runInfo['learnersFile'], format='svg')
+
+    #Teams in Root Team
+    plt.figure()
+    generations = runData[:,0]
+    teams = runData[:,6]
+    ind = [x for x, _ in enumerate(generations)]
+
+    plt.bar(ind, teams)
+    plt.xlabel("Generation #")
+    plt.ylabel("# of Teams in Root Team")
+    plt.title("Teams in Root Teams")
+
+    plt.savefig(runInfo['resultsPath']+runInfo['teamsFile'], format='svg')
+
+    #Total Instructions Graph
+    plt.figure()
+
+    generations = runData[:,0]
+    totalInstructions = runData[:,7]
+    ind = [indx for indx, _ in enumerate(generations)]
+
+    plt.bar(ind, totalInstructions)
+    plt.xlabel('Generation #')
+    plt.ylabel('# of Instructions')
+    plt.title("Total Instructions")
+    plt.xticks(ind,generations)
+
+    plt.savefig(runInfo['resultsPath']+runInfo['instructionsFile'], format='svg')
+
+    #Load Root Team Fitness Data
+    rtfData = pd.read_csv(runInfo['resultsPath']+runInfo['finalRootTeamFitnessFileName'], sep=',',header=0).to_numpy()
+
+    print(rtfData.dtype.names)
+    print(rtfData.shape)
+    print(rtfData)
+
+    rtfData = rtfData[rtfData[:,1].argsort()[::-1]]
+
+    print(rtfData)
+
+    #Root Team Fitness Graph
+    plt.figure()
+
+    teamIds = rtfData[:,0]
+    fitnesses = rtfData[:,1]
+    ind = [x for x, _ in enumerate(teamIds)]
+
+    plt.bar(ind, fitnesses)
+    plt.xlabel("Team Ids")
+    plt.ylabel("Fitness")
+    plt.title("Final Root Teams Fitness")
+    plt.xticks(ind, teamIds)
+
+    plt.savefig(runInfo['resultsPath']+runInfo['rootTeamsFitnessFile'], format='svg')
+
+#If the results path already exists, add an underscore + number to it until it doesn't exist
+def determineResultsPath(resultsPath):
+
+    if Path(resultsPath).exists():
+        counter = 1
+        token = resultsPath[:len(resultsPath)-1]
+        while Path(token + '_' + str(counter)).exists():
+            counter += 1
+        return token + '/'
+    else:
+        return resultsPath
+    
+
+

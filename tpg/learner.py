@@ -10,6 +10,7 @@ produce the bid value for this learner's action.
 class Learner:
 
     idCount = 0 # unique learner id
+    lastFrame = -1
 
     """
     Create a new learner, either copied from the original or from a program or
@@ -38,13 +39,17 @@ class Learner:
     """
     Get the bid value, highest gets its action selected.
     """
-    def bid(self, state, memMatrix):
-        Program.execute(state, self.registers,
-                        self.program.instructions[:,0], self.program.instructions[:,1],
-                        self.program.instructions[:,2], self.program.instructions[:,3],
-                        memMatrix, memMatrix.shape[0], memMatrix.shape[1])
+    def bid(self, state, memMatrix,frameNumber ):
 
-        return self.registers[0]
+        if self.lastFrame == -1 or self.lastFrame < frameNumber:
+            Program.execute(state, self.registers,
+                            self.program.instructions[:,0], self.program.instructions[:,1],
+                            self.program.instructions[:,2], self.program.instructions[:,3],
+                            memMatrix, memMatrix.shape[0], memMatrix.shape[1])
+            return self.registers[0]
+        else:
+            self.lastFrame = frameNumber
+            return self.registers[0]
 
     """
     Returns the action of this learner, either atomic, or requests the action

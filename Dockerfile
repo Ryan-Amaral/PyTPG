@@ -20,11 +20,11 @@ RUN pip install pathlib
 RUN pip install msal
 RUN pip install microsoftgraph-python 
 RUN pip install requests
+RUN pip install pandas
 RUN pip install gym['atari']
 RUN pip install -e .
 
 #ENTRYPOINT ["python", "run_mp.py", "Boxing-v0", "1", "10", "18000", "4", "600", "true", "test", "./results/","test","no"]
-ENTRYPOINT [ "/bin/sh", "-c"]
-CMD ["/bin/bash"]
-#python run_mp.py Boxing-v0 1 10 18000 4 600 true test ./results/ test no
-#python run_mp.py Boxing-v0 1 1 18000 4 50 true learner ./results/ ms_graph_config.json notify.json
+CMD ["python", "run_mp.py", "Boxing-v0", "2000", "10", "18000", "12", "600", "true", "team", "./results/", "results", "ms_graph_config.json", "notify.json" ]
+ENTRYPOINT [ "python", "run_mp.py"]
+#python run_mp.py Boxing-v0 3 1 18000 12 5 true learner ./results/ results ms_graph_config.json notify.json

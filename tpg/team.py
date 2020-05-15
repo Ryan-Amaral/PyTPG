@@ -10,10 +10,11 @@ class Team:
 
     idCount = 0
 
-    def __init__(self):
+    def __init__(self, traversal):
         self.learners = []
         self.outcomes = {} # scores at various tasks
         self.fitness = None
+        self.traversal = traversal
         self.numLearnersReferencing = 0 # number of learners that reference this
         self.id = Team.idCount
         Team.idCount += 1
@@ -21,20 +22,20 @@ class Team:
     """
     Returns an action to use based on the current state and traversal type.
     """
-    def act(self, state, memMatrix, visited=set(),):
+    def act(self, state, memMatrix, frameNumber, visited=set()):
         visited.add(self) # track visited teams
 
         if self.traversal == 'team':
             topLearner = max([lrnr for lrnr in self.learners
                     if lrnr.isActionAtomic() or lrnr.action not in visited],
-                key=lambda lrnr: lrnr.bid(state, memMatrix))
+                key=lambda lrnr: lrnr.bid(state=state, memMatrix=memMatrix,frameNumber=frameNumber))
 
             return topLearner.getAction(state, memMatrix, visited=visited)
         
         if self.traversal == 'learner':
             topLearner = max([lrnr for lrnr in self.learners
                     if lrnr.isActionAtomic() or lrnr not in visited],
-                key=lambda lrnr: lrnr.bid(state, memMatrix))
+                key=lambda lrnr: lrnr.bid(state=state,memMatrix=memMatrix,frameNumber=frameNumber))
 
             return topLearner.getAction(state, memMatrix, visited=visited)
 
