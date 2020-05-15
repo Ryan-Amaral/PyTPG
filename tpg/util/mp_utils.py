@@ -210,21 +210,21 @@ def generateGraphs(runInfo):
         sep=',',
         header=0,
         dtype={
-            'generation':'np.uint32',
-            'time taken':'np.float64',
-            'min fitness':'np.float32',
-            'avg fitness':'np.float32',
-            'max fitness':'np.float32',
-            'num learners':'np.uint32',
-            'num teams in root team':'np.uint32',
-            'num instructions':'np.uint32',
-            'add':'np.uint32',
-            'sub':'np.uint32',
-            'mult':'np.uint32',
-            'div':'np.uint32',
-            'neg':'np.uint32',
-            'memRead':'np.uint32',
-            'memWrite':'np.uint32'
+            'generation':'int32',
+            'time taken':'float64',
+            'min fitness':'float32',
+            'avg fitness':'float32',
+            'max fitness':'float32',
+            'num learners':'int32',
+            'num teams in root team':'int32',
+            'num instructions':'int64',
+            'add':'int64',
+            'sub':'int64',
+            'mult':'int64',
+            'div':'int64',
+            'neg':'int64',
+            'memRead':'int64',
+            'memWrite':'int64'
         }
         ).to_numpy()
 
@@ -232,8 +232,26 @@ def generateGraphs(runInfo):
     print(runData.shape)
     print(runData[:,:])
 
+    # Compute a reasonable generation step
+    if runInfo['maxGenerations'] <= 50:
+        generationStep = 1
+    elif runInfo['maxGenerations'] <= 100:
+        generationStep = 2
+    elif runInfo['maxGenerations'] <= 150:
+        generationStep = 5
+    elif runInfo['maxGenerations'] <= 250:
+        generationStep = 10
+    elif runInfo['maxGenerations'] <= 500:
+        generationStep = 25
+    elif runInfo['maxGenerations'] <= 1000:
+        generationStep = 50
+    elif runInfo['maxGenerations'] <= 2000:
+        generationStep = 100
+    else:
+        generationStep = 250
+
     #Max Fitness Graph
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
     x = runData[:,0]
     y = runData[:,3]
     plt.plot(
@@ -243,7 +261,7 @@ def generateGraphs(runInfo):
     plt.xlabel("Generation #")
     print('shape of x ' + str(x.shape))
     print('shape of y ' + str(y.shape))
-    plt.xticks( np.linspace(min(x), max(x), 20))
+    plt.xticks( np.arange(min(x),max(x)+1,generationStep))
     plt.ylabel("Max Fitness")
     plt.yticks ( np.linspace(min(y),max(y),20))
     plt.title("Max Fitness")
@@ -251,7 +269,7 @@ def generateGraphs(runInfo):
     plt.savefig(runInfo['resultsPath']+runInfo['maxFitnessFile'], format='svg')
 
     #Avg Fitness Graph
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
     x = runData[:,0]
     y = runData[:,4]
     plt.scatter(
@@ -259,7 +277,7 @@ def generateGraphs(runInfo):
         y=y
     )
     plt.xlabel("Generation #")
-    plt.xticks( np.linspace(min(x), max(x), 20))
+    plt.xticks( np.arange(min(x),max(x)+1,generationStep))
     plt.ylabel("Avg Fitness")
     plt.yticks ( np.linspace(min(y),max(y),20))
     plt.title("Avg Fitness")
@@ -267,7 +285,7 @@ def generateGraphs(runInfo):
     plt.savefig(runInfo['resultsPath']+runInfo['avgFitnessFile'], format='svg')
 
     #Min Fitness Graph
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
     x = runData[:,0]
     y = runData[:,2]
     plt.plot(
@@ -275,7 +293,7 @@ def generateGraphs(runInfo):
         y
     )
     plt.xlabel("Generation #")
-    plt.xticks( np.linspace(min(x), max(x), 20))
+    plt.xticks( np.arange(min(x),max(x)+1,generationStep))
     plt.ylabel("Min Fitness")
     plt.yticks ( np.linspace(min(y),max(y),20))
     plt.title("Min Fitness")
@@ -283,7 +301,7 @@ def generateGraphs(runInfo):
     plt.savefig(runInfo['resultsPath']+runInfo['minFitnessFile'], format='svg')
 
     #Time Taken Graph
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
     x = runData[:,0]
     y = runData[:,1]
     plt.scatter(
@@ -291,7 +309,7 @@ def generateGraphs(runInfo):
         y=y   
     )
     plt.xlabel("Generation #")
-    plt.xticks( np.linspace(min(x), max(x), 20))
+    plt.xticks( np.arange(min(x),max(x)+1,generationStep))
     plt.ylabel("Time Taken (hours)")
     plt.yticks ( np.linspace(min(y),max(y),20))
     plt.title("Time Taken")
@@ -299,7 +317,7 @@ def generateGraphs(runInfo):
     plt.savefig(runInfo['resultsPath']+runInfo['timeTakenFile'], format='svg')
 
     #Instructions Composition Graph
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
 
     generations = runData[:,0]
 
@@ -329,7 +347,7 @@ def generateGraphs(runInfo):
     plt.savefig(runInfo['resultsPath']+runInfo['instructionCompositionFile'], format='svg')
 
     #Learners in Root Team
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
     generations = runData[:,0]
     learners = runData[:,5]
     ind = [x for x, _ in enumerate(generations)]
@@ -343,7 +361,7 @@ def generateGraphs(runInfo):
     plt.savefig(runInfo['resultsPath']+runInfo['learnersFile'], format='svg')
 
     #Teams in Root Team
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
     generations = runData[:,0]
     teams = runData[:,6]
     ind = [x for x, _ in enumerate(generations)]
@@ -356,7 +374,7 @@ def generateGraphs(runInfo):
     plt.savefig(runInfo['resultsPath']+runInfo['teamsFile'], format='svg')
 
     #Total Instructions Graph
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
 
     generations = runData[:,0]
     totalInstructions = runData[:,7]
@@ -382,7 +400,7 @@ def generateGraphs(runInfo):
     print(rtfData)
 
     #Root Team Fitness Graph
-    plt.figure()
+    plt.figure(figsize=(11,8.5)) #Page sized figures
 
     teamIds = rtfData[:,0]
     fitnesses = rtfData[:,1]

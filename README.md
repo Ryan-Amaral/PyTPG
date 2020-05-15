@@ -69,7 +69,7 @@ Example:
 sudo docker run --hostname harry-docker -d nimslab/tpg-v2:latest "Boxing-v0" 25 1 18000 40 600 true team "./harry25test/" harry_tpg_boxing_25 "conf.json" "notify.json"
 ```
 
-## MS Graph Integration
+# MS Graph Integration
 PyTPG will automatically upload results to your one drive account and send email notifications to desired addresses. 
 
 To use this feature provide an json config file with the following:
