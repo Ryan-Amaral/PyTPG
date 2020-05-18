@@ -35,11 +35,30 @@ class Learner:
 
         self.id = Learner.idCount
         Learner.idCount += 1
-
+    
+    '''
+    Learner class string representation method. For use with str(..).
+    '''
+    def __str__(self):
+        return "L" + str(self.id)
+    
+    '''
+    Learner class object representation method. Typically used for 
+    debugging. In this case, it simply returns the string representation.
+    '''
+    def __repr__(self):
+        return self.__str__()
+    
+    '''
+    Learner class equality method. Returns True if this == other.
+    '''
+    def __eq__(self, other):
+        return self.id == other.id
+    
     """
     Get the bid value, highest gets its action selected.
     """
-    def bid(self, state, memMatrix,frameNumber ):
+    def bid(self, state, memMatrix, frameNumber):
 
         if self.lastFrame == -1 or self.lastFrame < frameNumber:
             Program.execute(state, self.registers,
@@ -55,11 +74,11 @@ class Learner:
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction(self, state, memMatrix, visited):
+    def getAction2(self, state, memMatrix, frameNumber, visited):
         if self.isActionAtomic():
             return self.action
         else:
-            return self.action.act(state, memMatrix, visited)
+            return self.action.act(state, memMatrix, frameNumber, visited)
 
 
     """
@@ -130,3 +149,6 @@ class Learner:
     def saveState(self, state, numStates=50):
         self.states.append(state)
         self.states = self.states[-numStates:]
+
+def if __name__ == "__main__":
+    print("This is Learner!")
