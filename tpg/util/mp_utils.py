@@ -10,6 +10,9 @@ import pandas as pd
 from tpg.trainer import Trainer
 from tpg.trainer import loadTrainer
 from tpg.agent import Agent
+from tpg.program import Program
+
+from tpg.util.ms_graph_utils import processPartialResults
 
 # To transform pixel matrix to a single vector.
 def getState(inState):
@@ -78,17 +81,22 @@ def doRun(runInfo):
     numActions = env.action_space.n
     del env
 
+    
     # Load trainer if one was passed
     if runInfo['loadPath'] is not None:
         trainer = loadTrainer(runInfo['loadPath'])
     else:
         trainer = Trainer(actions=range(numActions), teamPopSize=runInfo['teamPopulationSize'], rTeamPopSize=runInfo['teamPopulationSize'], sharedMemory=runInfo['useMemory'], traversal=runInfo['traversalType'])
 
+
     runInfo['trainer'] = trainer #Save the trainer for run details later
     man = mp.Manager()
     pool = mp.Pool(processes=runInfo['numThreads'], maxtasksperchild=1)
 
     allScores = [] #Track all scores each generation
+
+    #Notify counter
+    notifyCounter = 0 # Sends notifications with partial results every time it is 0.
 
     for gen in range(runInfo['maxGenerations']): #do maxGenerations of training
         scoreList = man.list()
@@ -123,7 +131,7 @@ def doRun(runInfo):
         }
 
          #Total instructions in the best root team
-        learners = []
+        learners = set()
 
         #Collect instruction info!
         trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.compileLearnerStats(
@@ -132,7 +140,7 @@ def doRun(runInfo):
             )
      
             
-        teams = []
+        teams = set()
         trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.size(teams)
         print("root team size: " + str(len(teams)))
 
@@ -178,6 +186,15 @@ def doRun(runInfo):
         runStatsFile.flush()
         runStatsFile.close()
 
+        if notifyCounter == 0:
+            processPartialResults(runInfo, gen)
+        
+        notifyCounter += 1
+
+        if notifyCounter == 250: #Notify every 250 gens
+            notifyCounter = 0
+        
+
     #Return scores and trainer for additional metrics post-run
     return allScores, trainer
 
@@ -202,9 +219,40 @@ def writeRunInfo(runInfo):
     for email in runInfo['emailList']:
         file.write("\t" + email+ "\n")
     file.write("loadPath = " + str(runInfo['loadPath'])+ "\n")
+
+
+    trainer = runInfo['trainer'] if 'trainer' in runInfo else None
+    if trainer is not None:
+        content = "Trainer Info\n"
+        content +="teamPopSize = " + str(trainer.teamPopSize) + "\n"
+        content +="rTeamPopSize = "+ str(trainer.rTeamPopSize) + "\n"
+        content +="gap = " + str(trainer.gap) + "\n"
+        content +="uniqueProgThresh = " + str(trainer.uniqueProgThresh) + "\n"
+        content +="initMaxTeamSize = " + str(trainer.initMaxTeamSize) + "\n"
+        content +="initMaxProgSize = " + str(trainer.initMaxProgSize) + "\n"
+        content +="registerSize = " + str(trainer.registerSize) + "\n"
+        content +="pDelLrn = " + str(trainer.pDelLrn) + "\n"
+        content +="pAddLrn = " + str(trainer.pAddLrn) + "\n"
+        content +="pMutLrn = " + str(trainer.pMutLrn) + "\n"
+        content +="pMutProg = " + str(trainer.pMutProg) + "\n"
+        content +="pMutAct = "+ str(trainer.pMutAct) + "\n"
+        content +="pActAtom = "+ str(trainer.pActAtom) + "\n"
+        content +="pDelInst = "+ str(trainer.pDelInst) + "\n"
+        content +="pAddInst = "+ str(trainer.pAddInst) + "\n"
+        content +="pSwpInst = " + str(trainer.pSwpInst) + "\n"
+        content +="pMutInst = " + str(trainer.pMutInst) + "\n"
+        content +="pSwapMutliAct = "+str(trainer.pSwapMultiAct ) + "\n"
+        content +="pChangeMultiAct = "+ str(trainer.pChangeMultiAct) + "\n"
+        content +="doElites = " + str(trainer.doElites) + "\n"
+        content +="sourceRange = " + str(trainer.sourceRange) + "\n"
+        content +="sharedMemory = "+ str(trainer.sharedMemory) + "\n"
+        content +="memMatrixShape = "+ str(trainer.memMatrixShape) + "\n"
+        content +="traversal = "+ str(trainer.traversal) + "\n"
+        file.write(content)
+
     file.close()
 
-def generateGraphs(runInfo):
+def generateGraphs(runInfo, final=True):
     runData = pd.read_csv(
         runInfo['resultsPath'] + runInfo['runStatsFileName'],
         sep=',',
@@ -251,7 +299,7 @@ def generateGraphs(runInfo):
         generationStep = 250
 
     #Max Fitness Graph
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+    plt.figure(figsize=(22,17)) #Page sized figures
     x = runData[:,0]
     y = runData[:,3]
     plt.plot(
@@ -267,14 +315,15 @@ def generateGraphs(runInfo):
     plt.title("Max Fitness")
 
     plt.savefig(runInfo['resultsPath']+runInfo['maxFitnessFile'], format='svg')
+    plt.close()
 
     #Avg Fitness Graph
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+    plt.figure(figsize=(22,17)) #Page sized figures
     x = runData[:,0]
     y = runData[:,4]
-    plt.scatter(
-        x=x,
-        y=y
+    plt.plot(
+        x,
+        y
     )
     plt.xlabel("Generation #")
     plt.xticks( np.arange(min(x),max(x)+1,generationStep))
@@ -283,9 +332,10 @@ def generateGraphs(runInfo):
     plt.title("Avg Fitness")
 
     plt.savefig(runInfo['resultsPath']+runInfo['avgFitnessFile'], format='svg')
+    plt.close()
 
     #Min Fitness Graph
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+    plt.figure(figsize=(22,17)) #Page sized figures
     x = runData[:,0]
     y = runData[:,2]
     plt.plot(
@@ -299,14 +349,15 @@ def generateGraphs(runInfo):
     plt.title("Min Fitness")
 
     plt.savefig(runInfo['resultsPath']+runInfo['minFitnessFile'], format='svg')
+    plt.close()
 
     #Time Taken Graph
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+    plt.figure(figsize=(22,17)) #Page sized figures
     x = runData[:,0]
     y = runData[:,1]
-    plt.scatter(
-        x=x,
-        y=y   
+    plt.plot(
+        x,
+        y   
     )
     plt.xlabel("Generation #")
     plt.xticks( np.arange(min(x),max(x)+1,generationStep))
@@ -315,9 +366,10 @@ def generateGraphs(runInfo):
     plt.title("Time Taken")
 
     plt.savefig(runInfo['resultsPath']+runInfo['timeTakenFile'], format='svg')
+    plt.close()
 
     #Instructions Composition Graph
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+    plt.figure(figsize=(22,17)) #Page sized figures
 
     generations = runData[:,0]
 
@@ -345,9 +397,10 @@ def generateGraphs(runInfo):
     plt.title("Instruction Composition")
 
     plt.savefig(runInfo['resultsPath']+runInfo['instructionCompositionFile'], format='svg')
+    plt.close()
 
     #Learners in Root Team
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+    plt.figure(figsize=(22,17)) #Page sized figures
     generations = runData[:,0]
     learners = runData[:,5]
     ind = [x for x, _ in enumerate(generations)]
@@ -359,22 +412,25 @@ def generateGraphs(runInfo):
     plt.xticks(ind, generations)
 
     plt.savefig(runInfo['resultsPath']+runInfo['learnersFile'], format='svg')
+    plt.close()
 
     #Teams in Root Team
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+    plt.figure(figsize=(22,17)) #Page sized figures
     generations = runData[:,0]
     teams = runData[:,6]
     ind = [x for x, _ in enumerate(generations)]
 
     plt.bar(ind, teams)
     plt.xlabel("Generation #")
+
     plt.ylabel("# of Teams in Root Team")
     plt.title("Teams in Root Teams")
 
     plt.savefig(runInfo['resultsPath']+runInfo['teamsFile'], format='svg')
+    plt.close()
 
     #Total Instructions Graph
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+    plt.figure(figsize=(22,17)) #Page sized figures
 
     generations = runData[:,0]
     totalInstructions = runData[:,7]
@@ -387,32 +443,37 @@ def generateGraphs(runInfo):
     plt.xticks(ind,generations)
 
     plt.savefig(runInfo['resultsPath']+runInfo['instructionsFile'], format='svg')
+    plt.close()
 
-    #Load Root Team Fitness Data
-    rtfData = pd.read_csv(runInfo['resultsPath']+runInfo['finalRootTeamFitnessFileName'], sep=',',header=0).to_numpy()
+    #If these are final results
+    if final:
+        #Load Root Team Fitness Data
+        rtfData = pd.read_csv(runInfo['resultsPath']+runInfo['finalRootTeamFitnessFileName'], sep=',',header=0).to_numpy()
 
-    print(rtfData.dtype.names)
-    print(rtfData.shape)
-    print(rtfData)
+        print(rtfData.dtype.names)
+        print(rtfData.shape)
+        print(rtfData)
 
-    rtfData = rtfData[rtfData[:,1].argsort()[::-1]]
+        rtfData = rtfData[rtfData[:,1].argsort()[::-1]]
 
-    print(rtfData)
+        print(rtfData)
 
-    #Root Team Fitness Graph
-    plt.figure(figsize=(11,8.5)) #Page sized figures
+        #Root Team Fitness Graph
+        plt.figure(figsize=(22,17)) #Page sized figures
 
-    teamIds = rtfData[:,0]
-    fitnesses = rtfData[:,1]
-    ind = [x for x, _ in enumerate(teamIds)]
+        teamIds = rtfData[:,0]
+        fitnesses = rtfData[:,1]
+        ind = [x for x, _ in enumerate(teamIds)]
 
-    plt.bar(ind, fitnesses)
-    plt.xlabel("Team Ids")
-    plt.ylabel("Fitness")
-    plt.title("Final Root Teams Fitness")
-    plt.xticks(ind, teamIds)
+        plt.bar(ind, fitnesses)
+        plt.xlabel("Team Ids")
+        plt.ylabel("Fitness")
+        plt.title("Final Root Teams Fitness")
+        plt.xticks(ind, teamIds, rotation='vertical')
 
-    plt.savefig(runInfo['resultsPath']+runInfo['rootTeamsFitnessFile'], format='svg')
+        plt.savefig(runInfo['resultsPath']+runInfo['rootTeamsFitnessFile'], format='svg')
+        plt.close()
+
 
 #If the results path already exists, add an underscore + number to it until it doesn't exist
 def determineResultsPath(resultsPath):

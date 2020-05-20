@@ -55,6 +55,9 @@ class Learner:
     def __eq__(self, other):
         return self.id == other.id
     
+    def __hash__(self):
+        return self.id
+
     """
     Get the bid value, highest gets its action selected.
     """
@@ -150,5 +153,5 @@ class Learner:
         self.states.append(state)
         self.states = self.states[-numStates:]
 
-def if __name__ == "__main__":
+if __name__ == "__main__":
     print("This is Learner!")

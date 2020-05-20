@@ -24,6 +24,9 @@ class Team:
             if learner.id == other.id:
                 return True
         return False
+    
+    def __hash__(self):
+        return self.id
 
     
     """
@@ -117,7 +120,7 @@ class Team:
     def size(self, visited):
         if self in visited:
             return 
-        visited.append(self)
+        visited.add(self)
         for l in self.learners:
             if not l.isActionAtomic():
                 l.action.size(visited)
@@ -128,7 +131,7 @@ class Team:
     def compileLearnerStats(self, learners, stats):
         for l in self.learners:
             if l not in learners:
-                learners.append(l)
+                learners.add(l)
                 for instruction in l.program.instructions:
                     stats['instructionCount'] += 1
                     if instruction[1] == 0:
@@ -152,7 +155,7 @@ class Team:
 
 
 
-
+ 
     """
     Adds learner to the team and updates number of references to that program.
     """
@@ -261,36 +264,42 @@ def main():
     import inspect
     team = Team("team")
 
-    print(inspect.signature(Learner.getAction))
+    print(inspect.signature(Learner.getAction2))
 
     for i in range(12):
-        learner = Learner(program=Program(maxProgramLength=2048), action=1, numRegisters=8)
+        learner = Learner(program=Program(maxProgramLength=1), action=1, numRegisters=8)
         
         team.addLearner(learner)
 
     from time import time
     import numpy as np
     
-    features = [random.randint(0,100000) for i in range(77000)]
-    memory = np.array([[random.randint(0,100000) for _ in range(800)] for _ in range(8)])
+    features = [random.randint(0,10000) for i in range(100)]
+    memory = np.array([[random.randint(0,10000) for _ in range(800)] for _ in range(8)])
 
     print("Features and Memory Created")
 
     team.act1(features, memory, -1, set())
     team.act(features, memory, -1, set())
 
+   
+
     start = time()
-    for i in range(100000):
+    for i in range(1000):
+
         team.act1(features, memory, i)
     stop = time() - start
     print("Ryan Act:", stop)
 
     start = time()
-    for i in range(100000, 200000):
+    for i in range(1000, 2000):
         team.act(features, memory, i)
     stop = time() - start
     print("Robert Act:", stop)
 
 
+
+
 if __name__ == "__main__":
     main()
+    

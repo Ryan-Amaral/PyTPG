@@ -210,6 +210,8 @@ if len(emailList) > 0:
         msGraphConfig['user_id'],
         link['webUrl'],
         runInfo['emailList'],
-        runInfo
+        runInfo,
+        True,
+        -1
     )
 

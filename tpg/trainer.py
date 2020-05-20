@@ -64,16 +64,19 @@ class Trainer:
 
         self.generation = 0
 
-        # extra operations if memory
-        if not sharedMemory:
-            Program.operationRange = 5
-        else:
-            Program.operationRange = 7
+        #Set operation range
+        Program.operationRange = 5
 
         Program.destinationRange = registerSize
         Program.sourceRange = sourceRange
 
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
+        
+        # extra operations if memory
+        if not sharedMemory:
+            Program.operationRange = 5
+        else:
+            Program.operationRange = 7
 
         self.memMatrix = np.zeros(shape=memMatrixShape)
 
