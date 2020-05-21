@@ -25,7 +25,7 @@ class Team:
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
-                if lrnr.isActionAtomic() or lrnr.action not in visited],
+                if lrnr.isActionAtomic() or lrnr.actionObj.teamAction not in visited],
             key=lambda lrnr: lrnr.bid(state, memMatrix))
 
         return topLearner.getAction(state, memMatrix, visited=visited)
@@ -97,9 +97,8 @@ class Team:
     Mutates the learner set of this team.
     """
     def mutate(self, pDelLrn, pAddLrn, pMutLrn, allLearners,
-                pMutProg, pMutAct, pActAtom, atomics, allTeams,
-                pDelInst, pAddInst, pSwpInst, pMutInst,
-                multiActs, pSwapMultiAct, pChangeMultiAct,
+                pMutProg, pMutAct, pActAtom, actionCodes, actionLengths, allTeams,
+                pDelInst, pAddInst, pSwpInst, pMutInst, progMutFlag,
                 uniqueProgThresh, inputs=None, outputs=None):
 
         # delete some learners
@@ -120,7 +119,7 @@ class Team:
 
             learner = random.choice([l for l in allLearners
                                      if l not in self.learners and
-                                        l.action is not self])
+                                        l.actionObj.teamAction is not self])
             self.addLearner(learner)
 
         # give chance to mutate all learners
@@ -136,8 +135,8 @@ class Team:
                 self.removeLearner(learner)
                 newLearner = Learner(learner=learner)
                 newLearner.mutate(
-                        pMutProg, pMutAct, pActAtom0, atomics, self, allTeams,
-                        pDelInst, pAddInst, pSwpInst, pMutInst,
-                        multiActs, pSwapMultiAct, pChangeMultiAct,
-                        uniqueProgThresh, inputs=inputs, outputs=outputs)
+                        pMutProg, pMutAct, pActAtom0, actionCodes, actionLengths,
+                        allTeams, self, progMutFlag, pDelInst, pAddInst,
+                        pSwpInst, pMutInst, uniqueProgThresh, inputs=None, outputs=None)
+
                 self.addLearner(newLearner)

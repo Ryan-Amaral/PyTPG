@@ -2,6 +2,7 @@ from tpg.program import Program
 from tpg.learner import Learner
 from tpg.team import Team
 from tpg.agent import Agent
+from tpg.action_object import ActionObject
 import random
 import numpy as np
 import pickle
@@ -17,7 +18,14 @@ class Trainer:
 
     Important parameters:
 
-    actions: List of actions, typically just set as 'range(n)' (n=18 for Atari).
+    actions: Integer number of actions if output is just a single discrete action,
+    ex: '18' for the 18 possible actions in an Atari (ALE) gym enironment. Returned
+    actions being from 0 to n-1, if n is the number of actions selected.
+    Or list of integers (length equal to number of actions), where each element
+    is the size of the real vector for that action, ex: '[0,2]' where 0 corresponds
+    to a discrete buttom press and 2 corresponds to a 2d joystick position. Or
+    ex: '[1,2]' functions the same as the previous example except now the 1 corresponds
+    to a real value instead of discrete (pressure sensitive button for example).
 
     teamPopSize: Initial number of teams / root teams, to be maintained through
     evolution.
@@ -31,15 +39,22 @@ class Trainer:
     memory.
     """
     def __init__(self, actions, teamPopSize=360, rootBasedPop=True, sharedMemory=False,
-        gap=0.5, uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
+        gap=0.5, uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128,
+        actionProgSize=64, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
         pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
         sourceRange=30720, memMatrixShape=(100,8)):
 
         # store all necessary params
-        self.actions = actions
-        self.multiAction = isinstance(self.actions, int)
+
+        # first store actions properly
+        if isinstance(actions, int):
+            self.actions = range(actions)
+            self.actionLengths = [0]*actions
+        else:
+            self.actions = range(len(actions))
+            self.actionLengths = list(actions)
 
         self.teamPopSize = teamPopSize
         self.rootBasedPop = rootBasedPop
@@ -89,15 +104,16 @@ class Trainer:
     def initializePopulations(self, initMaxTeamSize, initMaxProgSize, registerSize):
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
-            if self.multiAction == False:
-                a1,a2 = random.sample(self.actions, 2)
-            else:
-                a1 = [random.uniform(0,1) for _ in range(self.actions)]
-                a2 = [random.uniform(0,1) for _ in range(self.actions)]
+            ac1,ac2 = random.sample(self.actions, 2)
+            ao1 = ActionObject(actionCode=ac1, actionLength=self.actionLengths[ac1],
+                maxProgramLength=initMaxProgSize, nRegisters=registerSize)
+            ao2 = ActionObject(actionCode=ac2, actionLength=self.actionLengths[ac2],
+                maxProgramLength=initMaxProgSize, nRegisters=registerSize)
+
             l1 = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                         action=a1, numRegisters=registerSize)
+                                         actionObj=ao1, numRegisters=registerSize)
             l2 = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                         action=a2, numRegisters=registerSize)
+                                         actionObj=ao2, numRegisters=registerSize)
 
             # save learner population
             self.learners.append(l1)
@@ -112,14 +128,13 @@ class Trainer:
             moreLearners = random.randint(0, initMaxTeamSize-2)
             for i in range(moreLearners):
                 # select action
-                if self.multiAction == False:
-                    act = random.choice(self.actions)
-                else:
-                    act = [random.uniform(0,1) for _ in range(self.actions)]
+                ac = random.choice(self.actions)
+                ao = ActionObject(actionCode=ac, actionLength=self.actionLengths[ac],
+                    maxProgramLength=initMaxProgSize, nRegisters=registerSize)
+
                 # create new learner
                 learner = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                  action=act,
-                                  numRegisters=registerSize)
+                                  actionObj=ao, numRegisters=registerSize)
                 team.addLearner(learner)
                 self.learners.append(learner)
 
@@ -314,7 +329,7 @@ class Trainer:
                 if learner.numTeamsReferencing == 1:
                     # remove reference to team if applicable
                     if not learner.isActionAtomic():
-                        learner.action.numLearnersReferencing -= 1
+                        learner.actionObj.teamAction.numLearnersReferencing -= 1
 
                     self.learners.remove(learner) # permanently remove
 
@@ -330,15 +345,6 @@ class Trainer:
 
         oLearners = list(self.learners)
         oTeams = list(self.teams)
-
-        # multiActs for action pool for multiaction mutation
-        if self.multiAction:
-            multiActs = []
-            for learner in oLearners:
-                if learner.isActionAtomic():
-                    multiActs.append(list(learner.action))
-        else:
-            multiActs = None
 
         while (len(self.teams) < self.teamPopSize or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
@@ -359,10 +365,9 @@ class Trainer:
             # then mutates
             child.mutate(self.pDelLrn, self.pAddLrn, self.pMutLrn, oLearners,
                         self.pMutProg, self.pMutAct, self.pActAtom,
-                        self.actions, oTeams,
+                        self.actions, self.actionLengths, oTeams,
                         self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
-                        multiActs, self.pSwapMultiAct, self.pChangeMultiAct,
-                        self.uniqueProgThresh, inputs=inputs, outputs=outputs)
+                        True, self.uniqueProgThresh, inputs=inputs, outputs=outputs)
 
             self.teams.append(child)
             self.rootTeams.append(child)
