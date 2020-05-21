@@ -84,12 +84,12 @@ class Team:
             # Team, this process recurisvely continues from that Team's act().'
             return topLearner.getAction2(state, memMatrix, frameNumber, visited)
         
-        #if self.traversal == 'learner':
-        #    topLearner = max([lrnr for lrnr in self.learners
-        #            if lrnr.isActionAtomic() or lrnr not in visited],
-        #        key=lambda lrnr: lrnr.bid(state=state,memMatrix=memMatrix,frameNumber=frameNumber))
-        #
-        #    return topLearner.getAction(state, memMatrix, visited=visited)
+        if self.traversal == 'learner':
+            topLearner = max([lrnr for lrnr in self.learners
+                   if lrnr.isActionAtomic() or lrnr not in visited],
+                key=lambda lrnr: lrnr.bid(state=state,memMatrix=memMatrix,frameNumber=frameNumber))
+        
+            return topLearner.getAction2(state, memMatrix, visited=visited)
 
     """
     Same as act, but with additional features. Use act for performance.
