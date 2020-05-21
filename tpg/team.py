@@ -89,7 +89,7 @@ class Team:
                    if lrnr.isActionAtomic() or lrnr not in visited],
                 key=lambda lrnr: lrnr.bid(state=state,memMatrix=memMatrix,frameNumber=frameNumber))
         
-            return topLearner.getAction2(state, memMatrix, visited=visited)
+            return topLearner.getAction2(state, memMatrix, visited=visited, frameNumber=frameNumber)
 
     """
     Same as act, but with additional features. Use act for performance.
