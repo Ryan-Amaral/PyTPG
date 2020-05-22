@@ -53,7 +53,7 @@ def runAgentParallel(args):
             act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
 
             # feedback from env
-            state, reward, isDone, debug = env.step(act)
+            state, reward, isDone, debug = env.step(act[0])
             scoreEp += reward # accumulate reward in score
             if isDone:
                 break # end early if losing state
@@ -150,7 +150,7 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
                         continue
 
                     act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
-                    state, reward, isDone, debug = env.step(act)
+                    state, reward, isDone, debug = env.step(act[0])
 
                     score += reward # accumulate reward in score
                     if isDone:

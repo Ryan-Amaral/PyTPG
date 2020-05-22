@@ -1,6 +1,7 @@
 from tpg.program import Program
 import numpy as np
 import random
+from tpg.utils import flip
 
 """
 Action  Object has a program to produce a value for the action, program doesn't
@@ -41,7 +42,7 @@ class ActionObject:
     def getAction(self, state, memMatrix, visited):
         if self.teamAction is not None:
             # action from team
-            return self.teamAction.getAction(state, memMatrix, visited)
+            return self.teamAction.act(state, memMatrix, visited)
         else:
             # atomic action
             if self.actionLength == 0:
@@ -71,7 +72,7 @@ class ActionObject:
     """
     def mutate(self, pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst, uniqueProgThresh,
             inputs, outputs, pActAtom, parentTeam, actionCodes, actionLengths, teams, progMutFlag):
-        if progMutFlag:
+        if progMutFlag and self.actionLength > 0:
             # mutate program
             self.program.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
                 len(self.registers), uniqueProgThresh, inputs=inputs, outputs=outputs)
@@ -79,14 +80,15 @@ class ActionObject:
             # dereference if old action is team
             if self.teamAction is not None:
                 self.teamAction.numLearnersReferencing -= 1
+                self.teamAction = None
 
             # mutate action
             if flip(pActAtom):
                 # atomic
-                self.actionCode = random.choice(actions)
+                self.actionCode = random.choice(actionCodes)
                 self.actionLength = actionLengths[self.actionCode]
             else:
                 # team action
-                self.teamAction = random.choice([t for t in allTeams
+                self.teamAction = random.choice([t for t in teams
                         if t is not self.teamAction and t is not parentTeam])
                 self.teamAction.numLearnersReferencing += 1
