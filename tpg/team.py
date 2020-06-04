@@ -21,7 +21,7 @@ class Team:
     """
     Returns an action to use based on the current state.
     """
-    def act(self, state, memMatrix, visited=set(),):
+    def act(self, state, memMatrix, visited=set()):
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
