@@ -1,0 +1,4 @@
+generation,time taken,min fitness,max fitness,avg fitness,num learners,num teams in root team,num instructions,add,sub,mult,div,neg,memRead,memWrite
+0,0.003241467343436347,-36.0,-10.0,-19.4,3,1,232,41,35,33,22,33,42,26
+1,0.006477777428097195,-11.0,8.0,-2.8,7,1,476,78,65,68,62,74,71,58
+2,0.008921514881981743,-54.0,8.0,-10.2,7,1,476,78,65,68,62,74,71,58

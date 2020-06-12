@@ -280,20 +280,24 @@ def generateGraphs(runInfo, final=True):
     print(runData.shape)
     print(runData[:,:])
 
+    # Extract the number of generations in the csv file by subtracting 1 (header row)
+    # from the number of records found.
+    numGenerations = runData.shape[0] - 1
+
     # Compute a reasonable generation step
-    if runInfo['maxGenerations'] <= 50:
+    if numGenerations <= 50:
         generationStep = 1
-    elif runInfo['maxGenerations'] <= 100:
+    elif numGenerations <= 100:
         generationStep = 2
-    elif runInfo['maxGenerations'] <= 150:
+    elif numGenerations <= 150:
         generationStep = 5
-    elif runInfo['maxGenerations'] <= 250:
+    elif numGenerations <= 250:
         generationStep = 10
-    elif runInfo['maxGenerations'] <= 500:
+    elif numGenerations <= 500:
         generationStep = 25
-    elif runInfo['maxGenerations'] <= 1000:
+    elif numGenerations <= 1000:
         generationStep = 50
-    elif runInfo['maxGenerations'] <= 2000:
+    elif numGenerations <= 2000:
         generationStep = 100
     else:
         generationStep = 250
@@ -390,7 +394,7 @@ def generateGraphs(runInfo, final=True):
     plt.bar(ind, subs, label="sub",bottom=adds)
     plt.bar(ind, adds, label="add")
 
-    plt.xticks(ind, generations)
+    # Note: x-ticks are left to default
     plt.ylabel("# of Instructions")
     plt.xlabel("Generation #")
     plt.legend(loc="upper right")
@@ -409,7 +413,7 @@ def generateGraphs(runInfo, final=True):
     plt.xlabel("Generation #")
     plt.ylabel("# of Learners in Root Team")
     plt.title("Learners in Root Teams")
-    plt.xticks(ind, generations)
+    # Note: x-ticks are left to default
 
     plt.savefig(runInfo['resultsPath']+runInfo['learnersFile'], format='svg')
     plt.close()
@@ -440,7 +444,7 @@ def generateGraphs(runInfo, final=True):
     plt.xlabel('Generation #')
     plt.ylabel('# of Instructions')
     plt.title("Total Instructions")
-    plt.xticks(ind,generations)
+    # Note: x-ticks are left to default
 
     plt.savefig(runInfo['resultsPath']+runInfo['instructionsFile'], format='svg')
     plt.close()
@@ -466,10 +470,10 @@ def generateGraphs(runInfo, final=True):
         ind = [x for x, _ in enumerate(teamIds)]
 
         plt.bar(ind, fitnesses)
-        plt.xlabel("Team Ids")
+        plt.xlabel("Team Rank")
         plt.ylabel("Fitness")
         plt.title("Final Root Teams Fitness")
-        plt.xticks(ind, teamIds, rotation='vertical')
+        #plt.xticks(ind, teamIds, rotation='vertical')
 
         plt.savefig(runInfo['resultsPath']+runInfo['rootTeamsFitnessFile'], format='svg')
         plt.close()
