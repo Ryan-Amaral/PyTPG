@@ -3,6 +3,7 @@ import gym
 import multiprocessing as mp
 import time
 from tpg.trainer import Trainer
+import math
 
 """
 Transform visual input from ALE to flat vector.
@@ -51,9 +52,11 @@ def runAgentParallel(args):
                 continue
 
             act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
+            #print(act[1]%18)
+            act = min(17, math.floor(act[1] % 18))
 
             # feedback from env
-            state, reward, isDone, debug = env.step(act[0])
+            state, reward, isDone, debug = env.step(act)
             scoreEp += reward # accumulate reward in score
             if isDone:
                 break # end early if losing state
@@ -81,10 +84,10 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     acts = env.action_space.n
     del env
 
-    trainer = Trainer(actions=range(acts), teamPopSize=popSize)
+    trainer = Trainer(actions=[1,1], teamPopSize=popSize)
 
     man = mp.Manager()
-    pool = mp.Pool(processes=processes, maxtasksperchild=1)
+    #pool = mp.Pool(processes=processes, maxtasksperchild=1)
 
     allScores = [] # track all scores each generation
 
@@ -92,11 +95,12 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         scoreList = man.list()
 
         agents = trainer.getAgents() # swap out agents only at start of generation
-
-        # run the agents
-        pool.map(runAgentParallel,
-            [(agent, envName, scoreList, reps, frames, nRandFrames)
-            for agent in agents])
+        with mp.Pool(processes=processes, maxtasksperchild=1) as pool:
+            # run the agents
+            pool.map(runAgentParallel,
+                [(agent, envName, scoreList, reps, frames, nRandFrames)
+                 for agent in agents])
+        
 
         # prepare population for next gen
         teams = trainer.applyScores(scoreList)
