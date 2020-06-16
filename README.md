@@ -1,6 +1,9 @@
 # tpg-python
 A python implementation of Tangled Program Graphs. A graph based genetic programming algorithm.
 
+## This Branch
+Real actions + if a team is selected as the action, any team could be selected based on program output.
+
 ## Recent API changes
 **Trainer Parameters:** rTeamPopSize removed, just use teamPopSize and use the rootBasedPop parameter (boolean) to affect whether the population is based on all teams or just root teams.
 
