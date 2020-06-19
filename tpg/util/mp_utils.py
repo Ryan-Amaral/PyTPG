@@ -99,7 +99,13 @@ def doRun(runInfo):
     #Notify counter
     notifyCounter = 0 # Sends notifications with partial results every time it is 0.
 
-    for gen in range(runInfo['maxGenerations']): #do maxGenerations of training
+    rangeStart = 0
+
+    if runInfo['resumeGen'] != None:
+        rangeStart = runInfo['resumeGen']
+        print('resuming from gen ' + str(runInfo['resumeGen']))
+
+    for gen in range(rangeStart,runInfo['maxGenerations']): #do maxGenerations of training
         scoreList = man.list()
 
         # get agents, noRef to not hold reference to trainer in each one
@@ -480,17 +486,6 @@ def generateGraphs(runInfo, final=True):
         plt.close()
 
 
-#If the results path already exists, add an underscore + number to it until it doesn't exist
-def determineResultsPath(resultsPath):
-
-    if Path(resultsPath).exists():
-        counter = 1
-        token = resultsPath[:len(resultsPath)-1]
-        while Path(token + '_' + str(counter)).exists():
-            counter += 1
-        return token + '/'
-    else:
-        return resultsPath
     
 
 

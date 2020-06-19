@@ -13,12 +13,15 @@ from zipfile import ZipFile
 import json
 from optparse import OptionParser
 
+import glob
+import logging
+import logging.handlers
+
 #Import tpg
 from tpg.util.mp_utils import doRun
 from tpg.util.mp_utils import runAgent
 from tpg.util.mp_utils import writeRunInfo
 from tpg.util.mp_utils import generateGraphs
-from tpg.util.mp_utils import determineResultsPath
 from tpg.util.ms_graph_utils import getMSGraphToken 
 from tpg.util.ms_graph_utils import uploadFile
 from tpg.util.ms_graph_utils import getShareableLink
@@ -26,7 +29,21 @@ from tpg.util.ms_graph_utils import sendEmailWithResultsLink
 from tpg.trainer import Trainer
 from tpg.agent import Agent
 
+# Logging setup
+# https://docs.python.org/2.6/library/logging.html
+LOG_FILENAME = 'py-tpg.log'
 
+# Set up a specific logger with our desired output level
+logger = logging.getLogger('MyLogger')
+logger.setLevel(logging.DEBUG)
+
+
+# Add the log message handler to the logger
+handler = logging.handlers.RotatingFileHandler(
+              LOG_FILENAME, maxBytes=10000000, backupCount=5)
+logger.addHandler(handler)
+
+#Arg parsing
 parser = OptionParser()
 
 parser.add_option('-e','--env', type="string", dest="environmentName", default="Boxing-v0")
@@ -44,6 +61,7 @@ parser.add_option('-s', '--ms-graph-config', type="string", dest="msGraphConfigP
 parser.add_option('--email-list', type="string", dest="emailList", default="notify.json")
 parser.add_option('-l','--load-path', type="string", dest="loadPath")
 parser.add_option('-g','--resume-from-gen', type="int", dest="resumeGen")
+parser.add_option('--log-error', action="store_true", dest="logError" ,default=False)
 
 
 (opts, args) = parser.parse_args()
@@ -52,9 +70,6 @@ parser.add_option('-g','--resume-from-gen', type="int", dest="resumeGen")
 #Collect some other stuff
 hostname = platform.node()
 strStartTime = time.ctime()
-
-#Prevent overwriting results
-resultsPath = determineResultsPath(opts.resultsPath)
 
 emailList = json.load(open(opts.emailList))
 
@@ -76,6 +91,7 @@ runInfo = {
     'emailListPath': opts.emailList,
     'emailList': emailList,
     'loadPath':opts.loadPath,
+    'resumeGen':opts.resumeGen,
     'runInfoFileName': "RunInfo.txt",
     'runStatsFileName':"RunStats.csv",
     'finalRootTeamFitnessFileName':"FinalRootTeamsFitness.csv",
@@ -91,7 +107,9 @@ runInfo = {
     'rootTeamsFitnessFile':'final_root_teams_fitness.svg'
 }
 
-
+#Redirect errors to a file if log-error is set
+if opts.logError == True:
+    sys.stderr = open(runInfo['resultsPath'] + "err.log", "w")
 
 #Start timestmap
 tStart = time.time()
@@ -120,9 +138,12 @@ runInfoFile = open(runInfo['resultsPath'] + runInfo['runInfoFileName'], "a")
 runInfoFile.close()
 writeRunInfo(runInfo)
 
-runStatsFile = open(runInfo['resultsPath'] + runInfo['runStatsFileName'], "a")
-runStatsFile.write("generation,time taken,min fitness,max fitness,avg fitness,num learners,num teams in root team,num instructions,add,sub,mult,div,neg,memRead,memWrite\n")
-runStatsFile.close()
+
+if runInfo['resumeGen'] == None: #Only create header if we're not resuming from previous work
+    print('resumeGen is None!!')
+    runStatsFile = open(runInfo['resultsPath'] + runInfo['runStatsFileName'], "a")
+    runStatsFile.write("generation,time taken,min fitness,max fitness,avg fitness,num learners,num teams in root team,num instructions,add,sub,mult,div,neg,memRead,memWrite\n")
+    runStatsFile.close()
 
 finalRootTeamsFitnessFile = open(runInfo['resultsPath'] + runInfo['finalRootTeamFitnessFileName'],"a")
 finalRootTeamsFitnessFile.write("team id,fitness\n")
@@ -163,7 +184,7 @@ with ZipFile(runInfo['resultsPath']+runInfo['outputName']+'.zip','w') as zipFile
     
 
 #MS Graph Wizardry
-msGraphConfig = json.load(open(msGraphConfigPath))
+msGraphConfig = json.load(open(opts.msGraphConfigPath))
 
 
 # Create a preferably long-lived app instance that maintains a token cache.
