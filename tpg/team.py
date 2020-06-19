@@ -27,31 +27,7 @@ class Team:
     
     def __hash__(self):
         return self.id
-
-    
-    """
-    Returns an action to use based on the current state.
-    """
-    def act1(self, state, memMatrix, frameNumber, visited=set()):
-        # We've now visited this team, so add it to the visited set.
-        visited.add(self)
-        
-        # 1. Make a list of all Learners who:
-        #    a. Have an atomic action (label).
-        #    b. Have a team reference, but that team hasn't been visited.
-        # 2. Run the bid method of every one of those learners.
-        # 3. Find the learner with the largest bid and store it in topLearner.
-        topLearner = max([lrnr for lrnr in self.learners if lrnr.isActionAtomic() or lrnr.action not in visited], key=lambda lrnr: lrnr.bid(state, memMatrix, frameNumber))
-        
-        # Return the action of the top learner. If this action is a team
-        # reference, then getAction(..) calls that team's act(..) method
-        # recursively. This process continues until we get an atomic action.
-        
-
-
-        return topLearner.getAction2(state, memMatrix, frameNumber, visited)
-
-    
+      
     """
     Returns an action to use based on the current state and traversal type.
     """
@@ -59,26 +35,9 @@ class Team:
         visited.add(self) # track visited teams
 
         if self.traversal == 'team':
-            # Make the first Learner the top learner and save its bid.
-            topLearner = self.learners[0]
-            topBid = topLearner.bid(state=state, memMatrix=memMatrix, frameNumber=frameNumber)
-
-            # Iterate through every Learner on this Team.
-            for learner in self.learners:
-                # If we have visited this Learner already, skip it.
-                if learner == topLearner: 
-                    continue
-
-                # Make sure that if the Learner is not atomic, it is
-                # referencing a Team we have not yet visited.
-                if learner.isActionAtomic() or learner.action not in visited:
-                    # Store the bid from the Learner.
-                    bid = learner.bid(state=state, memMatrix=memMatrix, frameNumber=frameNumber)
-                    # If the bid is higher than our best learner, update the 
-                    # top learner variables and proceed to the next Learner.
-                    if bid > topBid:
-                        topLearner = learner
-                        topBid = bid
+          topLearner = max([lrnr for lrnr in self.learners
+                  if lrnr.isActionAtomic() or lrnr.actionObj.teamAction not in visited],
+              key=lambda lrnr: lrnr.bid(state, memMatrix))
             
             # Return the action of the top Learner. If it is a reference to a
             # Team, this process recurisvely continues from that Team's act().'
@@ -89,7 +48,7 @@ class Team:
                    if lrnr.isActionAtomic() or lrnr not in visited],
                 key=lambda lrnr: lrnr.bid(state=state,memMatrix=memMatrix,frameNumber=frameNumber))
         
-            return topLearner.getAction2(state, memMatrix, visited=visited, frameNumber=frameNumber)
+            return topLearner.getAction(state, memMatrix, visited=visited, frameNumber=frameNumber)
 
     """
     Same as act, but with additional features. Use act for performance.
@@ -210,9 +169,8 @@ class Team:
     Mutates the learner set of this team.
     """
     def mutate(self, pDelLrn, pAddLrn, pMutLrn, allLearners,
-                pMutProg, pMutAct, pActAtom, atomics, allTeams,
-                pDelInst, pAddInst, pSwpInst, pMutInst,
-                multiActs, pSwapMultiAct, pChangeMultiAct,
+                pMutProg, pMutAct, pActAtom, actionCodes, actionLengths, allTeams,
+                pDelInst, pAddInst, pSwpInst, pMutInst, progMutFlag,
                 uniqueProgThresh, inputs=None, outputs=None):
 
        # delete some learners
@@ -233,7 +191,7 @@ class Team:
 
             learner = random.choice([l for l in allLearners
                                      if l not in self.learners and
-                                        l.action is not self])
+                                        l.actionObj.teamAction is not self])
             self.addLearner(learner)
 
         # give chance to mutate all learners
@@ -249,10 +207,10 @@ class Team:
                 self.removeLearner(learner)
                 newLearner = Learner(learner=learner)
                 newLearner.mutate(
-                        pMutProg, pMutAct, pActAtom0, atomics, self, allTeams,
-                        pDelInst, pAddInst, pSwpInst, pMutInst,
-                        multiActs, pSwapMultiAct, pChangeMultiAct,
-                        uniqueProgThresh, inputs=inputs, outputs=outputs)
+                        pMutProg, pMutAct, pActAtom0, actionCodes, actionLengths,
+                        allTeams, self, progMutFlag, pDelInst, pAddInst,
+                        pSwpInst, pMutInst, uniqueProgThresh, inputs=None, outputs=None)
+
                 self.addLearner(newLearner)
 
 
