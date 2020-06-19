@@ -12,6 +12,7 @@ Functionality for actually growing TPG and evolving it to be functional.
 """
 class Trainer:
 
+
     """
     Create a trainer to store the various evolutionary parameters, and runs under
     them.
@@ -56,6 +57,7 @@ class Trainer:
             self.actions = range(len(actions))
             self.actionLengths = list(actions)
 
+        self.traversal = traversal
         self.teamPopSize = teamPopSize
         self.rootBasedPop = rootBasedPop
         self.gap = gap # portion of root teams to remove each generation
@@ -84,16 +86,19 @@ class Trainer:
 
         self.generation = 0
 
-        # extra operations if memory
-        if not sharedMemory:
-            Program.operationRange = 6
-        else:
-            Program.operationRange = 8
+        #Set operation range
+        Program.operationRange = 5
 
         Program.destinationRange = registerSize
         Program.sourceRange = sourceRange
 
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
+        
+        # extra operations if memory
+        if not sharedMemory:
+            Program.operationRange = 5
+        else:
+            Program.operationRange = 7
 
         self.memMatrix = np.zeros(shape=memMatrixShape)
 
@@ -119,8 +124,8 @@ class Trainer:
             self.learners.append(l1)
             self.learners.append(l2)
 
-            # create team and add initial learners
-            team = Team()
+            # create team, add initial learners, set traversal type
+            team = Team(self.traversal)
             team.addLearner(l1)
             team.addLearner(l2)
 
@@ -351,7 +356,7 @@ class Trainer:
 
             # get parent root team, and child to be based on that
             parent = random.choice(self.rootTeams)
-            child = Team()
+            child = Team(self.traversal)
 
             # child starts just like parent
             for learner in parent.learners:

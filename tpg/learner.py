@@ -11,6 +11,7 @@ produce the bid value for this learner's action.
 class Learner:
 
     idCount = 0 # unique learner id
+    lastFrame = -1
 
     """
     Create a new learner, either copied from the original or from a program or
@@ -32,17 +33,43 @@ class Learner:
 
         self.id = Learner.idCount
         Learner.idCount += 1
+    
+    '''
+    Learner class string representation method. For use with str(..).
+    '''
+    def __str__(self):
+        return "L" + str(self.id)
+    
+    '''
+    Learner class object representation method. Typically used for 
+    debugging. In this case, it simply returns the string representation.
+    '''
+    def __repr__(self):
+        return self.__str__()
+    
+    '''
+    Learner class equality method. Returns True if this == other.
+    '''
+    def __eq__(self, other):
+        return self.id == other.id
+    
+    def __hash__(self):
+        return self.id
 
     """
     Get the bid value, highest gets its action selected.
     """
-    def bid(self, state, memMatrix):
-        Program.execute(state, self.registers,
-                        self.program.instructions[:,0], self.program.instructions[:,1],
-                        self.program.instructions[:,2], self.program.instructions[:,3],
-                        memMatrix, memMatrix.shape[0], memMatrix.shape[1])
+    def bid(self, state, memMatrix, frameNumber):
 
-        return self.registers[0]
+        if self.lastFrame == -1 or self.lastFrame < frameNumber:
+            Program.execute(state, self.registers,
+                            self.program.instructions[:,0], self.program.instructions[:,1],
+                            self.program.instructions[:,2], self.program.instructions[:,3],
+                            memMatrix, memMatrix.shape[0], memMatrix.shape[1])
+            return self.registers[0]
+        else:
+            self.lastFrame = frameNumber
+            return self.registers[0]
 
     """
     Returns the action of this learner, either atomic, or requests the action
@@ -87,3 +114,6 @@ class Learner:
     def saveState(self, state, numStates=50):
         self.states.append(state)
         self.states = self.states[-numStates:]
+
+if __name__ == "__main__":
+    print("This is Learner!")

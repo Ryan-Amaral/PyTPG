@@ -104,4 +104,7 @@ venv.bak/
 .mypy_cache/
 
 tpg_examples-Copy1.ipynb
+ms_graph_config.json
+notify.json
+data
 *.pkl

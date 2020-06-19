@@ -10,7 +10,7 @@ A program that is executed to help obtain the bid for a learner.
 class Program:
 
     # operation is some math or memory operation
-    operationRange = 6 # 8 if memory
+    operationRange = 5 # 7 if memory
     # destination is the register to store result in for each instruction
     destinationRange = 8 # or however many registers there are
     # the source index of the registers or observation
@@ -63,17 +63,15 @@ class Program:
             elif op == 3:
                 regs[dest] = x/2
             elif op == 4:
-                regs[dest] = math.cos(y)
-            elif op == 5:
                 if x < y:
                     regs[dest] = x*(-1)
-            elif op == 6:
+            elif op == 5:
                 index = srcs[i]
                 index %= (memRows*memCols)
                 row = int(index / memRows)
                 col = index % memCols
                 regs[dest] = memMatrix[row, col]
-            elif op == 7:
+            elif op == 6:
                 # row offset (start from center, go to edges)
                 for i in range(int(memRows/2)):
                     # probability to write (gets smaller as i increases)
