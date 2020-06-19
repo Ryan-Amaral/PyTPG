@@ -21,10 +21,11 @@ RUN pip install msal
 RUN pip install microsoftgraph-python 
 RUN pip install requests
 RUN pip install pandas
+
 RUN pip install gym['atari']
 RUN pip install -e .
 
-CMD ["python", "run_mp.py", "Boxing-v0", "2000", "10", "18000", "12", "600", "true", "team", "./results/", "results", "ms_graph_config.json", "notify.json" ]
+CMD ["python", "run_mp.py", "-e", "Boxing-v0", "-x","2000", "-i", "10", "-f" , "18000", "-t", "12", "-p", "600", "-y", "-v","team", "-r","./results/", "-o" ,"results", "-s", "ms_graph_config.json", "--email-list","notify.json", "-m", "train"]
 ENTRYPOINT [ "python", "run_mp.py"]
 #python run_mp.py Boxing-v0 5 1 18000 12 5 true learner ./results/ results ms_graph_config.json notify.json
 

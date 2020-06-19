@@ -35,6 +35,7 @@ def runAgent(args):
     scoreList = args[2]
     numEpisodes = args[3] # number of times to repeat game
     numFrames = args[4] 
+    mode = args[5] # whether to run in train or test (random skip 30 frames @start) mode 
     
     # skip if task already done by agent
     if agent.taskDone(envName):
@@ -53,7 +54,7 @@ def runAgent(args):
         if numEpisodes > 1:
             numRandFrames = random.randint(0,30)
         for i in range(numFrames): # frame loop
-            if i < numRandFrames:
+            if mode == 'test' and i < numRandFrames: # Only skip frame on start in test mode 
                 env.step(env.action_space.sample())
                 continue
 
@@ -107,7 +108,7 @@ def doRun(runInfo):
 
         #run the agents
         pool.map(runAgent,
-            [(agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'])
+            [(agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'], runInfo['mode'])
             for agent in agents])
 
         # apply scores, must do this when multiprocessing

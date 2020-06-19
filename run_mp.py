@@ -11,6 +11,7 @@ import msal
 import requests
 from zipfile import ZipFile
 import json
+from optparse import OptionParser
 
 #Import tpg
 from tpg.util.mp_utils import doRun
@@ -26,90 +27,80 @@ from tpg.trainer import Trainer
 from tpg.agent import Agent
 
 
+parser = OptionParser()
 
-#Read program arguments
-if len(sys.argv) > 1:
-    environmentName = sys.argv[1]
-    maxGenerations = int(sys.argv[2])
-    episodes = int(sys.argv[3])
-    numFrames = int(sys.argv[4])
-    numThreads = int(sys.argv[5])
-    teamPopulationSize = int(sys.argv[6])
-    useMemory = bool(util.strtobool(sys.argv[7]))
-    traversalType = sys.argv[8]
-    resultsPath = sys.argv[9]
-    outputName = sys.argv[10]
-    msGraphConfigPath = sys.argv[11]
-    emailList = json.load(open(sys.argv[12]))
-    if len(sys.argv) > 13:
-        loadPath = sys.argv[13]
-    else:
-        loadPath = None
+parser.add_option('-e','--env', type="string", dest="environmentName", default="Boxing-v0")
+parser.add_option('-x', '--max-gens', type="int", dest="maxGenerations", default=2000)
+parser.add_option('-i', '--episodes', type="int", dest="episodes", default=10)
+parser.add_option('-f','--frames', type="int", dest="numFrames",default=18000)
+parser.add_option('-t','--threads', type="int", dest="numThreads", default=4)
+parser.add_option('-p', '--team-pop', type="int", dest="teamPopulationSize",default=600)
+parser.add_option('-y', '--use-memory', action="store_true", dest="useMemory", default=False)
+parser.add_option('-v', '--traversal', type="string", dest="traversalType", default="team")
+parser.add_option('-m','--mode', type="string", dest="mode", default="train")
+parser.add_option('-r', '--results-path', type="string", dest="resultsPath", default="./results/")
+parser.add_option('-o', '--output', type="string", dest="outputName", default="results")
+parser.add_option('-s', '--ms-graph-config', type="string", dest="msGraphConfigPath")
+parser.add_option('--email-list', type="string", dest="emailList", default="notify.json")
+parser.add_option('-l','--load-path', type="string", dest="loadPath")
+parser.add_option('-g','--resume-from-gen', type="int", dest="resumeGen")
 
-    #Collect some other stuff
-    hostname = platform.node()
-    strStartTime = time.ctime()
 
-    #Prevent overwriting results
-    resultsPath = determineResultsPath(resultsPath)
+(opts, args) = parser.parse_args()
 
-    runInfo = {
-        'hostname': hostname,
-        'startTime': strStartTime,
-        'environmentName':environmentName,
-        'maxGenerations':maxGenerations,
-        'episodes':episodes,
-        'numFrames':numFrames,
-        'numThreads':numThreads,
-        'teamPopulationSize': teamPopulationSize,
-        'useMemory': useMemory,
-        'traversalType': traversalType,
-        'resultsPath': resultsPath,
-        'outputName':outputName,
-        'msGraphConfigPath': msGraphConfigPath,
-        'emailListPath': sys.argv[12],
-        'emailList': emailList,
-        'loadPath':loadPath,
-        'runInfoFileName': "RunInfo.txt",
-        'runStatsFileName':"RunStats.csv",
-        'finalRootTeamFitnessFileName':"FinalRootTeamsFitness.csv",
-        #Define graph file names
-        'maxFitnessFile':'max_fitness.svg',
-        'avgFitnessFile':'avg_fitness.svg',
-        'minFitnessFile':'min_fitness.svg',
-        'timeTakenFile':'time_taken.svg',
-        'instructionCompositionFile': 'instruction_composition.svg',
-        'learnersFile':'learners.svg',
-        'teamsFile':'teams.svg',
-        'instructionsFile':'instructions.svg',
-        'rootTeamsFitnessFile':'final_root_teams_fitness.svg'
-    }
-else:
-    print("python run_mp.py <environmentName> <maxGenerations> <episodes> <numFrames> <numThreads> <teamPopulationSize> <useMemory> <traversalType> <resultsPath> <outputName> <msGraphConfigPath> <emailListPath> <loadPath>")
-    sys.exit()
+
+#Collect some other stuff
+hostname = platform.node()
+strStartTime = time.ctime()
+
+#Prevent overwriting results
+resultsPath = determineResultsPath(opts.resultsPath)
+
+emailList = json.load(open(opts.emailList))
+
+runInfo = {
+    'hostname': hostname,
+    'startTime': strStartTime,
+    'environmentName':opts.environmentName,
+    'maxGenerations':opts.maxGenerations,
+    'episodes':opts.episodes,
+    'numFrames':opts.numFrames,
+    'numThreads':opts.numThreads,
+    'teamPopulationSize': opts.teamPopulationSize,
+    'useMemory': opts.useMemory,
+    'traversalType': opts.traversalType,
+    'mode': opts.mode,
+    'resultsPath': opts.resultsPath,
+    'outputName':opts.outputName,
+    'msGraphConfigPath': opts.msGraphConfigPath,
+    'emailListPath': opts.emailList,
+    'emailList': emailList,
+    'loadPath':opts.loadPath,
+    'runInfoFileName': "RunInfo.txt",
+    'runStatsFileName':"RunStats.csv",
+    'finalRootTeamFitnessFileName':"FinalRootTeamsFitness.csv",
+    #Define graph file names
+    'maxFitnessFile':'max_fitness.svg',
+    'avgFitnessFile':'avg_fitness.svg',
+    'minFitnessFile':'min_fitness.svg',
+    'timeTakenFile':'time_taken.svg',
+    'instructionCompositionFile': 'instruction_composition.svg',
+    'learnersFile':'learners.svg',
+    'teamsFile':'teams.svg',
+    'instructionsFile':'instructions.svg',
+    'rootTeamsFitnessFile':'final_root_teams_fitness.svg'
+}
+
 
 
 #Start timestmap
 tStart = time.time()
 runInfo['tStart'] = tStart
 
-print("Starting run with args:")
-print("host = " + runInfo['hostname'])
-print("startTime = " + runInfo['startTime'])
-print("tStart = " + str(runInfo['tStart']))
-print("environmentName = " + runInfo['environmentName'])
-print("maxGenerations = " + str(runInfo['maxGenerations']))
-print("episodes = " + str(runInfo['episodes']))
-print("numFrames = " + str(runInfo['numFrames']))
-print("threads = " + str(runInfo['numThreads']))
-print("teamPopulationSize = " + str(runInfo['teamPopulationSize']))
-print("useMemory = " + str(runInfo['useMemory']))
-print("traversalType = " + str(runInfo['traversalType']))
-print("resultsPath = " + str(runInfo['resultsPath']))
-print("outputName = " + runInfo['outputName'])
-print("msGraphConfigPath = " + str(runInfo['msGraphConfigPath']))
-print("emailListPath = " + runInfo['emailListPath'])
-print("emailList: ")
+#Print run info
+for i in runInfo:
+    print (i, runInfo[i])
+
 for email in runInfo['emailList']:
     print("\t" + email)
 print("loadPath = " + str(runInfo['loadPath']))
