@@ -23,7 +23,7 @@ class Team:
     """
     def act(self, state, memMatrix, visited=set()):
         visited.add(self) # track visited teams
-
+        
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or lrnr.actionObj.teamAction not in visited],
             key=lambda lrnr: lrnr.bid(state, memMatrix))
