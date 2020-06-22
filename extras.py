@@ -84,7 +84,7 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     acts = env.action_space.n
     del env
 
-    trainer = Trainer(actions=[1,1], teamPopSize=popSize)
+    trainer = Trainer(actions=[1,1], teamPopSize=popSize, rootBasedPop=False)
 
     man = mp.Manager()
     #pool = mp.Pool(processes=processes, maxtasksperchild=1)
@@ -100,7 +100,7 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
             pool.map(runAgentParallel,
                 [(agent, envName, scoreList, reps, frames, nRandFrames)
                  for agent in agents])
-        
+
 
         # prepare population for next gen
         teams = trainer.applyScores(scoreList)

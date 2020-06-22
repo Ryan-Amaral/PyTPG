@@ -11,14 +11,10 @@ tests = {
     "loadTrainer" : "None"}
 
 # single processing run
-try:
-    spTrainer, spScore = runPopulation(
+spTrainer, spScore = runPopulation(
         envName="Boxing-v0", gens=2, popSize=10, reps=1,
         frames=18000, nRandFrames=30)
-    tests["spRun"] = "Pass"
-except Exception as e:
-    print(e)
-    tests["spRun"] = "Fail"
+tests["spRun"] = "Pass"
 
 # multiprocessing run
 try:

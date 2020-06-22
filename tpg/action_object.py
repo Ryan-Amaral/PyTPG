@@ -2,6 +2,7 @@ from tpg.program import Program
 import numpy as np
 import random
 from tpg.utils import flip
+from math import floor
 
 """
 Action  Object has a program to produce a value for the action, program doesn't
@@ -39,16 +40,24 @@ class ActionObject:
     """
     Returns the action code, and if applicable corresponding real action(s).
     """
-    def getAction(self, state, memMatrix, visited):
+    def getAction(self, state, memMatrix, allTeams):
         if self.teamAction is not None:
-            # action from team
-            return self.teamAction.act(state, memMatrix, visited)
+            return self.getTeamToAct(state, memMatrix, allTeams), None
         else:
             # atomic action
             if self.actionLength == 0:
                 return self.actionCode, None
             else:
                 return self.actionCode, self.getRealAction(state, memMatrix)
+
+    def getTeamToAct(self, state, memMatrix, allTeams):
+        Program.execute(state, self.registers,
+                        self.program.instructions[:,0], self.program.instructions[:,1],
+                        self.program.instructions[:,2], self.program.instructions[:,3],
+                        memMatrix, memMatrix.shape[0], memMatrix.shape[1])
+
+        # get team from register
+        return allTeams[floor(self.registers[0]%len(allTeams))]
 
     """
     Get the real valued portion of the action from the registers after program runs.

@@ -48,8 +48,8 @@ class Learner:
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction(self, state, memMatrix, visited):
-        return self.actionObj.getAction(state, memMatrix, visited)
+    def getAction(self, state, memMatrix, allTeams):
+        return self.actionObj.getAction(state, memMatrix, allTeams)
 
 
     """
