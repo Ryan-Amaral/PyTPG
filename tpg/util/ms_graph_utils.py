@@ -5,6 +5,7 @@ import pandas as pd
 import msal
 import json
 import numpy as np
+import os
 
 def getMSGraphToken(app, config):
     result = None
@@ -27,10 +28,76 @@ def getMSGraphToken(app, config):
         print(result.get("error_description"))
         print(result.get("correlation_id"))  # You might need this when reporting a bug.
 
+def downloadRun(access_token, driveId, folderId, itemId, runInfo):
+
+    http_headers = {
+        'Authorization': 'Bearer ' + access_token,
+    }
+    endpoint = "https://graph.microsoft.com/v1.0/drives/" + driveId + "/items/" + itemId + "/content"
+    request = requests.get(endpoint, headers=http_headers)
+    print(endpoint)
+    print('download run zip request status code: '+ str(request.status_code))
+
+    # Save the downloaded file to the filesystem
+    runZip = open('runZip.zip','wb')
+    runZip.write(request.content)
+    runZip.close()
+
+    #Unzip the run
+    with ZipFile('runZip.zip','r') as zipObj:
+        # Extract run folder contents into the results folder
+        zipObj.extractall()
+        runInfo['resultsPath'] = './' + zipObj.namelist()[0].split('/')[0] + '/'
+        zipObj.printdir()
+
+    runInfo['loadPath'] = runInfo['resultsPath'] + 'trainers/' + runInfo['loadPath']
+
+# Up to 60MB
+def uploadFile(access_token, driveId, folderId, uploadedFilename, mimeType, filePath):
+    # First create the upload session
+    http_headers = {
+        'Authorization': 'Bearer ' + access_token,
+    }
+    endpoint = "https://graph.microsoft.com/v1.0/drives/" + driveId + "/items/" + folderId + ":/"+uploadedFilename+":/createUploadSession"
+    fileInfo = {
+        '@microsoft.graph.conflictBehavior':'rename',
+        'name': uploadedFilename
+    }
+    # Send create upload session request
+    request = requests.post(endpoint, headers=http_headers, json=fileInfo)
+
+    print('create upload session request status code: ' + str(request.status_code))
+
+    
+    # Parse upload session info
+    uploadSession = request.json()
+
+    uploadUrl = uploadSession['uploadUrl']
+    fileData = open(filePath, 'rb').read()
+    fileSizeInBytes = os.path.getsize(filePath)
+
+    #Update HTTP headers for upload request
+    http_headers = {
+        'Content-Length': str(fileSizeInBytes), #Header values must be str
+        'Content-Range': 'bytes 0-' + str((fileSizeInBytes-1)) + "/"+ str(fileSizeInBytes)
+    }
+
+    request = requests.put(uploadUrl, headers=http_headers, data=fileData)
+
+    print('upload request status code: ' + str(request.status_code)) 
+
+    #Parse response json
+    data = request.json()
+
+    # Return driveItem
+    return data
+
+
+
 # Up to 4MB!!
 # Returns drive item 
 # https://docs.microsoft.com/en-us/graph/api/driveitem-put-content?view=graph-rest-1.0&tabs=http#http-request-to-upload-a-new-file
-def uploadFile(access_token, driveId, folderId, uploadedFilename, mimeType, filePath):
+def uploadSmallFile(access_token, driveId, folderId, uploadedFilename, mimeType, filePath):
     http_headers = {
         'Authorization': 'Bearer ' + access_token,
         'Accept': 'application/json',
@@ -196,6 +263,7 @@ def processPartialResults(runInfo, gen):
         zipFile.write(runInfo['resultsPath']+runInfo['learnersFile'])
         zipFile.write(runInfo['resultsPath']+runInfo['teamsFile'])
         zipFile.write(runInfo['resultsPath']+runInfo['instructionsFile'])
+        zipFile.write(runInfo['lastTrainerPath'])
     
     #MS Graph Wizardry
     msGraphConfig = json.load(open(runInfo['msGraphConfigPath']))

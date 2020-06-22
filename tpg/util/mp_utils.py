@@ -105,7 +105,7 @@ def doRun(runInfo):
         rangeStart = runInfo['resumeGen']
         print('resuming from gen ' + str(runInfo['resumeGen']))
 
-    for gen in range(rangeStart,runInfo['maxGenerations']): #do maxGenerations of training
+    for gen in range(rangeStart,runInfo['maxGenerations'] + 1): #do maxGenerations of training, + 1 as it's exclusive
         scoreList = man.list()
 
         # get agents, noRef to not hold reference to trainer in each one
@@ -157,7 +157,10 @@ def doRun(runInfo):
 
         #Save the trainer as a 'checkpoint' should we want to restart the run from this generation
         Path(runInfo['resultsPath']+"trainers/").mkdir(parents=True, exist_ok=True)
-        trainer.saveToFile(runInfo['resultsPath']+"trainers/gen_" + str(gen))
+        runInfo['lastTrainerFile'] = "gen_" + str(gen)
+        runInfo['lastTrainerPath'] = runInfo['resultsPath']+"trainers/"+runInfo['lastTrainerFile']
+        trainer.saveToFile(runInfo['lastTrainerPath'])
+        print(runInfo['lastTrainerPath'])
 
         # important to remember to set tasks right, unless not using task names
         # task name set in runAgent()
@@ -203,7 +206,7 @@ def doRun(runInfo):
         
 
     #Return scores and trainer for additional metrics post-run
-    return allScores, trainer
+    return allScores, trainer, runInfo['lastTrainerPath']
 
 def writeRunInfo(runInfo):
 
