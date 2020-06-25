@@ -24,10 +24,10 @@ class Team:
             if learner.id == other.id:
                 return True
         return False
-    
+
     def __hash__(self):
         return self.id
-      
+
     """
     Returns an action to use based on the current state and traversal type.
     """
@@ -35,19 +35,19 @@ class Team:
         visited.add(self) # track visited teams
 
         if self.traversal == 'team':
-          topLearner = max([lrnr for lrnr in self.learners
+            topLearner = max([lrnr for lrnr in self.learners
                   if lrnr.isActionAtomic() or lrnr.actionObj.teamAction not in visited],
-              key=lambda lrnr: lrnr.bid(state, memMatrix))
-            
+              key=lambda lrnr: lrnr.bid(state, memMatrix, frameNumber))
+
             # Return the action of the top Learner. If it is a reference to a
             # Team, this process recurisvely continues from that Team's act().'
-            return topLearner.getAction2(state, memMatrix, frameNumber, visited)
-        
+            return topLearner.getAction(state, memMatrix, frameNumber, visited)
+
         if self.traversal == 'learner':
             topLearner = max([lrnr for lrnr in self.learners
                    if lrnr.isActionAtomic() or lrnr not in visited],
                 key=lambda lrnr: lrnr.bid(state=state,memMatrix=memMatrix,frameNumber=frameNumber))
-        
+
             return topLearner.getAction(state, memMatrix, visited=visited, frameNumber=frameNumber)
 
     """
@@ -78,14 +78,14 @@ class Team:
     """
     def size(self, visited):
         if self in visited:
-            return 
+            return
         visited.add(self)
         for l in self.learners:
             if not l.isActionAtomic():
                 l.action.size(visited)
 
     """
-    Returns the number of learners and instructions in the graph 
+    Returns the number of learners and instructions in the graph
     """
     def compileLearnerStats(self, learners, stats):
         for l in self.learners:
@@ -110,21 +110,21 @@ class Team:
                 if not l.isActionAtomic():
                     l.action.compileLearnerStats( learners, stats)
 
-                
 
 
 
- 
+
+
     """
     Adds learner to the team and updates number of references to that program.
     """
     def addLearner(self, learner):
         program = learner.program
-        
+
         # Don't add duplicate program.
         if learner in self.learners:
             return False
-        
+
         # Add the incoming learner to the list of learners..
         self.learners.append(learner)
 
@@ -179,10 +179,10 @@ class Team:
             p *= pDelLrn # decrease next chance
 
             # choose non-atomic learners if only one atomic remaining
-            learner = random.choice([l for l in self.learners 
-                                     if not l.isActionAtomic() or 
+            learner = random.choice([l for l in self.learners
+                                     if not l.isActionAtomic() or
                                      self.numAtomicActions() > 1])
-            self.removeLearner(learner)                 
+            self.removeLearner(learner)
 
         # add some learners
         p = pAddLrn
@@ -226,12 +226,12 @@ def main():
 
     for i in range(12):
         learner = Learner(program=Program(maxProgramLength=1), action=1, numRegisters=8)
-        
+
         team.addLearner(learner)
 
     from time import time
     import numpy as np
-    
+
     features = [random.randint(0,10000) for i in range(100)]
     memory = np.array([[random.randint(0,10000) for _ in range(800)] for _ in range(8)])
 
@@ -240,7 +240,7 @@ def main():
     team.act1(features, memory, -1, set())
     team.act(features, memory, -1, set())
 
-   
+
 
     start = time()
     for i in range(1000):
@@ -260,4 +260,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

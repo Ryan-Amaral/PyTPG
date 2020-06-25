@@ -17,7 +17,7 @@ class Agent:
     """
     Gets an action from the root team of this agent / this agent.
     """
-    def act(self, state, frameNumber,):
+    def act(self, state, frameNumber):
         return self.team.act( state, self.memMatrix, frameNumber=frameNumber)
 
     """

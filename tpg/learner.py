@@ -33,26 +33,26 @@ class Learner:
 
         self.id = Learner.idCount
         Learner.idCount += 1
-    
+
     '''
     Learner class string representation method. For use with str(..).
     '''
     def __str__(self):
         return "L" + str(self.id)
-    
+
     '''
-    Learner class object representation method. Typically used for 
+    Learner class object representation method. Typically used for
     debugging. In this case, it simply returns the string representation.
     '''
     def __repr__(self):
         return self.__str__()
-    
+
     '''
     Learner class equality method. Returns True if this == other.
     '''
     def __eq__(self, other):
         return self.id == other.id
-    
+
     def __hash__(self):
         return self.id
 
@@ -75,7 +75,7 @@ class Learner:
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction(self, state, memMatrix, visited):
+    def getAction(self, state, memMatrix, frameNumber, visited):
         return self.actionObj.getAction(state, memMatrix, visited)
 
 

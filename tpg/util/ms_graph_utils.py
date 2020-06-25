@@ -28,7 +28,7 @@ def getMSGraphToken(app, config):
         print(result.get("correlation_id"))  # You might need this when reporting a bug.
 
 # Up to 4MB!!
-# Returns drive item 
+# Returns drive item
 # https://docs.microsoft.com/en-us/graph/api/driveitem-put-content?view=graph-rest-1.0&tabs=http#http-request-to-upload-a-new-file
 def uploadFile(access_token, driveId, folderId, uploadedFilename, mimeType, filePath):
     http_headers = {
@@ -81,7 +81,7 @@ def getShareableLink(access_token, driveId, driveItemId):
 # See example request in MS Graph Explorer for more details https://developer.microsoft.com/en-us/graph/graph-explorer/preview
 def sendEmailWithResultsLink(access_token, sender_id, resultsUrl, recipientEmails, runInfo, final, gen):
 
-    
+
 
     content = "<h2>Run Info</h2>"
     content += "host = " + runInfo['hostname'] + "<br>"
@@ -107,7 +107,7 @@ def sendEmailWithResultsLink(access_token, sender_id, resultsUrl, recipientEmail
     trainer = runInfo['trainer']
     content +="<h2>Trainer Info</h2> <br>"
     content +="teamPopSize = " + str(trainer.teamPopSize) + "<br>"
-    content +="rTeamPopSize = "+ str(trainer.rTeamPopSize) + "<br>"
+    content +="rTeamPopSize = "+ str(0) + "<br>"
     content +="gap = " + str(trainer.gap) + "<br>"
     content +="uniqueProgThresh = " + str(trainer.uniqueProgThresh) + "<br>"
     content +="initMaxTeamSize = " + str(trainer.initMaxTeamSize) + "<br>"
@@ -167,7 +167,7 @@ def sendEmailWithResultsLink(access_token, sender_id, resultsUrl, recipientEmail
                 'importance': 'Normal',
                 'body': {
                     'contentType':'HTML',
-                    'content': content 
+                    'content': content
                 },
                 'toRecipients': recipients
             }
@@ -175,10 +175,10 @@ def sendEmailWithResultsLink(access_token, sender_id, resultsUrl, recipientEmail
 
     request = requests.post(endpoint, headers=http_headers, stream=False, json=payload)
     print('send email request status code: ' + str(request.status_code))
-    if request.status_code != 202: 
+    if request.status_code != 202:
         errData = request.json()
         print(errData)
-    
+
 
 
 def processPartialResults(runInfo, gen):
@@ -196,7 +196,7 @@ def processPartialResults(runInfo, gen):
         zipFile.write(runInfo['resultsPath']+runInfo['learnersFile'])
         zipFile.write(runInfo['resultsPath']+runInfo['teamsFile'])
         zipFile.write(runInfo['resultsPath']+runInfo['instructionsFile'])
-    
+
     #MS Graph Wizardry
     msGraphConfig = json.load(open(runInfo['msGraphConfigPath']))
 
@@ -349,7 +349,7 @@ def generateGraphs(runInfo, final=True):
     y = runData[:,1]
     plt.plot(
         x,
-        y   
+        y
     )
     plt.xlabel("Generation #")
     plt.xticks( np.arange(min(x),max(x)+1,generationStep))
@@ -470,6 +470,3 @@ def generateGraphs(runInfo, final=True):
 
         plt.savefig(runInfo['resultsPath']+runInfo['rootTeamsFitnessFile'], format='svg')
         plt.close()
-
-
-

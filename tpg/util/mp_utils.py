@@ -34,18 +34,18 @@ def runAgent(args):
     envName = args[1]
     scoreList = args[2]
     numEpisodes = args[3] # number of times to repeat game
-    numFrames = args[4] 
-    mode = args[5] # whether to run in train or test (random skip 30 frames @start) mode 
-    
+    numFrames = args[4]
+    mode = args[5] # whether to run in train or test (random skip 30 frames @start) mode
+
     # skip if task already done by agent
     if agent.taskDone(envName):
         print('Agent #' + str(agent.agentNum) + ' can skip.')
         scoreList.append((agent.team.id, agent.team.outcomes))
         return
-    
+
     env = gym.make(envName)
     valActs = range(env.action_space.n) # valid actions, some envs are less
-    
+
     scoreTotal = 0 # score accumulates over all episodes
     for ep in range(numEpisodes): # episode loop
         state = env.reset()
@@ -54,7 +54,7 @@ def runAgent(args):
         if numEpisodes > 1:
             numRandFrames = random.randint(0,30)
         for i in range(numFrames): # frame loop
-            if mode == 'test' and i < numRandFrames: # Only skip frame on start in test mode 
+            if mode == 'test' and i < numRandFrames: # Only skip frame on start in test mode
                 env.step(env.action_space.sample())
                 continue
 
@@ -65,11 +65,11 @@ def runAgent(args):
             scoreEp += reward # accumulate reward in score
             if isDone:
                 break # end early if losing state
-                
-        print('Agent #' + str(agent.agentNum) + 
+
+        print('Agent #' + str(agent.agentNum) +
               ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
         scoreTotal += scoreEp
-       
+
     scoreTotal /= numEpisodes
     env.close()
     agent.reward(scoreTotal, envName)
@@ -82,13 +82,13 @@ def doRun(runInfo):
     numActions = env.action_space.n
     del env
 
-    
+
     # Load trainer if one was passed
     if runInfo['loadPath'] is not None:
         trainer = loadTrainer(runInfo['loadPath'])
     else:
-        trainer = Trainer(actions=range(numActions), teamPopSize=runInfo['teamPopulationSize'], rTeamPopSize=runInfo['teamPopulationSize'], sharedMemory=runInfo['useMemory'], traversal=runInfo['traversalType'])
-
+        trainer = Trainer(actions=numActions, teamPopSize=runInfo['teamPopulationSize'],
+                sharedMemory=runInfo['useMemory'], traversal=runInfo['traversalType'])
 
     runInfo['trainer'] = trainer #Save the trainer for run details later
     man = mp.Manager()
@@ -106,6 +106,7 @@ def doRun(runInfo):
         print('resuming from gen ' + str(runInfo['resumeGen']))
 
     for gen in range(rangeStart,runInfo['maxGenerations']): #do maxGenerations of training
+        print(gen)
         scoreList = man.list()
 
         # get agents, noRef to not hold reference to trainer in each one
@@ -123,7 +124,7 @@ def doRun(runInfo):
 
 
         '''
-        Gather statistics 
+        Gather statistics
         '''
         stats = {
             'learnerCount': len(trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.learners),
@@ -145,8 +146,8 @@ def doRun(runInfo):
             learners,
             stats
             )
-     
-            
+
+
         teams = set()
         trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.size(teams)
         print("root team size: " + str(len(teams)))
@@ -162,30 +163,30 @@ def doRun(runInfo):
         # important to remember to set tasks right, unless not using task names
         # task name set in runAgent()
         trainer.evolve(tasks=[runInfo['environmentName']]) # go into next gen
-        
+
         # an easier way to track stats than the above example
         scoreStats = trainer.fitnessStats
         allScores.append((scoreStats['min'], scoreStats['max'], scoreStats['average']))
-        
-       
+
+
         print('Time Taken (Hours): ' + str((time.time() - runInfo['tStart'])/3600))
         print('Gen: ' + str(gen))
         print('Results so far: ' + str(allScores))
 
         runStatsFile = open(runInfo['resultsPath'] + runInfo['runStatsFileName'],"a")
-        
+
         runStatsFile.write(str(gen) + "," +
-        str((time.time() - runInfo['tStart'])/3600) + "," + 
+        str((time.time() - runInfo['tStart'])/3600) + "," +
         str(scoreStats['min']) + "," +
         str(scoreStats['max']) + "," +
         str(scoreStats['average']) + "," +
         str(len(learners)) + "," +
-        str(len(teams)) + "," + 
+        str(len(teams)) + "," +
         str(stats['instructionCount']) + "," +
         str(stats['add']) + "," +
         str(stats['subtract']) + "," +
         str(stats['multiply']) + "," +
-        str(stats['divide']) + "," + 
+        str(stats['divide']) + "," +
         str(stats['neg']) + "," +
         str(stats['memRead']) + "," +
         str(stats['memWrite']) + "\n"
@@ -195,12 +196,12 @@ def doRun(runInfo):
 
         if notifyCounter == 0:
             processPartialResults(runInfo, gen)
-        
+
         notifyCounter += 1
 
         if notifyCounter == 250: #Notify every 250 gens
             notifyCounter = 0
-        
+
 
     #Return scores and trainer for additional metrics post-run
     return allScores, trainer
@@ -368,7 +369,7 @@ def generateGraphs(runInfo, final=True):
     y = runData[:,1]
     plt.plot(
         x,
-        y   
+        y
     )
     plt.xlabel("Generation #")
     plt.xticks( np.arange(min(x),max(x)+1,generationStep))
@@ -484,8 +485,3 @@ def generateGraphs(runInfo, final=True):
 
         plt.savefig(runInfo['resultsPath']+runInfo['rootTeamsFitnessFile'], format='svg')
         plt.close()
-
-
-    
-
-
