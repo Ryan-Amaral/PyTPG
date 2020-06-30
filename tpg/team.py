@@ -82,7 +82,7 @@ class Team:
         visited.add(self)
         for l in self.learners:
             if not l.isActionAtomic():
-                l.action.size(visited)
+                l.actionObj.teamAction.size(visited)
 
     """
     Returns the number of learners and instructions in the graph
@@ -108,7 +108,7 @@ class Team:
                     elif instruction[1] == 6:
                         stats['memWrite'] += 1
                 if not l.isActionAtomic():
-                    l.action.compileLearnerStats( learners, stats)
+                    l.actionObj.teamAction.compileLearnerStats( learners, stats)
 
 
 
