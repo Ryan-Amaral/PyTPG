@@ -76,7 +76,7 @@ class Learner:
     from the action team.
     """
     def getAction(self, state, memMatrix, frameNumber, visited):
-        return self.actionObj.getAction(state, memMatrix, visited)
+        return self.actionObj.getAction(state, memMatrix, visited, frameNumber)
 
 
     """

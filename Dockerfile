@@ -7,9 +7,6 @@ RUN apt-get update && apt-get -y install sudo && apt-get -y install cmake
 
 WORKDIR /usr/src/app
 
-#Copy tpg files
-COPY . .
-
 #Need to install llvm as pre-req for llvmlite python module
 RUN sudo apt-get -y install llvm
 
@@ -23,7 +20,13 @@ RUN pip install requests
 RUN pip install pandas
 
 RUN pip install gym['atari']
+
+#Copy tpg files
+COPY . .
+
 RUN pip install -e .
+
+
 
 CMD ["python", "run_mp.py", "-e", "Boxing-v0", "-x","2000", "-i", "10", "-f" , "18000", "-t", "12", "-p", "600", "-y", "-v","team", "-r","./results/", "-o" ,"results", "-s", "ms_graph_config.json", "--email-list","notify.json", "-m", "train"]
 ENTRYPOINT [ "python", "run_mp.py"]

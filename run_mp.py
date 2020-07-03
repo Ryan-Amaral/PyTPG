@@ -18,14 +18,15 @@ import logging
 import logging.handlers
 
 #Import tpg
-from tpg.util.mp_utils import doRun
-from tpg.util.mp_utils import runAgent
-from tpg.util.mp_utils import writeRunInfo
-from tpg.util.mp_utils import generateGraphs
-from tpg.util.ms_graph_utils import getMSGraphToken
-from tpg.util.ms_graph_utils import uploadFile
-from tpg.util.ms_graph_utils import getShareableLink
-from tpg.util.ms_graph_utils import sendEmailWithResultsLink
+from mp_utils import doRun
+from mp_utils import runAgent
+from mp_utils import writeRunInfo
+from mp_utils import generateGraphs
+from ms_graph_utils import getMSGraphToken
+from ms_graph_utils import uploadFile
+from ms_graph_utils import getShareableLink
+from ms_graph_utils import sendEmailWithResultsLink
+from ms_graph_utils import downloadRun
 from tpg.trainer import Trainer
 from tpg.agent import Agent
 
@@ -62,6 +63,7 @@ parser.add_option('--email-list', type="string", dest="emailList", default="noti
 parser.add_option('-l','--load-path', type="string", dest="loadPath")
 parser.add_option('-g','--resume-from-gen', type="int", dest="resumeGen")
 parser.add_option('--log-error', action="store_true", dest="logError" ,default=False)
+parser.add_option('--onedrive-id', type="string", dest="onedriveId")
 
 
 (opts, args) = parser.parse_args()
@@ -111,6 +113,30 @@ runInfo = {
 if opts.logError == True:
     sys.stderr = open(runInfo['resultsPath'] + "err.log", "w")
 
+#If we're provided a onedrive-id download the run now!
+if opts.onedriveId != None:
+    #MS Graph Wizardry
+    msGraphConfig = json.load(open(opts.msGraphConfigPath))
+
+
+    # Create a preferably long-lived app instance that maintains a token cache.
+    app = msal.ConfidentialClientApplication(
+    msGraphConfig["client_id"], authority=msGraphConfig["authority"],
+    client_credential=msGraphConfig["secret"],
+    # token_cache=...  # Default cache is in memory only.
+                       # You can learn how to use SerializableTokenCache from
+                       # https://msal-python.rtfd.io/en/latest/#msal.SerializableTokenCache
+    )
+    msGraphToken = getMSGraphToken(app, msGraphConfig)
+
+    downloadRun(
+        msGraphToken['access_token'],
+        msGraphConfig['drive_id'],
+        msGraphConfig['tpg_runs_folder_id'],
+        opts.onedriveId,
+        runInfo
+        )
+
 #Start timestmap
 tStart = time.time()
 runInfo['tStart'] = tStart
@@ -149,7 +175,7 @@ finalRootTeamsFitnessFile = open(runInfo['resultsPath'] + runInfo['finalRootTeam
 finalRootTeamsFitnessFile.write("team id,fitness\n")
 finalRootTeamsFitnessFile.close()
 
-allScores, trainer = doRun(runInfo)
+allScores, trainer, trainerPath = doRun(runInfo)
 
 
 print('Time Taken (Hours): ' + str((time.time() - runInfo['tStart'])/3600))
@@ -181,6 +207,7 @@ with ZipFile(runInfo['resultsPath']+runInfo['outputName']+'.zip','w') as zipFile
     zipFile.write(runInfo['resultsPath']+runInfo['teamsFile'])
     zipFile.write(runInfo['resultsPath']+runInfo['instructionsFile'])
     zipFile.write(runInfo['resultsPath']+runInfo['rootTeamsFitnessFile'])
+    zipFile.write(trainerPath)
 
 
 #MS Graph Wizardry

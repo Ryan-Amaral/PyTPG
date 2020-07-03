@@ -39,10 +39,10 @@ class ActionObject:
     """
     Returns the action code, and if applicable corresponding real action(s).
     """
-    def getAction(self, state, memMatrix, visited):
+    def getAction(self, state, memMatrix, visited, frameNumber):
         if self.teamAction is not None:
             # action from team
-            return self.teamAction.act(state, memMatrix, visited)
+            return self.teamAction.act(state, memMatrix, frameNumber, visited)
         else:
             # atomic action
             if self.actionLength == 0:

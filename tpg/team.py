@@ -110,11 +110,6 @@ class Team:
                 if not l.isActionAtomic():
                     l.actionObj.teamAction.compileLearnerStats( learners, stats)
 
-
-
-
-
-
     """
     Adds learner to the team and updates number of references to that program.
     """
