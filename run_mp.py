@@ -22,7 +22,7 @@ from tpg.util.mp_utils import doRun
 from tpg.util.mp_utils import runAgent
 from tpg.util.mp_utils import writeRunInfo
 from tpg.util.mp_utils import generateGraphs
-from tpg.util.ms_graph_utils import getMSGraphToken 
+from tpg.util.ms_graph_utils import getMSGraphToken
 from tpg.util.ms_graph_utils import uploadFile
 from tpg.util.ms_graph_utils import getShareableLink
 from tpg.util.ms_graph_utils import sendEmailWithResultsLink
@@ -50,7 +50,7 @@ parser.add_option('-e','--env', type="string", dest="environmentName", default="
 parser.add_option('-x', '--max-gens', type="int", dest="maxGenerations", default=2000)
 parser.add_option('-i', '--episodes', type="int", dest="episodes", default=10)
 parser.add_option('-f','--frames', type="int", dest="numFrames",default=18000)
-parser.add_option('-t','--threads', type="int", dest="numThreads", default=4)
+parser.add_option('-t','--threads', type="int", dest="numThreads", default=12)
 parser.add_option('-p', '--team-pop', type="int", dest="teamPopulationSize",default=600)
 parser.add_option('-y', '--use-memory', action="store_true", dest="useMemory", default=False)
 parser.add_option('-v', '--traversal', type="string", dest="traversalType", default="team")
@@ -128,11 +128,11 @@ print("loadPath = " + str(runInfo['loadPath']))
 # Setup output files
 
 # Create results path if it doesn't exist
-Path(runInfo['resultsPath']).mkdir(parents=True, exist_ok=True) 
+Path(runInfo['resultsPath']).mkdir(parents=True, exist_ok=True)
 
 # RunInfo.txt - Program arguments, loaded configurations, implicit configurations
 # RunStats.csv - Stats of interest collected during the generation loop
-# FinalRootTeamsFitness.csv - Fitness each team in the root team after the run is complete. 
+# FinalRootTeamsFitness.csv - Fitness each team in the root team after the run is complete.
 runInfoFile = open(runInfo['resultsPath'] + runInfo['runInfoFileName'], "a")
 #TODO - print Program arguments, loaded configurations, implicit configurations. Don't print sensitive garbage!!
 runInfoFile.close()
@@ -181,7 +181,7 @@ with ZipFile(runInfo['resultsPath']+runInfo['outputName']+'.zip','w') as zipFile
     zipFile.write(runInfo['resultsPath']+runInfo['teamsFile'])
     zipFile.write(runInfo['resultsPath']+runInfo['instructionsFile'])
     zipFile.write(runInfo['resultsPath']+runInfo['rootTeamsFitnessFile'])
-    
+
 
 #MS Graph Wizardry
 msGraphConfig = json.load(open(opts.msGraphConfigPath))
@@ -226,4 +226,3 @@ if len(emailList) > 0:
         True,
         -1
     )
-

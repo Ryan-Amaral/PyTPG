@@ -113,15 +113,22 @@ def doRun(runInfo):
         # don't need reference to trainer in multiprocessing
         agents = trainer.getAgents()
 
-        #run the agents
-        pool.map(runAgent,
-            [(agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'], runInfo['mode'])
-            for agent in agents])
+        if runInfo['numThreads'] > 1:
+            # run in parallel with multiprocessing pool
 
-        # apply scores, must do this when multiprocessing
-        # because agents can't refer to trainer
-        teams = trainer.applyScores(scoreList)
+            #run the agents
+            pool.map(runAgent,
+                [(agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'], runInfo['mode'])
+                for agent in agents])
 
+            # apply scores, must do this when multiprocessing
+            # because agents can't refer to trainer
+            teams = trainer.applyScores(scoreList)
+        else:
+            # run one at a time in the current process
+            for agent in agents:
+                print("Single process!!!")
+                runAgent((agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'], runInfo['mode']))
 
         '''
         Gather statistics
