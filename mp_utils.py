@@ -6,6 +6,7 @@ from pathlib import Path
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 import pandas as pd
+import math
 
 from tpg.trainer import Trainer
 from tpg.trainer import loadTrainer
@@ -59,8 +60,8 @@ def runAgent(args):
                 env.step(env.action_space.sample())
                 continue
 
-            act = agent.act(frameNumber=i,state=getState(np.array(state, dtype=np.int32)))
-
+            act = agent.act(frameNumber=i,state=getState(np.array(state, dtype=np.int32)))[1][0]
+            act = min(env.action_space.n - 1 , math.floor(act % env.action_space.n))
             # feedback from env
             state, reward, isDone, debug = env.step(act)
             scoreEp += reward # accumulate reward in score
@@ -88,7 +89,7 @@ def doRun(runInfo):
     if runInfo['loadPath'] is not None:
         trainer = loadTrainer(runInfo['loadPath'])
     else:
-        trainer = Trainer(actions=numActions, teamPopSize=runInfo['teamPopulationSize'],
+        trainer = Trainer(actions=[1,1], teamPopSize=runInfo['teamPopulationSize'],
         sharedMemory=runInfo['useMemory'], traversal=runInfo['traversalType'])
 
 

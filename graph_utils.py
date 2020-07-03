@@ -162,7 +162,6 @@ def generateGraphs(runInfo, final=True):
     plt.bar(ind, learners)
     plt.xlabel("Generation #")
     plt.ylabel("# of Learners in Root Team")
-    plt.yticks(np.arange(min(learners), max(learners), int(max(learners)/10), dtype=int))
     plt.title("Learners in Root Teams")
     plt.xticks( np.arange(min(ind),max(ind)+1,generationStep, dtype=int))
 
@@ -179,7 +178,6 @@ def generateGraphs(runInfo, final=True):
     plt.xlabel("Generation #")
     plt.xticks( np.arange(min(ind),max(ind)+1,generationStep, dtype=int))
     plt.ylabel("# of Teams in Root Team")
-    plt.yticks( np.arange(min(teams), max(teams), int(max(teams)/10), dtype=int))
     plt.title("Teams in Root Teams")
 
     plt.savefig(runInfo['resultsPath']+runInfo['teamsFile'], format='svg')
