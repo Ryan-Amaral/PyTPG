@@ -1,9 +1,12 @@
 # tpg-python
-A python implementation of Tangled Program Graphs. A major refactor was recently implemented to clean up the API and improve performance.
+A python implementation of Tangled Program Graphs. A graph based genetic programming algorithm.
+
+## Recent API changes
+**Trainer Parameters:** rTeamPopSize removed, just use teamPopSize and use the rootBasedPop parameter (boolean) to affect whether the population is based on all teams or just root teams.
 
 ## Setup
 
-### Requirements
+### Requirements (automatically installed with with PyTPG)
 - numba
 - numpy
 
