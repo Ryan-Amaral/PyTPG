@@ -211,24 +211,8 @@ def doRun(runInfo):
 def writeRunInfo(runInfo):
 
     file = open(runInfo['resultsPath']+runInfo['runInfoFileName'], 'w')
-    file.write("host = " + runInfo['hostname']+ "\n")
-    file.write("startTime = " + runInfo['startTime']+ "\n")
-    file.write("tStart = " + str(runInfo['tStart'])+ "\n")
-    file.write("environmentName = " + runInfo['environmentName']+ "\n")
-    file.write("maxGenerations = " + str(runInfo['maxGenerations'])+ "\n")
-    file.write("episodes = " + str(runInfo['episodes'])+ "\n")
-    file.write("numFrames = " + str(runInfo['numFrames'])+ "\n")
-    file.write("threads = " + str(runInfo['numThreads'])+ "\n")
-    file.write("teamPopulationSize = " + str(runInfo['teamPopulationSize'])+ "\n")
-    file.write("useMemory = " + str(runInfo['useMemory'])+ "\n")
-    file.write("traversalType = " + str(runInfo['traversalType'])+ "\n")
-    file.write("resultsPath = " + str(runInfo['resultsPath'])+ "\n")
-    file.write("msGraphConfigPath = " + str(runInfo['msGraphConfigPath'])+ "\n")
-    file.write("emailListPath = " + runInfo['emailListPath']+ "\n")
-    file.write("emailList: \n")
-    for email in runInfo['emailList']:
-        file.write("\t" + email+ "\n")
-    file.write("loadPath = " + str(runInfo['loadPath'])+ "\n")
+    for i in runInfo:
+        file.write(i + " = " + str(runInfo[i])+"\n")
 
 
     trainer = runInfo['trainer'] if 'trainer' in runInfo else None

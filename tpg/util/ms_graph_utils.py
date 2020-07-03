@@ -151,25 +151,8 @@ def sendEmailWithResultsLink(access_token, sender_id, resultsUrl, recipientEmail
     
 
     content = "<h2>Run Info</h2>"
-    content += "host = " + runInfo['hostname'] + "<br>"
-    content += "startTime = " + runInfo['startTime']+ "<br>"
-    content += "tStart = " + str(runInfo['tStart'])+ "<br>"
-    content +="environmentName = " + runInfo['environmentName']+ "<br>"
-    content +="maxGenerations = " + str(runInfo['maxGenerations'])+ "<br>"
-    content +="episodes = " + str(runInfo['episodes'])+ "<br>"
-    content +="numFrames = " + str(runInfo['numFrames'])+ "<br>"
-    content +="threads = " + str(runInfo['numThreads'])+ "<br>"
-    content +="teamPopulationSize = " + str(runInfo['teamPopulationSize'])+ "<br>"
-    content +="useMemory = " + str(runInfo['useMemory'])+ "<br>"
-    content +="traversalType = " + str(runInfo['traversalType'])+ "<br>"
-    content +="resultsPath = " + str(runInfo['resultsPath'])+ "<br>"
-    content +="msGraphConfigPath = " + str(runInfo['msGraphConfigPath'])+ "<br>"
-    content +="emailListPath = " + runInfo['emailListPath']+ "<br>"
-    content +="emailList: <ul>"
-    for email in runInfo['emailList']:
-        content +="<li>" + email + "</li>"
-    content += "</ul>"
-    content +="loadPath = " + str(runInfo['loadPath'])+ "<br>"
+    for i in runInfo:
+        content += i + " = " + str(runInfo[i]) + "<br>"
 
     trainer = runInfo['trainer']
     content +="<h2>Trainer Info</h2> <br>"
