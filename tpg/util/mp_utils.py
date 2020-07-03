@@ -219,7 +219,7 @@ def writeRunInfo(runInfo):
     if trainer is not None:
         content = "Trainer Info\n"
         content +="teamPopSize = " + str(trainer.teamPopSize) + "\n"
-        content +="rTeamPopSize = "+ str(trainer.rTeamPopSize) + "\n"
+        content +="rootBasedPop = "+ str(trainer.rootBasedPop) + "\n"
         content +="gap = " + str(trainer.gap) + "\n"
         content +="uniqueProgThresh = " + str(trainer.uniqueProgThresh) + "\n"
         content +="initMaxTeamSize = " + str(trainer.initMaxTeamSize) + "\n"

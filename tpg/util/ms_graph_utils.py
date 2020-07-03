@@ -157,7 +157,7 @@ def sendEmailWithResultsLink(access_token, sender_id, resultsUrl, recipientEmail
     trainer = runInfo['trainer']
     content +="<h2>Trainer Info</h2> <br>"
     content +="teamPopSize = " + str(trainer.teamPopSize) + "<br>"
-    content +="rTeamPopSize = "+ str(trainer.rTeamPopSize) + "<br>"
+    content +="rootBasedPop = "+ str(trainer.rootBasedPop) + "<br>"
     content +="gap = " + str(trainer.gap) + "<br>"
     content +="uniqueProgThresh = " + str(trainer.uniqueProgThresh) + "<br>"
     content +="initMaxTeamSize = " + str(trainer.initMaxTeamSize) + "<br>"
