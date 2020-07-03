@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='PyTPG',
     version='0.95',
-    packages=['tpg'],
+    packages=find_packages(),
     install_requires=['numba','numpy'],
     license='MIT',
     description='Python implementation of Tangled Program Graphs.',

@@ -45,7 +45,7 @@ class Trainer:
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
         pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
-        sourceRange=30720, memMatrixShape=(100,8)):
+        sourceRange=30720, memMatrixShape=(100,8), traversal="team"):
 
         # store all necessary params
 
@@ -92,8 +92,13 @@ class Trainer:
         Program.destinationRange = registerSize
         Program.sourceRange = sourceRange
 
+        self.initMaxTeamSize = initMaxTeamSize
+        self.initMaxProgSize = initMaxProgSize
+        self.registerSize = registerSize
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
         
+        self.sharedMemory = sharedMemory
+        self.memMatrixShape = memMatrixShape
         # extra operations if memory
         if not sharedMemory:
             Program.operationRange = 5

@@ -35,13 +35,13 @@ class Team:
         visited.add(self) # track visited teams
 
         if self.traversal == 'team':
-          topLearner = max([lrnr for lrnr in self.learners
-                  if lrnr.isActionAtomic() or lrnr.actionObj.teamAction not in visited],
-              key=lambda lrnr: lrnr.bid(state, memMatrix))
+            topLearner = max([lrnr for lrnr in self.learners
+                if lrnr.isActionAtomic() or lrnr.actionObj.teamAction not in visited],
+            key=lambda lrnr: lrnr.bid(state, memMatrix, frameNumber))
             
             # Return the action of the top Learner. If it is a reference to a
             # Team, this process recurisvely continues from that Team's act().'
-            return topLearner.getAction2(state, memMatrix, frameNumber, visited)
+            return topLearner.getAction(state, memMatrix, frameNumber, visited)
         
         if self.traversal == 'learner':
             topLearner = max([lrnr for lrnr in self.learners
@@ -108,7 +108,7 @@ class Team:
                     elif instruction[1] == 6:
                         stats['memWrite'] += 1
                 if not l.isActionAtomic():
-                    l.action.compileLearnerStats( learners, stats)
+                    l.actionObj.teamAction.compileLearnerStats( learners, stats)
 
                 
 

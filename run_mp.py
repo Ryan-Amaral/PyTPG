@@ -18,15 +18,15 @@ import logging
 import logging.handlers
 
 #Import tpg
-from tpg.util.mp_utils import doRun
-from tpg.util.mp_utils import runAgent
-from tpg.util.mp_utils import writeRunInfo
-from tpg.util.mp_utils import generateGraphs
-from tpg.util.ms_graph_utils import getMSGraphToken 
-from tpg.util.ms_graph_utils import uploadFile
-from tpg.util.ms_graph_utils import getShareableLink
-from tpg.util.ms_graph_utils import sendEmailWithResultsLink
-from tpg.util.ms_graph_utils import downloadRun
+from mp_utils import doRun
+from mp_utils import runAgent
+from mp_utils import writeRunInfo
+from mp_utils import generateGraphs
+from ms_graph_utils import getMSGraphToken 
+from ms_graph_utils import uploadFile
+from ms_graph_utils import getShareableLink
+from ms_graph_utils import sendEmailWithResultsLink
+from ms_graph_utils import downloadRun
 from tpg.trainer import Trainer
 from tpg.agent import Agent
 

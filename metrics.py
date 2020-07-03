@@ -1,6 +1,6 @@
 from optparse import OptionParser
 
-from tpg.util.mp_utils import generateGraphs
+from mp_utils import generateGraphs
 
 parser = OptionParser()
 
