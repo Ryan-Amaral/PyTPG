@@ -36,18 +36,18 @@ def runAgent(args):
     envName = args[1]
     scoreList = args[2]
     numEpisodes = args[3] # number of times to repeat game
-    numFrames = args[4] 
-    mode = args[5] # whether to run in train or test (random skip 30 frames @start) mode 
-    
+    numFrames = args[4]
+    mode = args[5] # whether to run in train or test (random skip 30 frames @start) mode
+
     # skip if task already done by agent
     if agent.taskDone(envName):
         print('Agent #' + str(agent.agentNum) + ' can skip.')
         scoreList.append((agent.team.id, agent.team.outcomes))
         return
-    
+
     env = gym.make(envName)
     valActs = range(env.action_space.n) # valid actions, some envs are less
-    
+
     scoreTotal = 0 # score accumulates over all episodes
     for ep in range(numEpisodes): # episode loop
         state = env.reset()
@@ -56,22 +56,23 @@ def runAgent(args):
         if numEpisodes > 1:
             numRandFrames = random.randint(0,30)
         for i in range(numFrames): # frame loop
-            if mode == 'test' and i < numRandFrames: # Only skip frame on start in test mode 
+            if mode == 'test' and i < numRandFrames: # Only skip frame on start in test mode
                 env.step(env.action_space.sample())
                 continue
 
             act = agent.act(frameNumber=i,state=getState(np.array(state, dtype=np.int32)))[1][0]
             act = min(env.action_space.n - 1 , math.floor(act % env.action_space.n))
+
             # feedback from env
             state, reward, isDone, debug = env.step(act)
             scoreEp += reward # accumulate reward in score
             if isDone:
                 break # end early if losing state
-                
-        print('Agent #' + str(agent.agentNum) + 
+
+        print('Agent #' + str(agent.agentNum) +
               ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
         scoreTotal += scoreEp
-       
+
     scoreTotal /= numEpisodes
     env.close()
     agent.reward(scoreTotal, envName)
@@ -84,7 +85,7 @@ def doRun(runInfo):
     numActions = env.action_space.n
     del env
 
-    
+
     # Load trainer if one was passed
     if runInfo['loadPath'] is not None:
         trainer = loadTrainer(runInfo['loadPath'])
@@ -115,18 +116,25 @@ def doRun(runInfo):
         # don't need reference to trainer in multiprocessing
         agents = trainer.getAgents()
 
-        #run the agents
-        pool.map(runAgent,
-            [(agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'], runInfo['mode'])
-            for agent in agents])
+        if runInfo['numThreads'] > 1:
+            # run in parallel with multiprocessing pool
 
-        # apply scores, must do this when multiprocessing
-        # because agents can't refer to trainer
-        teams = trainer.applyScores(scoreList)
+            #run the agents
+            pool.map(runAgent,
+                [(agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'], runInfo['mode'])
+                for agent in agents])
+
+            # apply scores, must do this when multiprocessing
+            # because agents can't refer to trainer
+            teams = trainer.applyScores(scoreList)
+        else:
+            # run one at a time in the current process
+            for agent in agents:
+                runAgent((agent, runInfo['environmentName'], scoreList, runInfo['episodes'], runInfo['numFrames'], runInfo['mode']))
 
 
         '''
-        Gather statistics 
+        Gather statistics
         '''
         stats = {
             'learnerCount': len(trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.learners),
@@ -148,8 +156,8 @@ def doRun(runInfo):
             learners,
             stats
             )
-     
-            
+
+
         teams = set()
         trainer.getAgents(sortTasks=[runInfo['environmentName']])[0].team.size(teams)
         print("root team size: " + str(len(teams)))
@@ -168,30 +176,30 @@ def doRun(runInfo):
         # important to remember to set tasks right, unless not using task names
         # task name set in runAgent()
         trainer.evolve(tasks=[runInfo['environmentName']]) # go into next gen
-        
+
         # an easier way to track stats than the above example
         scoreStats = trainer.fitnessStats
         allScores.append((scoreStats['min'], scoreStats['max'], scoreStats['average']))
-        
-       
+
+
         print('Time Taken (Hours): ' + str((time.time() - runInfo['tStart'])/3600))
         print('Gen: ' + str(gen))
         print('Results so far: ' + str(allScores))
 
         runStatsFile = open(runInfo['resultsPath'] + runInfo['runStatsFileName'],"a")
-        
+
         runStatsFile.write(str(gen) + "," +
-        str((time.time() - runInfo['tStart'])/3600) + "," + 
+        str((time.time() - runInfo['tStart'])/3600) + "," +
         str(scoreStats['min']) + "," +
         str(scoreStats['max']) + "," +
         str(scoreStats['average']) + "," +
         str(len(learners)) + "," +
-        str(len(teams)) + "," + 
+        str(len(teams)) + "," +
         str(stats['instructionCount']) + "," +
         str(stats['add']) + "," +
         str(stats['subtract']) + "," +
         str(stats['multiply']) + "," +
-        str(stats['divide']) + "," + 
+        str(stats['divide']) + "," +
         str(stats['neg']) + "," +
         str(stats['memRead']) + "," +
         str(stats['memWrite']) + "\n"
@@ -201,12 +209,12 @@ def doRun(runInfo):
 
         if notifyCounter == 0:
             processPartialResults(runInfo, gen)
-        
+
         notifyCounter += 1
 
         if notifyCounter == 250: #Notify every 250 gens
             notifyCounter = 0
-        
+
 
     #Return scores and trainer for additional metrics post-run
     return allScores, trainer, runInfo['lastTrainerPath']
@@ -248,5 +256,3 @@ def writeRunInfo(runInfo):
         file.write(content)
 
     file.close()
-
-
