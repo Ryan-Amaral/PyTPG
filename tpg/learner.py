@@ -38,11 +38,10 @@ class Learner:
     """
     Get the bid value, highest gets its action selected.
     """
-    def bid(self, state, memMatrix):
+    def bid(self, state):
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
-                        self.program.instructions[:,2], self.program.instructions[:,3],
-                        memMatrix, memMatrix.shape[0], memMatrix.shape[1])
+                        self.program.instructions[:,2], self.program.instructions[:,3])
 
         return self.registers[0]
 
@@ -50,11 +49,11 @@ class Learner:
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction(self, state, memMatrix, visited):
+    def getAction(self, state, visited):
         if self.isActionAtomic():
             return self.action
         else:
-            return self.action.act(state, memMatrix, visited)
+            return self.action.act(state, visited)
 
 
     """
@@ -67,9 +66,7 @@ class Learner:
     Mutates either the program or the action or both.
     """
     def mutate(self, pMutProg, pMutAct, pActAtom, atomics, parentTeam, allTeams,
-                pDelInst, pAddInst, pSwpInst, pMutInst,
-                multiActs, pSwapMultiAct, pChangeMultiAct,
-                uniqueProgThresh, inputs=None, outputs=None):
+                pDelInst, pAddInst, pSwpInst, pMutInst):
 
         changed = False
         while not changed:
@@ -77,40 +74,23 @@ class Learner:
             if flip(pMutProg):
                 changed = True
                 self.program.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
-                    len(self.registers), uniqueProgThresh,
-                    inputs=inputs, outputs=outputs)
+                    len(self.registers))
 
             # mutate the action
             if flip(pMutAct):
                 changed = True
-                self.mutateAction(pActAtom, atomics, allTeams, parentTeam,
-                                  multiActs, pSwapMultiAct, pChangeMultiAct)
+                self.mutateAction(pActAtom, atomics, allTeams, parentTeam)
 
     """
     Changes the action, into an atomic or team.
     """
-    def mutateAction(self, pActAtom, atomics, allTeams, parentTeam,
-                     multiActs, pSwapMultiAct, pChangeMultiAct):
+    def mutateAction(self, pActAtom, atomics, allTeams, parentTeam):
         if not self.isActionAtomic(): # dereference old team action
             self.action.numLearnersReferencing -= 1
 
         if flip(pActAtom): # atomic action
-            if multiActs is None:
-                self.action = random.choice(
-                                [a for a in atomics if a is not self.action])
-            else:
-                swap = flip(pSwapMultiAct)
-                if swap or not self.isActionAtomic(): # totally swap action for another
-                    self.action = list(random.choice(multiActs))
-
-                # change some value in action
-                if not swap or flip(pChangeMultiAct):
-                    changed = False
-                    while not changed or flip(pChangeMultiAct):
-                        index = random.randint(0, len(self.action)-1)
-                        self.action[index] += random.gauss(0, .15)
-                        self.action = list(np.clip(self.action, 0, 1))
-                        changed = True
+            self.action = random.choice(
+                            [a for a in atomics if a is not self.action])
 
         else: # Team action
             self.action = random.choice([t for t in allTeams

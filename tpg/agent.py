@@ -9,22 +9,21 @@ class Agent:
     """
     Create an agent with a team.
     """
-    def __init__(self, team, memMatrix, num=1):
+    def __init__(self, team, num=1):
         self.team = team
         self.agentNum = num
-        self.memMatrix = memMatrix
 
     """
     Gets an action from the root team of this agent / this agent.
     """
     def act(self, state):
-        return self.team.act(state, self.memMatrix)
+        return self.team.act(state)
 
     """
     Same as act, but with additional features. Use act for performance.
     """
     def act2(self, state, numStates=50):
-        return self.team.act2(state, self.memMatrix, numStates=numStates)
+        return self.team.act2(state, numStates=numStates)
 
     """
     Give this agent/root team a reward for the given task
@@ -44,7 +43,7 @@ class Agent:
     def saveToFile(self, fileName):
         self.operationRange = Program.operationRange
         self.destinationRange = Program.destinationRange
-        self.sourceRange = Program.sourceRange
+        self.inputSize = Program.inputSize
 
         pickle.dump(self, open(fileName, 'wb'))
 
@@ -56,6 +55,6 @@ def loadAgent(fileName):
 
     Program.operationRange = agent.operationRange
     Program.destinationRange = agent.destinationRange
-    Program.sourceRange = agent.sourceRange
+    Program.inputSize = agent.inputSize
 
     return agent

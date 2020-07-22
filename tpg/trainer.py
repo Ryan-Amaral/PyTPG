@@ -30,22 +30,18 @@ class Trainer:
     sharedMemory: Whether to use the shared memory module to have more long term
     memory.
     """
-    def __init__(self, actions, teamPopSize=360, rootBasedPop=True, sharedMemory=False,
-        gap=0.5, uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
+    def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
+        inputSize=30720, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
         pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
         pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
-        pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
-        sourceRange=30720, memMatrixShape=(100,8)):
+        doElites=True):
 
         # store all necessary params
         self.actions = actions
-        self.multiAction = isinstance(self.actions, int)
 
         self.teamPopSize = teamPopSize
         self.rootBasedPop = rootBasedPop
         self.gap = gap # portion of root teams to remove each generation
-        # threshold to accept mutated programs
-        self.uniqueProgThresh = uniqueProgThresh # about 1e-5 is good
 
         self.pDelLrn = pDelLrn
         self.pAddLrn = pAddLrn
@@ -57,8 +53,6 @@ class Trainer:
         self.pAddInst = pAddInst
         self.pSwpInst = pSwpInst
         self.pMutInst = pMutInst
-        self.pSwapMultiAct = pSwapMultiAct
-        self.pChangeMultiAct = pChangeMultiAct
         self.doElites = doElites
 
         self.teams = []
@@ -70,17 +64,12 @@ class Trainer:
         self.generation = 0
 
         # extra operations if memory
-        if not sharedMemory:
-            Program.operationRange = 6
-        else:
-            Program.operationRange = 8
+        Program.operationRange = 6
 
         Program.destinationRange = registerSize
-        Program.sourceRange = sourceRange
+        Program.inputSize = inputSize
 
         self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
-
-        self.memMatrix = np.zeros(shape=memMatrixShape)
 
     """
     Initializes a popoulation of teams and learners generated randomly with only
@@ -89,11 +78,8 @@ class Trainer:
     def initializePopulations(self, initMaxTeamSize, initMaxProgSize, registerSize):
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
-            if self.multiAction == False:
-                a1,a2 = random.sample(self.actions, 2)
-            else:
-                a1 = [random.uniform(0,1) for _ in range(self.actions)]
-                a2 = [random.uniform(0,1) for _ in range(self.actions)]
+            a1,a2 = random.sample(self.actions, 2)
+
             l1 = Learner(program=Program(maxProgramLength=initMaxProgSize),
                                          action=a1, numRegisters=registerSize)
             l2 = Learner(program=Program(maxProgramLength=initMaxProgSize),
@@ -112,14 +98,13 @@ class Trainer:
             moreLearners = random.randint(0, initMaxTeamSize-2)
             for i in range(moreLearners):
                 # select action
-                if self.multiAction == False:
-                    act = random.choice(self.actions)
-                else:
-                    act = [random.uniform(0,1) for _ in range(self.actions)]
+                act = random.choice(self.actions)
+
                 # create new learner
                 learner = Learner(program=Program(maxProgramLength=initMaxProgSize),
                                   action=act,
                                   numRegisters=registerSize)
+
                 team.addLearner(learner)
                 self.learners.append(learner)
 
@@ -138,13 +123,13 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            return [Agent(team, self.memMatrix, num=i) for i,team in enumerate(rTeams)]
+            return [Agent(team, num=i) for i,team in enumerate(rTeams)]
         else:
             # apply scores/fitness to root teams
             self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType,
                                                                 doElites=False)
             # return teams sorted by fitness
-            return [Agent(team, self.memMatrix, num=i) for i,team in
+            return [Agent(team, num=i) for i,team in
                     enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 
@@ -331,15 +316,6 @@ class Trainer:
         oLearners = list(self.learners)
         oTeams = list(self.teams)
 
-        # multiActs for action pool for multiaction mutation
-        if self.multiAction:
-            multiActs = []
-            for learner in oLearners:
-                if learner.isActionAtomic():
-                    multiActs.append(list(learner.action))
-        else:
-            multiActs = None
-
         while (len(self.teams) < self.teamPopSize or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
 
@@ -351,18 +327,11 @@ class Trainer:
             for learner in parent.learners:
                 child.addLearner(learner)
 
-            if self.uniqueProgThresh > 0:
-                inputs, outputs = self.getLearnersInsOuts(oLearners)
-            else:
-                inputs = None
-                outputs = None
             # then mutates
             child.mutate(self.pDelLrn, self.pAddLrn, self.pMutLrn, oLearners,
                         self.pMutProg, self.pMutAct, self.pActAtom,
                         self.actions, oTeams,
-                        self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
-                        multiActs, self.pSwapMultiAct, self.pChangeMultiAct,
-                        self.uniqueProgThresh, inputs=inputs, outputs=outputs)
+                        self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst)
 
             self.teams.append(child)
             self.rootTeams.append(child)
@@ -397,32 +366,6 @@ class Trainer:
         return numRTeams
 
     """
-    Returns the input and output of each learner bid in each state.
-    As [learner, stateNum]. Inputs being states, outputs being floats (bid values)
-    """
-    def getLearnersInsOuts(self, learners, clearStates=True):
-        inputs = []
-        outputs = []
-        for lrnr in learners:
-            lrnrInputs = []
-            lrnrOutputs = []
-            for state in lrnr.states:
-                regs = np.zeros(len(lrnr.registers))
-                Program.execute(state, regs,
-                                lrnr.program.modes, lrnr.program.operations,
-                                lrnr.program.destinations, lrnr.program.sources)
-                lrnrInputs.append(state)
-                lrnrOutputs.append(regs[0])
-
-            if clearStates: # free up some space
-                lrnr.states = []
-
-            inputs.append(lrnrInputs)
-            outputs.append(lrnrOutputs)
-
-        return inputs, outputs
-
-    """
     Save the trainer to the file, saving any class values to the instance.
     """
     def saveToFile(self, fileName):
@@ -431,7 +374,7 @@ class Trainer:
         self.programIdCount = Program.idCount
         self.operationRange = Program.operationRange
         self.destinationRange = Program.destinationRange
-        self.sourceRange = Program.sourceRange
+        self.inputSize = Program.inputSize
 
         pickle.dump(self, open(fileName, 'wb'))
 
@@ -446,6 +389,6 @@ def loadTrainer(fileName):
     Program.idCount = trainer.programIdCount
     Program.operationRange = trainer.operationRange
     Program.destinationRange = trainer.destinationRange
-    Program.sourceRange = trainer.sourceRange
+    Program.inputSize = trainer.inputSize
 
     return trainer

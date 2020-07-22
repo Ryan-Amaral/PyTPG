@@ -21,37 +21,14 @@ class Team:
     """
     Returns an action to use based on the current state.
     """
-    def act(self, state, memMatrix, visited=set(),):
+    def act(self, state, visited=set(),):
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or lrnr.action not in visited],
-            key=lambda lrnr: lrnr.bid(state, memMatrix))
+            key=lambda lrnr: lrnr.bid(state))
 
-        return topLearner.getAction(state, memMatrix, visited=visited)
-
-    """
-    Same as act, but with additional features. Use act for performance.
-    TODO: IMPLEMENT OTHER GET ACTION IN LEARNER TO MAKE THIS USEFUL.
-    """
-    def act2(self, state, memMatrix, visited=set(), numStates=50):
-        visited.add(self) # track visited teams
-
-        # first get candidate (unvisited) learners
-        learners = [lrnr for lrnr in self.learners
-                if lrnr.action not in visited]
-        # break down getting bids to do more stuff to learners
-        topLearner = learners[0]
-        topBid = learners[0].bid(state)
-        learners[0].saveState(state, numStates=numStates)
-        for lrnr in learners[1:]:
-            bid = lrnr.bid(state, memMatrix)
-            lrnr.saveState(state, numStates=numStates)
-            if bid > topBid:
-                topLearner = lrnr
-                topBid = bid
-
-        return topLearner.getAction(state, memMatrix, visited=visited)
+        return topLearner.getAction(state, visited=visited)
 
     """
     Adds learner to the team and updates number of references to that program.
@@ -98,9 +75,7 @@ class Team:
     """
     def mutate(self, pDelLrn, pAddLrn, pMutLrn, allLearners,
                 pMutProg, pMutAct, pActAtom, atomics, allTeams,
-                pDelInst, pAddInst, pSwpInst, pMutInst,
-                multiActs, pSwapMultiAct, pChangeMultiAct,
-                uniqueProgThresh, inputs=None, outputs=None):
+                pDelInst, pAddInst, pSwpInst, pMutInst):
 
         # delete some learners
         p = pDelLrn
@@ -137,7 +112,5 @@ class Team:
                 newLearner = Learner(learner=learner)
                 newLearner.mutate(
                         pMutProg, pMutAct, pActAtom0, atomics, self, allTeams,
-                        pDelInst, pAddInst, pSwpInst, pMutInst,
-                        multiActs, pSwapMultiAct, pChangeMultiAct,
-                        uniqueProgThresh, inputs=inputs, outputs=outputs)
+                        pDelInst, pAddInst, pSwpInst, pMutInst)
                 self.addLearner(newLearner)
