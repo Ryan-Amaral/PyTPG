@@ -81,13 +81,13 @@ class Program:
     inpts, and outs (parallel) not None, then mutates until this program is
     distinct. If update then calls update when done.
     """
-    def mutate(self, pMutRep, pDelInst, pAddInst, pSwpInst, pMutInst,
+    def mutate(self, pMutRep, pInstDel, pInstAdd, pInstSwp, pInstMut,
                 regSize, inputs=None, outputs=None,
                 maxMuts=100):
         # mutations repeatedly, random probably small amount
         mutated = False
         while not mutated or flip(pMutRep):
-            self.mutateInstructions(pDelInst, pAddInst, pSwpInst, pMutInst)
+            self.mutateInstructions(pInstDel, pInstAdd, pInstSwp, pInstMut)
             mutated = True
 
     """

@@ -26,50 +26,53 @@ class Trainer:
     are always roughly the same amount of root teams (uses more RAM).
     Else it ensures the total team population size is 'teamPopSize' (uses
     less RAM).
-
-    sharedMemory: Whether to use the shared memory module to have more long term
-    memory.
     """
     def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
-        inputSize=30720, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
-        pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
-        pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
+        inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
+        pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
+        pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True):
 
         # store all necessary params
         self.actions = actions
 
+        # population params
         self.teamPopSize = teamPopSize
+        # whether population size is based on root teams or all teams
         self.rootBasedPop = rootBasedPop
         self.gap = gap # portion of root teams to remove each generation
 
-        self.pDelLrn = pDelLrn
-        self.pAddLrn = pAddLrn
-        self.pMutLrn = pMutLrn
-        self.pMutProg = pMutProg
-        self.pMutAct = pMutAct
+        # input to agent (must be at-least size of input/state from environment)
+        self.inputSize = inputSize # defaulted to number of Atari screen pixels
+        # number of local memory registers each learner will have
+        self.nRegisters = nRegisters
+
+        # params for initializing evolution
+        self.initMaxTeamSize = initMaxTeamSize # size of team = # of learners
+        self.initMaxProgSize = initMaxProgSize # size of program = # of instructions
+
+        # params for continued evolution
+        self.pLrnDel = pLrnDel
+        self.pLrnAdd = pLrnAdd
+        self.pLrnMut = pLrnMut
+        self.pProgMut = pProgMut
+        self.pActMut = pActMut
         self.pActAtom = pActAtom
-        self.pDelInst = pDelInst
-        self.pAddInst = pAddInst
-        self.pSwpInst = pSwpInst
-        self.pMutInst = pMutInst
+        self.pInstDel = pInstDel
+        self.pInstAdd = pInstAdd
+        self.pInstSwp = pInstSwp
+        self.pInstMut = pInstMut
+
+        # whether to keep elites
         self.doElites = doElites
 
+        # core components of TPG
         self.teams = []
         self.rootTeams = []
         self.learners = []
-
         self.elites = [] # save best at each task
 
-        self.generation = 0
-
-        # extra operations if memory
-        Program.operationRange = 6
-
-        Program.destinationRange = registerSize
-        Program.inputSize = inputSize
-
-        self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
+        self.generation = 0 # track this
 
     """
     Initializes a popoulation of teams and learners generated randomly with only
@@ -102,8 +105,7 @@ class Trainer:
 
                 # create new learner
                 learner = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                  action=act,
-                                  numRegisters=registerSize)
+                                  action=act, numRegisters=registerSize)
 
                 team.addLearner(learner)
                 self.learners.append(learner)
@@ -328,10 +330,10 @@ class Trainer:
                 child.addLearner(learner)
 
             # then mutates
-            child.mutate(self.pDelLrn, self.pAddLrn, self.pMutLrn, oLearners,
-                        self.pMutProg, self.pMutAct, self.pActAtom,
+            child.mutate(self.pLrnDel, self.pLrnAdd, self.pLrnMut, oLearners,
+                        self.pProgMut, self.pActMut, self.pActAtom,
                         self.actions, oTeams,
-                        self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst)
+                        self.pInstDel, self.pInstAdd, self.pInstSwp, self.pInstMut)
 
             self.teams.append(child)
             self.rootTeams.append(child)

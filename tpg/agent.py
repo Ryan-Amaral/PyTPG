@@ -20,12 +20,6 @@ class Agent:
         return self.team.act(state)
 
     """
-    Same as act, but with additional features. Use act for performance.
-    """
-    def act2(self, state, numStates=50):
-        return self.team.act2(state, numStates=numStates)
-
-    """
     Give this agent/root team a reward for the given task
     """
     def reward(self, score, task='task'):

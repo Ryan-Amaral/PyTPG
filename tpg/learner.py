@@ -65,19 +65,19 @@ class Learner:
     """
     Mutates either the program or the action or both.
     """
-    def mutate(self, pMutProg, pMutAct, pActAtom, atomics, parentTeam, allTeams,
-                pDelInst, pAddInst, pSwpInst, pMutInst):
+    def mutate(self, pProgMut, pActMut, pActAtom, atomics, parentTeam, allTeams,
+                pInstDel, pInstAdd, pInstSwp, pInstMut):
 
         changed = False
         while not changed:
             # mutate the program
-            if flip(pMutProg):
+            if flip(pProgMut):
                 changed = True
-                self.program.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
+                self.program.mutate(pProgMut, pInstDel, pInstAdd, pInstSwp, pInstMut,
                     len(self.registers))
 
             # mutate the action
-            if flip(pMutAct):
+            if flip(pActMut):
                 changed = True
                 self.mutateAction(pActAtom, atomics, allTeams, parentTeam)
 
