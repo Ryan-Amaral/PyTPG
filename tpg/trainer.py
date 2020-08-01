@@ -74,19 +74,21 @@ class Trainer:
 
         self.generation = 0 # track this
 
+        self.initializePopulations()
+
     """
     Initializes a popoulation of teams and learners generated randomly with only
     atomic actions.
     """
-    def initializePopulations(self, initMaxTeamSize, initMaxProgSize, registerSize):
+    def initializePopulations(self):
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
             a1,a2 = random.sample(self.actions, 2)
 
-            l1 = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                         action=a1, numRegisters=registerSize)
-            l2 = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                         action=a2, numRegisters=registerSize)
+            l1 = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
+                                         action=a1, numRegisters=self.nRegisters)
+            l2 = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
+                                         action=a2, numRegisters=self.nRegisters)
 
             # save learner population
             self.learners.append(l1)
@@ -98,14 +100,14 @@ class Trainer:
             team.addLearner(l2)
 
             # add more learners
-            moreLearners = random.randint(0, initMaxTeamSize-2)
+            moreLearners = random.randint(0, self.initMaxTeamSize-2)
             for i in range(moreLearners):
                 # select action
                 act = random.choice(self.actions)
 
                 # create new learner
-                learner = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                  action=act, numRegisters=registerSize)
+                learner = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
+                                  action=act, numRegisters=self.nRegisters)
 
                 team.addLearner(learner)
                 self.learners.append(learner)

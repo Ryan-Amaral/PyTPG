@@ -1,4 +1,5 @@
 from tpg.program import Program
+from tpg.action_object import ActionObject
 import numpy as np
 from tpg.utils import flip
 import random
@@ -15,14 +16,14 @@ class Learner:
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
     """
-    def __init__(self, learner=None, program=None, action=None, numRegisters=8):
+    def __init__(self, learner=None, program=None, actionObj=None, numRegisters=8):
         if learner is not None:
             self.program = Program(instructions=learner.program.instructions)
-            self.action = learner.action
+            self.actionObj = ActionObject(learner.actionObj)
             self.registers = np.zeros(len(learner.registers), dtype=float)
-        elif program is not None and action is not None:
+        elif program is not None and actionObj is not None:
             self.program = program
-            self.action = action
+            self.actionObj = actionObj
             self.registers = np.zeros(numRegisters, dtype=float)
 
         if not self.isActionAtomic():
@@ -50,17 +51,17 @@ class Learner:
     from the action team.
     """
     def getAction(self, state, visited):
-        if self.isActionAtomic():
-            return self.action
-        else:
-            return self.action.act(state, visited)
+        return self.actionObj.getAction(state, visited)
+
+    def getActionTeam(self):
+        return self.actionObj.teamAction
 
 
     """
     Returns true if the action is atomic, otherwise the action is a team.
     """
     def isActionAtomic(self):
-        return isinstance(self.action, (int, list))
+        return self.actionObj.isAtomic()
 
     """
     Mutates either the program or the action or both.
@@ -79,7 +80,9 @@ class Learner:
             # mutate the action
             if flip(pActMut):
                 changed = True
-                self.mutateAction(pActAtom, atomics, allTeams, parentTeam)
+                self.actionObj.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
+                    uniqueProgThresh, inputs, outputs, pActAtom, parentTeam, actionCodes,
+                    actionLengths, teams, progMutFlag)
 
     """
     Changes the action, into an atomic or team.
@@ -98,10 +101,3 @@ class Learner:
 
         if not self.isActionAtomic(): # add reference for new team action
             self.action.numLearnersReferencing += 1
-
-    """
-    Saves visited states for mutation uniqueness purposes.
-    """
-    def saveState(self, state, numStates=50):
-        self.states.append(state)
-        self.states = self.states[-numStates:]

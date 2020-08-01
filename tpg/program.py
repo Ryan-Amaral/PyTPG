@@ -14,7 +14,7 @@ class Program:
     # destination is the register to store result in for each instruction
     destinationRange = 8 # or however many registers there are
     # the source index of the registers or observation
-    sourceRange = 30720 # should be equal to input size (or larger if varies)
+    inputSize = 30720 # should be equal to input size (or larger if varies)
 
     idCount = 0 # unique id of each program
 
@@ -26,7 +26,7 @@ class Program:
                 (random.randint(0,1),
                     random.randint(0, Program.operationRange-1),
                     random.randint(0, Program.destinationRange-1),
-                    random.randint(0, Program.sourceRange-1))
+                    random.randint(0, Program.inputSize-1))
                 for _ in range(random.randint(1, maxProgramLength))], dtype=np.int32)
 
         self.id = Program.idCount
@@ -77,13 +77,10 @@ class Program:
 
 
     """
-    Mutates the program, by performing some operations on the instructions. If
-    inpts, and outs (parallel) not None, then mutates until this program is
-    distinct. If update then calls update when done.
+    Mutates the program, by performing some operations on the instructions.
     """
     def mutate(self, pMutRep, pInstDel, pInstAdd, pInstSwp, pInstMut,
-                regSize, inputs=None, outputs=None,
-                maxMuts=100):
+                regSize):
         # mutations repeatedly, random probably small amount
         mutated = False
         while not mutated or flip(pMutRep):
@@ -120,7 +117,7 @@ class Program:
                 elif idx2 == 2:
                     maxVal = Program.destinationRange-1
                 elif idx2 == 3:
-                    maxVal = Program.sourceRange-1
+                    maxVal = Program.inputSize-1
 
                 # change it
                 self.instructions[idx1, idx2] = random.randint(0, maxVal)
@@ -147,6 +144,6 @@ class Program:
                             (random.randint(0,1),
                             random.randint(0, Program.operationRange-1),
                             random.randint(0, Program.destinationRange-1),
-                            random.randint(0, Program.sourceRange-1)),0)
+                            random.randint(0, Program.inputSize-1)),0)
 
                 changed = True
