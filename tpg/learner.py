@@ -53,9 +53,11 @@ class Learner:
     def getAction(self, state, visited):
         return self.actionObj.getAction(state, visited)
 
+    """
+    Gets the team that is the action of the learners action object.
+    """
     def getActionTeam(self):
         return self.actionObj.teamAction
-
 
     """
     Returns true if the action is atomic, otherwise the action is a team.
@@ -83,21 +85,3 @@ class Learner:
                 self.actionObj.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
                     uniqueProgThresh, inputs, outputs, pActAtom, parentTeam, actionCodes,
                     actionLengths, teams, progMutFlag)
-
-    """
-    Changes the action, into an atomic or team.
-    """
-    def mutateAction(self, pActAtom, atomics, allTeams, parentTeam):
-        if not self.isActionAtomic(): # dereference old team action
-            self.action.numLearnersReferencing -= 1
-
-        if flip(pActAtom): # atomic action
-            self.action = random.choice(
-                            [a for a in atomics if a is not self.action])
-
-        else: # Team action
-            self.action = random.choice([t for t in allTeams
-                    if t is not self.action and t is not parentTeam])
-
-        if not self.isActionAtomic(): # add reference for new team action
-            self.action.numLearnersReferencing += 1
