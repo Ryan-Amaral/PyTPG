@@ -79,8 +79,7 @@ class Program:
     """
     Mutates the program, by performing some operations on the instructions.
     """
-    def mutate(self, pMutRep, pInstDel, pInstAdd, pInstSwp, pInstMut,
-                regSize):
+    def mutate(self, pMutRep, pInstDel, pInstAdd, pInstSwp, pInstMut):
         # mutations repeatedly, random probably small amount
         mutated = False
         while not mutated or flip(pMutRep):

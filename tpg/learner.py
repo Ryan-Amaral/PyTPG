@@ -27,7 +27,7 @@ class Learner:
             self.registers = np.zeros(numRegisters, dtype=float)
 
         if not self.isActionAtomic():
-            self.action.numLearnersReferencing += 1
+            self.getActionTeam().numLearnersReferencing += 1
 
         self.states = []
 
@@ -68,7 +68,7 @@ class Learner:
     """
     Mutates either the program or the action or both.
     """
-    def mutate(self, pProgMut, pActMut, pActAtom, atomics, parentTeam, allTeams,
+    def mutate(self, pProgMut, pActMut, pActAtom, actionCodes, parentTeam, teams,
                 pInstDel, pInstAdd, pInstSwp, pInstMut):
 
         changed = False
@@ -76,12 +76,9 @@ class Learner:
             # mutate the program
             if flip(pProgMut):
                 changed = True
-                self.program.mutate(pProgMut, pInstDel, pInstAdd, pInstSwp, pInstMut,
-                    len(self.registers))
+                self.program.mutate(pProgMut, pInstDel, pInstAdd, pInstSwp, pInstMut)
 
             # mutate the action
             if flip(pActMut):
                 changed = True
-                self.actionObj.mutate(pMutProg, pDelInst, pAddInst, pSwpInst, pMutInst,
-                    uniqueProgThresh, inputs, outputs, pActAtom, parentTeam, actionCodes,
-                    actionLengths, teams, progMutFlag)
+                self.actionObj.mutate(pActAtom, parentTeam, actionCodes, teams)

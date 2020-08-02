@@ -25,7 +25,7 @@ class Team:
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
-                if lrnr.isActionAtomic() or lrnr.action not in visited],
+                if lrnr.isActionAtomic() or lrnr.getActionTeam() not in visited],
             key=lambda lrnr: lrnr.bid(state))
 
         return topLearner.getAction(state, visited=visited)
@@ -74,7 +74,7 @@ class Team:
     Mutates the learner set of this team.
     """
     def mutate(self, pLrnDel, pLrnAdd, pLrnMut, allLearners,
-                pProgMut, pActMut, pActAtom, atomics, allTeams,
+                pProgMut, pActMut, pActAtom, actionCodes, teams,
                 pInstDel, pInstAdd, pInstSwp, pInstMut):
 
         # delete some learners
@@ -95,7 +95,7 @@ class Team:
 
             learner = random.choice([l for l in allLearners
                                      if l not in self.learners and
-                                        l.action is not self])
+                                        l.getActionTeam() is not self])
             self.addLearner(learner)
 
         # give chance to mutate all learners
@@ -111,6 +111,6 @@ class Team:
                 self.removeLearner(learner)
                 newLearner = Learner(learner=learner)
                 newLearner.mutate(
-                        pProgMut, pActMut, pActAtom0, atomics, self, allTeams,
+                        pProgMut, pActMut, pActAtom0, actionCodes, self, teams,
                         pInstDel, pInstAdd, pInstSwp, pInstMut)
                 self.addLearner(newLearner)

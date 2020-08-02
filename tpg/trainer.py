@@ -1,3 +1,4 @@
+from tpg.action_object import ActionObject
 from tpg.program import Program
 from tpg.learner import Learner
 from tpg.team import Team
@@ -86,9 +87,11 @@ class Trainer:
             a1,a2 = random.sample(self.actions, 2)
 
             l1 = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
-                                         action=a1, numRegisters=self.nRegisters)
+                                         actionObj=ActionObject(actionCode=a1),
+                                         numRegisters=self.nRegisters)
             l2 = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
-                                         action=a2, numRegisters=self.nRegisters)
+                                         actionObj=ActionObject(actionCode=a2),
+                                         numRegisters=self.nRegisters)
 
             # save learner population
             self.learners.append(l1)
@@ -107,7 +110,8 @@ class Trainer:
 
                 # create new learner
                 learner = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
-                                  action=act, numRegisters=self.nRegisters)
+                                  actionObj=ActionObject(actionCode=act),
+                                  numRegisters=self.nRegisters)
 
                 team.addLearner(learner)
                 self.learners.append(learner)
@@ -303,7 +307,7 @@ class Trainer:
                 if learner.numTeamsReferencing == 1:
                     # remove reference to team if applicable
                     if not learner.isActionAtomic():
-                        learner.action.numLearnersReferencing -= 1
+                        learner.getActionTeam().numLearnersReferencing -= 1
 
                     self.learners.remove(learner) # permanently remove
 

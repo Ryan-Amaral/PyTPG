@@ -40,9 +40,9 @@ class ActionObject:
         return self.teamAction is None
 
     """
-    Either swap the action, or modify the program, depending on a flag.
+    Change action to team or atomic action.
     """
-    def mutate(self, pActAtom, parentTeam, actionCodes, actionLengths, teams, progMutFlag):
+    def mutate(self, pActAtom, parentTeam, actionCodes, teams):
         # dereference if old action is team
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing -= 1
