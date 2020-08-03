@@ -42,7 +42,7 @@ class ActionObject:
     """
     Change action to team or atomic action.
     """
-    def mutate(self, pActAtom, parentTeam, actionCodes, teams):
+    def mutate(self, mutateParams, parentTeam, teams, pActAtom):
         # dereference if old action is team
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing -= 1
@@ -51,7 +51,7 @@ class ActionObject:
         # mutate action
         if flip(pActAtom):
             # atomic
-            self.actionCode = random.choice(actionCodes)
+            self.actionCode = random.choice(mutateParams.actionCodes)
         else:
             # team action
             self.teamAction = random.choice([t for t in teams

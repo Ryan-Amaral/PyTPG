@@ -16,18 +16,17 @@ class Learner:
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
     """
-    def __init__(self, learner=None, program=None, actionObj=None, numRegisters=8):
+    def __init__(self, learner=None, program=None, actionObj=None, numRegisters=8,
+            nOperations=5, nDestinations=8, inputSize=30720):
         if learner is not None:
-            self.program = Program(instructions=learner.program.instructions)
+            self.program = Program(instructions=learner.program.instructions,
+                nOperations=nOperations, nDestinations=nDestinations, inputSize=inputSize)
             self.actionObj = ActionObject(learner.actionObj)
             self.registers = np.zeros(len(learner.registers), dtype=float)
         elif program is not None and actionObj is not None:
             self.program = program
             self.actionObj = actionObj
             self.registers = np.zeros(numRegisters, dtype=float)
-
-        if not self.isActionAtomic():
-            self.getActionTeam().numLearnersReferencing += 1
 
         self.states = []
 
@@ -68,17 +67,16 @@ class Learner:
     """
     Mutates either the program or the action or both.
     """
-    def mutate(self, pProgMut, pActMut, pActAtom, actionCodes, parentTeam, teams,
-                pInstDel, pInstAdd, pInstSwp, pInstMut):
+    def mutate(self, mutateParams, parentTeam, teams, pActAtom):
 
         changed = False
         while not changed:
             # mutate the program
-            if flip(pProgMut):
+            if flip(mutateParams.pProgMut):
                 changed = True
-                self.program.mutate(pProgMut, pInstDel, pInstAdd, pInstSwp, pInstMut)
+                self.program.mutate(mutateParams)
 
             # mutate the action
-            if flip(pActMut):
+            if flip(mutateParams.pActMut):
                 changed = True
-                self.actionObj.mutate(pActAtom, parentTeam, actionCodes, teams)
+                self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)

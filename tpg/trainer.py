@@ -6,6 +6,7 @@ from tpg.agent import Agent
 import random
 import numpy as np
 import pickle
+from collections import namedtuple
 
 """
 Functionality for actually growing TPG and evolving it to be functional.
@@ -32,10 +33,18 @@ class Trainer:
         inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
-        doElites=True):
+        doElites=True, nOperations=5):
 
         # store all necessary params
-        self.actions = actions
+
+        # first store actions properly
+        if isinstance(actions, int):
+            # all discrete actions
+            self.actionCodes = range(actions)
+        else: # list of lengths of each action
+            # some may be real actions
+            self.actionCodes = range(len(actions))
+            self.actionLengths = list(actions)
 
         # population params
         self.teamPopSize = teamPopSize
@@ -64,8 +73,17 @@ class Trainer:
         self.pInstSwp = pInstSwp
         self.pInstMut = pInstMut
 
+        # store paramers used in mutation here to not clutter mutate calls
+        self.mutateParams = MutateParams(
+            pLrnDel, pLrnAdd, pLrnMut, pProgMut, pActMut, pActAtom, pInstDel,
+            pInstAdd, pInstSwp, pInstMut, self.actionCodes, nOperations,
+            nRegisters, inputSize)
+
         # whether to keep elites
         self.doElites = doElites
+
+        # how many operations programs can do, must match with program execute
+        self.nOperations = nOperations
 
         # core components of TPG
         self.teams = []
@@ -84,14 +102,20 @@ class Trainer:
     def initializePopulations(self):
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
-            a1,a2 = random.sample(self.actions, 2)
+            a1,a2 = random.sample(self.actionCodes, 2)
 
-            l1 = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
-                                         actionObj=ActionObject(actionCode=a1),
-                                         numRegisters=self.nRegisters)
-            l2 = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
-                                         actionObj=ActionObject(actionCode=a2),
-                                         numRegisters=self.nRegisters)
+            l1 = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
+                                         nOperations=self.nOperations,
+                                         nDestinations=self.nRegisters,
+                                         inputSize=self.inputSize),
+                        actionObj=ActionObject(actionCode=a1),
+                        numRegisters=self.nRegisters)
+            l2 = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
+                                         nOperations=self.nOperations,
+                                         nDestinations=self.nRegisters,
+                                         inputSize=self.inputSize),
+                        actionObj=ActionObject(actionCode=a2),
+                        numRegisters=self.nRegisters)
 
             # save learner population
             self.learners.append(l1)
@@ -106,10 +130,13 @@ class Trainer:
             moreLearners = random.randint(0, self.initMaxTeamSize-2)
             for i in range(moreLearners):
                 # select action
-                act = random.choice(self.actions)
+                act = random.choice(self.actionCodes)
 
                 # create new learner
-                learner = Learner(program=Program(maxProgramLength=self.initMaxProgSize),
+                learner = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
+                                                  nOperations=self.nOperations,
+                                                  nDestinations=self.nRegisters,
+                                                  inputSize=self.inputSize),
                                   actionObj=ActionObject(actionCode=act),
                                   numRegisters=self.nRegisters)
 
@@ -336,10 +363,7 @@ class Trainer:
                 child.addLearner(learner)
 
             # then mutates
-            child.mutate(self.pLrnDel, self.pLrnAdd, self.pLrnMut, oLearners,
-                        self.pProgMut, self.pActMut, self.pActAtom,
-                        self.actions, oTeams,
-                        self.pInstDel, self.pInstAdd, self.pInstSwp, self.pInstMut)
+            child.mutate(self.mutateParams, oLearners, oTeams)
 
             self.teams.append(child)
             self.rootTeams.append(child)
@@ -380,9 +404,6 @@ class Trainer:
         self.teamIdCount = Team.idCount
         self.learnerIdCount = Learner.idCount
         self.programIdCount = Program.idCount
-        self.operationRange = Program.operationRange
-        self.destinationRange = Program.destinationRange
-        self.inputSize = Program.inputSize
 
         pickle.dump(self, open(fileName, 'wb'))
 
@@ -395,8 +416,13 @@ def loadTrainer(fileName):
     Team.idCount = trainer.teamIdCount
     Learner.idCount = trainer.learnerIdCount
     Program.idCount = trainer.programIdCount
-    Program.operationRange = trainer.operationRange
-    Program.destinationRange = trainer.destinationRange
-    Program.inputSize = trainer.inputSize
 
     return trainer
+
+"""
+Struct to hold parameters used in mutation to not clutter function calls.
+"""
+MutateParams = namedtuple("MutateParams", """pLrnDel pLrnAdd pLrnMut
+    pProgMut pActMut pActAtom pInstDel pInstAdd pInstSwp pInstMut
+    actionCodes nOperations nDestinations inputSize"""
+)

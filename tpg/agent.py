@@ -35,20 +35,10 @@ class Agent:
     Save the agent to the file, saving any relevant class values to the instance.
     """
     def saveToFile(self, fileName):
-        self.operationRange = Program.operationRange
-        self.destinationRange = Program.destinationRange
-        self.inputSize = Program.inputSize
-
         pickle.dump(self, open(fileName, 'wb'))
 
 """
 Load some agent from the file, returning it and repopulate class values.
 """
 def loadAgent(fileName):
-    agent = pickle.load(open(fileName, 'rb'))
-
-    Program.operationRange = agent.operationRange
-    Program.destinationRange = agent.destinationRange
-    Program.inputSize = agent.inputSize
-
-    return agent
+    return pickle.load(open(fileName, 'rb'))

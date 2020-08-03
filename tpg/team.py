@@ -73,14 +73,12 @@ class Team:
     """
     Mutates the learner set of this team.
     """
-    def mutate(self, pLrnDel, pLrnAdd, pLrnMut, allLearners,
-                pProgMut, pActMut, pActAtom, actionCodes, teams,
-                pInstDel, pInstAdd, pInstSwp, pInstMut):
+    def mutate(self, mutateParams, allLearners, teams):
 
         # delete some learners
-        p = pLrnDel
+        p = mutateParams.pLrnDel
         while flip(p) and len(self.learners) > 2: # must have >= 2 learners
-            p *= pLrnDel # decrease next chance
+            p *= mutateParams.pLrnDel # decrease next chance
 
             # choose non-atomic learners if only one atomic remaining
             learner = random.choice([l for l in self.learners
@@ -89,9 +87,9 @@ class Team:
             self.removeLearner(learner)
 
         # add some learners
-        p = pLrnAdd
+        p = mutateParams.pLrnAdd
         while flip(p):
-            p *= pLrnAdd # decrease next chance
+            p *= mutateParams.pLrnAdd # decrease next chance
 
             learner = random.choice([l for l in allLearners
                                      if l not in self.learners and
@@ -101,16 +99,14 @@ class Team:
         # give chance to mutate all learners
         oLearners = list(self.learners)
         for learner in oLearners:
-            if flip(pLrnMut):
+            if flip(mutateParams.pLrnMut):
                 if self.numAtomicActions() == 1 and learner.isActionAtomic():
-                    pActAtom0 = 1 # action must be kept atomic if only one
+                    pActAtom0 = 1.1 # action must be kept atomic if only one
                 else:
-                    pActAtom0 = pActAtom
+                    pActAtom0 = mutateParams.pActAtom
 
                 # must remove then re-add fresh mutated learner
                 self.removeLearner(learner)
                 newLearner = Learner(learner=learner)
-                newLearner.mutate(
-                        pProgMut, pActMut, pActAtom0, actionCodes, self, teams,
-                        pInstDel, pInstAdd, pInstSwp, pInstMut)
+                newLearner.mutate(mutateParams, self, teams, pActAtom0)
                 self.addLearner(newLearner)
