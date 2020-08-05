@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='PyTPG',
     version='0.95',
-    packages=['tpg'],
+    packages=['tpg', 'tpg.configuration'],
     install_requires=['numba','numpy'],
     license='MIT',
     description='Python implementation of Tangled Program Graphs.',

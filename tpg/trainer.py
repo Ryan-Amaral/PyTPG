@@ -7,7 +7,7 @@ import random
 import numpy as np
 import pickle
 from collections import namedtuple
-from tpg.configuration.configurer import configure
+from tpg.configuration import configurer
 
 """
 Functionality for actually growing TPG and evolving it to be functional.
@@ -34,20 +34,12 @@ class Trainer:
         inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
-        doElites=True, memType=None, ):
+        doElites=True, memType=None, memMatrixShape=(100,8)):
 
         # store all necessary params
 
         # first store actions properly
-        if isinstance(actions, int):
-            # all discrete actions
-            self.actionCodes = range(actions)
-            doReal = False
-        else: # list of lengths of each action
-            # some may be real actions
-            self.actionCodes = range(len(actions))
-            self.actionLengths = list(actions)
-            doReal = True
+        doReal = self.setUpActions(actions)
 
         # population params
         self.teamPopSize = teamPopSize
@@ -81,7 +73,9 @@ class Trainer:
 
         # how many operations programs can do, must match with program execute
         self.nOperations = 5 # TODO move to config
+
         self.actVarVals = []
+        self.memMatrix = np.zeros(shape=memMatrixShape)
 
         # core components of TPG
         self.teams = []
@@ -92,17 +86,34 @@ class Trainer:
         self.generation = 0 # track this
 
         # configure tpg functions and variable appropriately now
-        configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
-            memType is not None, memType, doReal)
+        configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
+            memType is not None, memType, memMatrixShape, doReal)
 
         # store paramers used in mutation here to not clutter mutate calls
         # TODO: mode to configurator
-        self.mutateParams = MutateParams(
+        self.mutateParams = configurer.MutateParams(
             self.pLrnDel, self.pLrnAdd, self.pLrnMut, self.pProgMut, self.pActMut,
             self.pActAtom, self.pInstDel, self.pInstAdd, self.pInstSwp, self.pInstMut,
             self.actionCodes, self.nOperations, self.nRegisters, self.inputSize)
 
         self.initializePopulations()
+
+    """
+    Sets up the actions properly, splitting action codes, and if needed, action
+    lengths. Returns whether doing real actions.
+    """
+    def setUpActions(self, actions):
+        if isinstance(actions, int):
+            # all discrete actions
+            self.actionCodes = range(actions)
+            doReal = False
+        else: # list of lengths of each action
+            # some may be real actions
+            self.actionCodes = range(len(actions))
+            self.actionLengths = list(actions)
+            doReal = True
+
+        return doReal
 
     """
     Initializes a popoulation of teams and learners generated randomly with only
@@ -427,11 +438,3 @@ def loadTrainer(fileName):
     Program.idCount = trainer.programIdCount
 
     return trainer
-
-"""
-Struct to hold parameters used in mutation to not clutter function calls.
-"""
-MutateParams = namedtuple("MutateParams", """pLrnDel pLrnAdd pLrnMut
-    pProgMut pActMut pActAtom pInstDel pInstAdd pInstSwp pInstMut
-    actionCodes nOperations nDestinations inputSize"""
-)
