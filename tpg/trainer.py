@@ -7,6 +7,7 @@ import random
 import numpy as np
 import pickle
 from collections import namedtuple
+from tpg.configuration.configurer import configure
 
 """
 Functionality for actually growing TPG and evolving it to be functional.
@@ -33,7 +34,7 @@ class Trainer:
         inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
-        doElites=True, nOperations=5, agentActVars=[], trainerMutateVars):
+        doElites=True, memType=None, ):
 
         # store all necessary params
 
@@ -41,10 +42,12 @@ class Trainer:
         if isinstance(actions, int):
             # all discrete actions
             self.actionCodes = range(actions)
+            doReal = False
         else: # list of lengths of each action
             # some may be real actions
             self.actionCodes = range(len(actions))
             self.actionLengths = list(actions)
+            doReal = True
 
         # population params
         self.teamPopSize = teamPopSize
@@ -73,17 +76,12 @@ class Trainer:
         self.pInstSwp = pInstSwp
         self.pInstMut = pInstMut
 
-        # store paramers used in mutation here to not clutter mutate calls
-        self.mutateParams = MutateParams(
-            pLrnDel, pLrnAdd, pLrnMut, pProgMut, pActMut, pActAtom, pInstDel,
-            pInstAdd, pInstSwp, pInstMut, self.actionCodes, nOperations,
-            nRegisters, inputSize)
-
         # whether to keep elites
         self.doElites = doElites
 
         # how many operations programs can do, must match with program execute
-        self.nOperations = nOperations
+        self.nOperations = 5 # TODO move to config
+        self.actVarVals = []
 
         # core components of TPG
         self.teams = []
@@ -92,6 +90,17 @@ class Trainer:
         self.elites = [] # save best at each task
 
         self.generation = 0 # track this
+
+        # configure tpg functions and variable appropriately now
+        configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
+            memType is not None, memType, doReal)
+
+        # store paramers used in mutation here to not clutter mutate calls
+        # TODO: mode to configurator
+        self.mutateParams = MutateParams(
+            self.pLrnDel, self.pLrnAdd, self.pLrnMut, self.pProgMut, self.pActMut,
+            self.pActAtom, self.pInstDel, self.pInstAdd, self.pInstSwp, self.pInstMut,
+            self.actionCodes, self.nOperations, self.nRegisters, self.inputSize)
 
         self.initializePopulations()
 
@@ -158,14 +167,14 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            return [Agent(team, num=i) for i,team in enumerate(rTeams)]
+            return [Agent(team, num=i, actVarVals=self.actVarVals)
+                    for i,team in enumerate(rTeams)]
         else:
             # apply scores/fitness to root teams
-            self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType,
-                                                                doElites=False)
+            self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
             # return teams sorted by fitness
-            return [Agent(team, num=i) for i,team in
-                    enumerate(sorted(rTeams,
+            return [Agent(team, num=i, actVarVals=self.actVarVals)
+                    for i,team in enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 
     """

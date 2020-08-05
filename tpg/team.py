@@ -21,14 +21,14 @@ class Team:
     """
     Returns an action to use based on the current state.
     """
-    def act(self, state, visited=set()):
+    def act(self, state, visited=set(), actVars=None):
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or lrnr.getActionTeam() not in visited],
-            key=lambda lrnr: lrnr.bid(state))
+            key=lambda lrnr: lrnr.bid(state, actVars=actVars))
 
-        return topLearner.getAction(state, visited=visited)
+        return topLearner.getAction(state, visited=visited, actVars=actVars)
 
     """
     Adds learner to the team and updates number of references to that program.

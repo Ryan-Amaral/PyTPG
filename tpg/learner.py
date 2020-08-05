@@ -38,7 +38,7 @@ class Learner:
     """
     Get the bid value, highest gets its action selected.
     """
-    def bid(self, state):
+    def bid(self, state, actVars=None):
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3])
@@ -49,8 +49,8 @@ class Learner:
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction(self, state, visited):
-        return self.actionObj.getAction(state, visited)
+    def getAction(self, state, visited, actVars=None):
+        return self.actionObj.getAction(state, visited, actVars=actVars)
 
     """
     Gets the team that is the action of the learners action object.

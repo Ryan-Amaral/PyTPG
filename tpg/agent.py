@@ -1,5 +1,6 @@
 from tpg.program import Program
 import pickle
+from tpg.configuration import configurer
 
 """
 Simplified wrapper around a (root) team for easier interface for user.
@@ -9,15 +10,16 @@ class Agent:
     """
     Create an agent with a team.
     """
-    def __init__(self, team, num=1):
+    def __init__(self, team, num=1, actVarVals=[]):
         self.team = team
         self.agentNum = num
+        self.actVars = configurer.ActVars(*actVarVals)
 
     """
     Gets an action from the root team of this agent / this agent.
     """
     def act(self, state):
-        return self.team.act(state)
+        return self.team.act(state, actVars=self.actVars)
 
     """
     Give this agent/root team a reward for the given task
