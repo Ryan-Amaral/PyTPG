@@ -10,7 +10,7 @@ class Team:
 
     idCount = 0
 
-    def __init__(self):
+    def __init__(self, initParams=None):
         self.learners = []
         self.outcomes = {} # scores at various tasks
         self.fitness = None

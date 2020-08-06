@@ -12,7 +12,7 @@ class Program:
     idCount = 0 # unique id of each program
 
     def __init__(self, instructions=None, maxProgramLength=128, nOperations=5,
-            nDestinations=8, inputSize=30720):
+            nDestinations=8, inputSize=30720, initParams=None):
 
         if instructions is not None: # copy from existing
             self.instructions = np.array(instructions, dtype=np.int32)

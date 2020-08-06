@@ -8,7 +8,8 @@ run if just a discrete action code.
 """
 class ConfActionObject:
 
-    def init_def(self, actionObj=None, program=None, actionCode=None, teamAction=None):
+    def init_def(self, actionObj=None, program=None, actionCode=None, teamAction=None,
+            initParams=None):
         if actionObj is not None:
             # clone the other action object
             self.actionCode = actionObj.actionCode
@@ -22,7 +23,8 @@ class ConfActionObject:
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing += 1
 
-    def init_real(self, actionObj=None, program=None, actionCode=None, teamAction=None):
+    def init_real(self, actionObj=None, program=None, actionCode=None, teamAction=None,
+            initParams=None):
         if actionObj is not None:
             # clone the other action object
             self.actionCode = actionObj.actionCode

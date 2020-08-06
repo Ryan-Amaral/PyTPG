@@ -6,7 +6,6 @@ from tpg.agent import Agent
 import random
 import numpy as np
 import pickle
-from collections import namedtuple
 from tpg.configuration import configurer
 
 """
@@ -89,12 +88,10 @@ class Trainer:
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
             memType is not None, memType, memMatrixShape, doReal)
 
-        # store paramers used in mutation here to not clutter mutate calls
-        # TODO: mode to configurator
-        self.mutateParams = configurer.MutateParams(
-            self.pLrnDel, self.pLrnAdd, self.pLrnMut, self.pProgMut, self.pActMut,
-            self.pActAtom, self.pInstDel, self.pInstAdd, self.pInstSwp, self.pInstMut,
-            self.actionCodes, self.nOperations, self.nRegisters, self.inputSize)
+        from tpg.configuration.extra_params import MutateParams, ActVars
+
+        self.mutateParams = MutateParams(*self.mutateParamVals)
+        self.actVars = ActVars(*self.actVarVals)
 
         self.initializePopulations()
 
@@ -127,15 +124,19 @@ class Trainer:
             l1 = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
                                          nOperations=self.nOperations,
                                          nDestinations=self.nRegisters,
-                                         inputSize=self.inputSize),
-                        actionObj=ActionObject(actionCode=a1),
-                        numRegisters=self.nRegisters)
+                                         inputSize=self.inputSize,
+                                         initParams=self.mutateParams),
+                        actionObj=ActionObject(actionCode=a1, initParams=self.mutateParams),
+                        numRegisters=self.nRegisters,
+                        initParams=self.mutateParams)
             l2 = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
                                          nOperations=self.nOperations,
                                          nDestinations=self.nRegisters,
-                                         inputSize=self.inputSize),
-                        actionObj=ActionObject(actionCode=a2),
-                        numRegisters=self.nRegisters)
+                                         inputSize=self.inputSize,
+                                         initParams=self.mutateParams),
+                        actionObj=ActionObject(actionCode=a2, initParams=self.mutateParams),
+                        numRegisters=self.nRegisters,
+                        initParams=self.mutateParams)
 
             # save learner population
             self.learners.append(l1)
@@ -154,11 +155,13 @@ class Trainer:
 
                 # create new learner
                 learner = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
-                                                  nOperations=self.nOperations,
-                                                  nDestinations=self.nRegisters,
-                                                  inputSize=self.inputSize),
-                                  actionObj=ActionObject(actionCode=act),
-                                  numRegisters=self.nRegisters)
+                                             nOperations=self.nOperations,
+                                             nDestinations=self.nRegisters,
+                                             inputSize=self.inputSize,
+                                             initParams=self.mutateParams),
+                            actionObj=ActionObject(actionCode=act, initParams=self.mutateParams),
+                            numRegisters=self.nRegisters,
+                            initParams=self.mutateParams)
 
                 team.addLearner(learner)
                 self.learners.append(learner)
@@ -178,13 +181,13 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            return [Agent(team, num=i, actVarVals=self.actVarVals)
+            return [Agent(team, num=i, actVars=self.actVars)
                     for i,team in enumerate(rTeams)]
         else:
             # apply scores/fitness to root teams
             self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
             # return teams sorted by fitness
-            return [Agent(team, num=i, actVarVals=self.actVarVals)
+            return [Agent(team, num=i, actVars=self.actVars)
                     for i,team in enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 

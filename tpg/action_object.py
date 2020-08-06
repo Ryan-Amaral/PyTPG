@@ -8,7 +8,8 @@ run if just a discrete action code.
 """
 class ActionObject:
 
-    def __init__(self, actionObj=None, program=None, actionCode=None, teamAction=None):
+    def __init__(self, actionObj=None, program=None, actionCode=None, teamAction=None,
+            initParams=None):
         if actionObj is not None:
             # clone the other action object
             self.actionCode = actionObj.actionCode
