@@ -12,7 +12,7 @@ actions.
 """
 
 def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
-        doMemory, memType, memMatrixShape, doReal):
+        doMemory, doReal):
 
     # make keys global to be accessed by other modele to create namedtuple
     global mutateParamKeys
@@ -33,11 +33,11 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
 
     # configure stuff for using the memory module
     if doMemory:
-        configureMemory(trainer, Learner, Program, memMatrixShape, actVarKeys, actVarVals)
+        configureMemory(trainer, Learner, Program, trainer.memMatrixShape, actVarKeys, actVarVals)
 
     # configure stuff for using real valued actions
     if doReal:
-        configureRealAction()
+        configureRealAction(trainer, mutateParamKeys, mutateParamVals)
 
     # save values to trainer so it can crete the extra parameters
     trainer.mutateParamVals = mutateParamVals
@@ -59,5 +59,8 @@ def configureMemory(trainer, Learner, Program, memMatrixShape, actVarKeys, actVa
     actVarKeys += ["memMatrix"]
     actVarVals += [trainer.memMatrix]
 
-def configureRealAction():
-    pass
+def configureRealAction(trainer, mutateParamKeys, mutateParamVals):
+
+    # mutateParams needs to have lengths of actions
+    mutateParamKeys += ["actionLengths"]
+    mutateParamVals += [trainer.actionLengths]

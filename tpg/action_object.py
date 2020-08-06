@@ -8,7 +8,7 @@ run if just a discrete action code.
 """
 class ActionObject:
 
-    def __init__(self, actionObj=None, program=None, actionCode=None, teamAction=None,
+    def __init__(self, actionObj=None, actionIndex=None, teamAction=None,
             initParams=None):
         if actionObj is not None:
             # clone the other action object
@@ -16,7 +16,7 @@ class ActionObject:
             self.teamAction = actionObj.teamAction
         else:
             # no cloning
-            self.actionCode = actionCode
+            self.actionCode = initParams.actionCodes[actionIndex]
             self.teamAction = teamAction
 
         # increase references to team

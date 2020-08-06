@@ -8,7 +8,7 @@ run if just a discrete action code.
 """
 class ConfActionObject:
 
-    def init_def(self, actionObj=None, program=None, actionCode=None, teamAction=None,
+    def init_def(self, actionObj=None, actionIndex=None, teamAction=None,
             initParams=None):
         if actionObj is not None:
             # clone the other action object
@@ -16,23 +16,34 @@ class ConfActionObject:
             self.teamAction = actionObj.teamAction
         else:
             # no cloning
-            self.actionCode = actionCode
+            self.actionCode = initParams.actionCodes[actionIndex]
             self.teamAction = teamAction
 
         # increase references to team
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing += 1
 
-    def init_real(self, actionObj=None, program=None, actionCode=None, teamAction=None,
+    def init_real(self, actionObj=None, program=None, actionIndex=None, teamAction=None,
             initParams=None):
         if actionObj is not None:
             # clone the other action object
             self.actionCode = actionObj.actionCode
+            self.actionLength = actionObj.actionLength
             self.teamAction = actionObj.teamAction
+            self.program = Program(instructions=actionObj.program.instructions,
+                                    initParams=initParams)
         else:
             # no cloning
-            self.actionCode = actionCode
+            self.actionCode = initParams.actionCodes[actionIndex]
+            self.actionLength = initParams.actionLength[actionIndex]
             self.teamAction = teamAction
+
+            if program is None:
+                # create new program
+                self.program = Program(maxProgramLength=maxProgramLength)
+            else:
+                # copy program
+                self.program = Program(instructions=program.instructions)
 
         # increase references to team
         if self.teamAction is not None:

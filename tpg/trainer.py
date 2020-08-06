@@ -70,11 +70,11 @@ class Trainer:
         # whether to keep elites
         self.doElites = doElites
 
+        self.memType = memType
+        self.memMatrixShape = memMatrixShape
+
         # how many operations programs can do, must match with program execute
         self.nOperations = 5 # TODO move to config
-
-        self.actVarVals = []
-        self.memMatrix = np.zeros(shape=memMatrixShape)
 
         # core components of TPG
         self.teams = []
@@ -86,7 +86,7 @@ class Trainer:
 
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
-            memType is not None, memType, memMatrixShape, doReal)
+            memType is not None, doReal)
 
         from tpg.configuration.extra_params import MutateParams, ActVars
 
@@ -119,14 +119,14 @@ class Trainer:
     def initializePopulations(self):
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
-            a1,a2 = random.sample(self.actionCodes, 2)
+            a1,a2 = random.sample(range(len(self.actionCodes)), 2)
 
             l1 = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
                                          nOperations=self.nOperations,
                                          nDestinations=self.nRegisters,
                                          inputSize=self.inputSize,
                                          initParams=self.mutateParams),
-                        actionObj=ActionObject(actionCode=a1, initParams=self.mutateParams),
+                        actionObj=ActionObject(actionIndex=a1, initParams=self.mutateParams),
                         numRegisters=self.nRegisters,
                         initParams=self.mutateParams)
             l2 = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
@@ -134,7 +134,7 @@ class Trainer:
                                          nDestinations=self.nRegisters,
                                          inputSize=self.inputSize,
                                          initParams=self.mutateParams),
-                        actionObj=ActionObject(actionCode=a2, initParams=self.mutateParams),
+                        actionObj=ActionObject(actionIndex=a2, initParams=self.mutateParams),
                         numRegisters=self.nRegisters,
                         initParams=self.mutateParams)
 
@@ -151,7 +151,7 @@ class Trainer:
             moreLearners = random.randint(0, self.initMaxTeamSize-2)
             for i in range(moreLearners):
                 # select action
-                act = random.choice(self.actionCodes)
+                act = random.choice(range(len(self.actionCodes)))
 
                 # create new learner
                 learner = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
@@ -159,7 +159,7 @@ class Trainer:
                                              nDestinations=self.nRegisters,
                                              inputSize=self.inputSize,
                                              initParams=self.mutateParams),
-                            actionObj=ActionObject(actionCode=act, initParams=self.mutateParams),
+                            actionObj=ActionObject(actionIndex=act, initParams=self.mutateParams),
                             numRegisters=self.nRegisters,
                             initParams=self.mutateParams)
 
