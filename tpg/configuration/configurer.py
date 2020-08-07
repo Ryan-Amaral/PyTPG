@@ -1,5 +1,6 @@
-from tpg.configuration.conf_program import ConfProgram
 from tpg.configuration.conf_learner import ConfLearner
+from tpg.configuration.conf_action_object import ConfActionObject
+from tpg.configuration.conf_program import ConfProgram
 
 from collections import namedtuple
 import numpy as np
@@ -22,10 +23,10 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
     # for mutation and creation
     mutateParamKeys = ["pLrnDel", "pLrnAdd", "pLrnMut",
         "pProgMut", "pActMut", "pActAtom", "pInstDel", "pInstAdd", "pInstSwp", "pInstMut",
-        "actionCodes", "nOperations", "nDestinations", "inputSize"]
+        "actionCodes", "nOperations", "nDestinations", "inputSize", "initMaxProgSize"]
     mutateParamVals = [trainer.pLrnDel, trainer.pLrnAdd, trainer.pLrnMut,
         trainer.pProgMut, trainer.pActMut, trainer.pActAtom, trainer.pInstDel, trainer.pInstAdd, trainer.pInstSwp, trainer.pInstMut,
-        trainer.actionCodes, trainer.nOperations, trainer.nRegisters, trainer.inputSize]
+        trainer.actionCodes, trainer.nOperations, trainer.nRegisters, trainer.inputSize, trainer.initMaxProgSize]
 
     # additional stuff for act, like memory matrix possible
     actVarKeys = []
@@ -33,11 +34,12 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
 
     # configure stuff for using the memory module
     if doMemory:
-        configureMemory(trainer, Learner, Program, trainer.memMatrixShape, actVarKeys, actVarVals)
+        configureMemory(trainer, Learner, Program, actVarKeys, actVarVals)
 
     # configure stuff for using real valued actions
     if doReal:
-        configureRealAction(trainer, mutateParamKeys, mutateParamVals)
+        configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals,
+                            doMemory)
 
     # save values to trainer so it can crete the extra parameters
     trainer.mutateParamVals = mutateParamVals
@@ -45,7 +47,7 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
 
     import tpg.configuration.extra_params
 
-def configureMemory(trainer, Learner, Program, memMatrixShape, actVarKeys, actVarVals):
+def configureMemory(trainer, Learner, Program, actVarKeys, actVarVals):
     # change functions as needed
     Program.execute = ConfProgram.execute_mem
     Learner.bid = ConfLearner.bid_mem
@@ -54,12 +56,20 @@ def configureMemory(trainer, Learner, Program, memMatrixShape, actVarKeys, actVa
     trainer.nOperations = 7
 
     # trainer needs to have memory
-    trainer.memMatrix = np.zeros(shape=memMatrixShape)
+    trainer.memMatrix = np.zeros(shape=trainer.memMatrixShape)
     # agents need access to memory too, and to pass through act
     actVarKeys += ["memMatrix"]
     actVarVals += [trainer.memMatrix]
 
-def configureRealAction(trainer, mutateParamKeys, mutateParamVals):
+def configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals, doMemory):
+    # change functions as needed
+    ActionObject.__init__ = ConfActionObject.init_real
+    ActionObject.getAction = ConfActionObject.getAction_real
+    if doMemory:
+        ActionObject.getRealAction = ConfActionObject.getRealAction_real_mem
+    else:
+        ActionObject.getRealAction = ConfActionObject.getRealAction_real
+    ActionObject.mutate = ConfActionObject.mutate_real
 
     # mutateParams needs to have lengths of actions
     mutateParamKeys += ["actionLengths"]

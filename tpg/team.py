@@ -107,6 +107,6 @@ class Team:
 
                 # must remove then re-add fresh mutated learner
                 self.removeLearner(learner)
-                newLearner = Learner(learner=learner)
+                newLearner = Learner(learner=learner, initParams=mutateParams)
                 newLearner.mutate(mutateParams, self, teams, pActAtom0)
                 self.addLearner(newLearner)

@@ -1,3 +1,4 @@
+from tpg.program import Program
 import numpy as np
 import random
 from tpg.utils import flip
@@ -35,12 +36,12 @@ class ConfActionObject:
         else:
             # no cloning
             self.actionCode = initParams.actionCodes[actionIndex]
-            self.actionLength = initParams.actionLength[actionIndex]
+            self.actionLength = initParams.actionLengths[actionIndex]
             self.teamAction = teamAction
 
             if program is None:
                 # create new program
-                self.program = Program(maxProgramLength=maxProgramLength)
+                self.program = Program(maxProgramLength=initParams.initMaxProgSize)
             else:
                 # copy program
                 self.program = Program(instructions=program.instructions)
@@ -48,6 +49,8 @@ class ConfActionObject:
         # increase references to team
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing += 1
+
+        self.registers = np.zeros(initParams.nDestinations)
 
     """
     Returns the action code, and if applicable corresponding real action.
@@ -69,7 +72,31 @@ class ConfActionObject:
             return self.teamAction.act(state, visited, actVars=actVars)
         else:
             # atomic action
-            return self.actionCode
+            if self.actionLength == 0:
+                return self.actionCode, None
+            else:
+                return self.actionCode, self.getRealAction(state, actVars=actVars)
+
+    """
+    Gets the real action from a register.
+    """
+    def getRealAction_real(self, state, actVars=None):
+        Program.execute(state, self.registers,
+                        self.program.instructions[:,0], self.program.instructions[:,1],
+                        self.program.instructions[:,2], self.program.instructions[:,3])
+
+        return self.registers[:self.actionLength]
+
+    """
+    Gets the real action from a register. With memory.
+    """
+    def getRealAction_real_mem(self, state, actVars=None):
+        Program.execute(state, self.registers,
+                        self.program.instructions[:,0], self.program.instructions[:,1],
+                        self.program.instructions[:,2], self.program.instructions[:,3],
+                        actVars.memMatrix, actVars.memMatrix.shape[0], actVars.memMatrix.shape[1])
+
+        return self.registers[:self.actionLength]
 
     """
     Returns true if the action is atomic, otherwise the action is a team.
@@ -100,17 +127,22 @@ class ConfActionObject:
     Change action to team or atomic action.
     """
     def mutate_real(self, mutateParams, parentTeam, teams, pActAtom):
-        # dereference if old action is team
-        if self.teamAction is not None:
-            self.teamAction.numLearnersReferencing -= 1
-            self.teamAction = None
-
-        # mutate action
-        if flip(pActAtom):
-            # atomic
-            self.actionCode = random.choice(mutateParams.actionCodes)
+        if self.actionLength > 0 and flip(0.5):
+            # mutate program
+            self.program.mutate(mutateParams)
         else:
-            # team action
-            self.teamAction = random.choice([t for t in teams
-                    if t is not self.teamAction and t is not parentTeam])
-            self.teamAction.numLearnersReferencing += 1
+            # dereference if old action is team
+            if self.teamAction is not None:
+                self.teamAction.numLearnersReferencing -= 1
+                self.teamAction = None
+
+            # mutate action
+            if flip(mutateParams.pActAtom):
+                # atomic
+                self.actionCode = random.choice(mutateParams.actionCodes)
+                self.actionLength = mutateParams.actionLengths[self.actionCode]
+            else:
+                # team action
+                self.teamAction = random.choice([t for t in teams
+                        if t is not self.teamAction and t is not parentTeam])
+                self.teamAction.numLearnersReferencing += 1
