@@ -1,9 +1,6 @@
 # tpg-python
 A python implementation of Tangled Program Graphs. A graph based genetic programming algorithm.
 
-## Recent API changes
-**Trainer Parameters:** rTeamPopSize removed, just use teamPopSize and use the rootBasedPop parameter (boolean) to affect whether the population is based on all teams or just root teams.
-
 ## Setup
 
 ### Requirements (automatically installed with with PyTPG)
@@ -24,13 +21,22 @@ from tpg.trainer import Trainer
 from tpg.agent import Agent
 ```
 
-**Trainer** is the class used for training, to do all the standard tasks of an evolutionary algorithm. Such as getting individuals, evolving, and reporting stats. **Agent** is essentially a wrapper for an individual of the population that the user (you) gets access to. Its API allows for things like selecting an action based on the world state, and giving a reward.
+**Trainer** is the class used for training, to do all the standard tasks of an evolutionary algorithm.
+Such as getting individuals, evolving, and reporting stats.
+**Agent** is essentially a wrapper for an individual of the population that the user (you) gets access to.
+Its API allows for things like selecting an action based on the world state, and giving it a reward.
 
-Create an instance of the trainer, which initializes the necessary populations for the algorithm. There are many parameters to choose for the initializer, `actions` is the only required one, which is a list of actions available to you from the chosen environment, or an int representing the number of continuous action ranging from
-0-1.
+Create an instance of the trainer, which initializes the necessary populations for the algorithm.
+There are many parameters to choose for the initializer, `actions` is the only required one, which is either an integer representing the number of discrete actions (e.g. Atari), or a list of integers representing the size of a real valued vector for each action (0 for discrete).
 
 ```python
-trainer = Trainer(actions=range(7))
+# 7 different discrete actions
+trainer = Trainer(actions=7)
+
+### OR
+
+# 3 different actions, 2 being real valued vectors of size 2, 1 being a single discrete action
+trainer = Trainer(actions=[2,2,0])
 ```
 
 Withdraw the agents from the population to be used in some task.
@@ -60,15 +66,15 @@ trainer.evolve([environmentName])
 ### Other ways to use
 The above were just some of the important functions, and left out some necessary code for the environment, and a few other ways to use this API (some perhaps better). There are different ways to do things like withdrawing agents, rewarding agents, and evolving. And things become a bit tricky if you wish to work with multiprocessing, but its relatively straight forward to make it work. See [the examples page](./tpg_examples.ipynb) for details.
 
+The test files and `extras.py` file shows more examples, those files are used for testing.
+
 ## TODO
-- Implement a sort of memory module with some learners reading and some writing.
-- Add convenience code to the utils file, such a simple method to run an agent in a gym environment with certain parameters, a method to transform the state, etc.
+- Implement alternative mutation methods.
 
 ## Some Projects PyTPG was Used in
 - https://github.com/Ryan-Amaral/general-game-playing-tpg (old API version)
 - https://github.com/Ryan-Amaral/prosthetic-challenge-tpg (old API version)
-- https://github.com/Ryan-Amaral/nips-l2m-2019 (private untill competition end)
-- Send me a message or a pull request for your projects to be included.
+- https://github.com/Ryan-Amaral/nips-l2m-2019
 
 ## Other TPG implementations:
 - https://github.com/skellco/Tangled-Program-Graphs
