@@ -33,7 +33,7 @@ class Trainer:
         inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
-        doElites=True, memType=None, memMatrixShape=(100,8)):
+        doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(-1,0,1)):
 
         # store all necessary params
 
@@ -72,6 +72,11 @@ class Trainer:
 
         self.memType = memType
         self.memMatrixShape = memMatrixShape
+
+        # fix range of rampancy if invalid
+        if rampancy[2] <= rampancy[1]:
+            rampancy[2] = rampancy[1]+1
+        self.rampancy = rampancy
 
         # how many operations programs can do, must match with program execute
         self.nOperations = 5 # TODO move to config
@@ -373,6 +378,9 @@ class Trainer:
 
         oLearners = list(self.learners)
         oTeams = list(self.teams)
+
+        # update generation in mutateParams
+        self.mutateParams = self.mutateParams._replace(generation=self.generation)
 
         while (len(self.teams) < self.teamPopSize or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):

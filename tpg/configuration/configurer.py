@@ -21,12 +21,14 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
 
     # keys and values used in key value pairs for suplementary function args
     # for mutation and creation
-    mutateParamKeys = ["pLrnDel", "pLrnAdd", "pLrnMut",
+    mutateParamKeys = ["generation", "pLrnDel", "pLrnAdd", "pLrnMut",
         "pProgMut", "pActMut", "pActAtom", "pInstDel", "pInstAdd", "pInstSwp", "pInstMut",
-        "actionCodes", "nOperations", "nDestinations", "inputSize", "initMaxProgSize"]
-    mutateParamVals = [trainer.pLrnDel, trainer.pLrnAdd, trainer.pLrnMut,
+        "actionCodes", "nOperations", "nDestinations", "inputSize", "initMaxProgSize",
+        "rampantGen", "rampantMin", "rampantMax"]
+    mutateParamVals = [trainer.generation, trainer.pLrnDel, trainer.pLrnAdd, trainer.pLrnMut,
         trainer.pProgMut, trainer.pActMut, trainer.pActAtom, trainer.pInstDel, trainer.pInstAdd, trainer.pInstSwp, trainer.pInstMut,
-        trainer.actionCodes, trainer.nOperations, trainer.nRegisters, trainer.inputSize, trainer.initMaxProgSize]
+        trainer.actionCodes, trainer.nOperations, trainer.nRegisters, trainer.inputSize, trainer.initMaxProgSize,
+        trainer.rampancy[0], trainer.rampancy[1], trainer.rampancy[2]]
 
     # additional stuff for act, like memory matrix possible
     actVarKeys = []
