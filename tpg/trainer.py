@@ -91,7 +91,7 @@ class Trainer:
 
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
-            memType is not None, doReal)
+            memType is not None, memType, doReal)
 
         from tpg.configuration.extra_params import MutateParams, ActVars
 

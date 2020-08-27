@@ -2,7 +2,6 @@ from numba import njit
 import numpy as np
 import math
 
-
 """
 A program that is executed to help obtain the bid for a learner.
 """
@@ -66,10 +65,10 @@ class ConfProgram:
                 regs[dest] = np.finfo(np.float64).min
 
     """
-    Executes the program which returns a single final value.
+    Executes the program which returns a single final value. Default memory distribution.
     """
     @njit
-    def execute_mem(inpt, regs, modes, ops, dsts, srcs, memMatrix, memRows, memCols):
+    def execute_mem_def(inpt, regs, modes, ops, dsts, srcs, memMatrix, memRows, memCols):
         regSize = len(regs)
         inptLen = len(inpt)
         for i in range(len(modes)):
@@ -105,19 +104,147 @@ class ConfProgram:
                 regs[dest] = memMatrix[row, col]
             elif op == 6:
                 # row offset (start from center, go to edges)
-                for i in range(int(memRows/2)):
+                halfRows = int(memRows/2) # halfRows
+                for i in range(halfRows):
                     # probability to write (gets smaller as i increases)
-                    # need to modify to be more robust with different # of rows
                     writeProb = 0.25 - (0.01*i)**2
                     # column to maybe write corresponding value into
                     for col in range(memCols):
                         # try write to lower half
                         if np.random.rand(1)[0] < writeProb:
-                            row = (int(memRows/2) - i) - 1
+                            row = (halfRows - i) - 1
                             memMatrix[row,col] = regs[col]
                         # try write to upper half
                         if np.random.rand(1)[0] < writeProb:
-                            row = int(memRows/2) + i
+                            row = halfRows + i
+                            memMatrix[row,col] = regs[col]
+
+            if math.isnan(regs[dest]):
+                regs[dest] = 0
+            elif regs[dest] == np.inf:
+                regs[dest] = np.finfo(np.float64).max
+            elif regs[dest] == np.NINF:
+                regs[dest] = np.finfo(np.float64).min
+
+    """
+    Executes the program which returns a single final value. Uses Cauchy distribution
+    with lambda=1 for write probability.
+    """
+    @njit
+    def execute_mem_cauchy1(inpt, regs, modes, ops, dsts, srcs, memMatrix, memRows, memCols):
+        regSize = len(regs)
+        inptLen = len(inpt)
+        for i in range(len(modes)):
+            # first get source
+            if modes[i] == 0:
+                src = regs[srcs[i]%regSize]
+            else:
+                src = inpt[srcs[i]%inptLen]
+
+            # get data for operation
+            op = ops[i]
+            x = regs[dsts[i]]
+            y = src
+            dest = dsts[i]%regSize
+
+            # do an operation
+            if op == 0:
+                regs[dest] = x+y
+            elif op == 1:
+                regs[dest] = x-y
+            elif op == 2:
+                regs[dest] = x*2
+            elif op == 3:
+                regs[dest] = x/2
+            elif op == 4:
+                if x < y:
+                    regs[dest] = x*(-1)
+            elif op == 5:
+                index = srcs[i]
+                index %= (memRows*memCols)
+                row = int(index / memRows)
+                col = index % memCols
+                regs[dest] = memMatrix[row, col]
+            elif op == 6:
+                # row offset (start from center, go to edges)
+                halfRows = int(memRows/2) # save half rows for faster recall
+                pi = np.pi
+                for i in range(halfRows):
+                    # probability to write (gets smaller as i increases)
+                    writeProb = 1/(pi*(i)**2 + 1)
+                    # column to maybe write corresponding value into
+                    for col in range(memCols):
+                        # try write to lower half
+                        if np.random.rand(1)[0] < writeProb:
+                            row = (halfRows - i) - 1
+                            memMatrix[row,col] = regs[col]
+                        # try write to upper half
+                        if np.random.rand(1)[0] < writeProb:
+                            row = halfRows + i
+                            memMatrix[row,col] = regs[col]
+
+            if math.isnan(regs[dest]):
+                regs[dest] = 0
+            elif regs[dest] == np.inf:
+                regs[dest] = np.finfo(np.float64).max
+            elif regs[dest] == np.NINF:
+                regs[dest] = np.finfo(np.float64).min
+
+    """
+    Executes the program which returns a single final value. Uses Cauchy distribution
+    with lambda=1 for write probability.
+    """
+    @njit
+    def execute_mem_cauchyHalf(inpt, regs, modes, ops, dsts, srcs, memMatrix, memRows, memCols):
+        regSize = len(regs)
+        inptLen = len(inpt)
+        for i in range(len(modes)):
+            # first get source
+            if modes[i] == 0:
+                src = regs[srcs[i]%regSize]
+            else:
+                src = inpt[srcs[i]%inptLen]
+
+            # get data for operation
+            op = ops[i]
+            x = regs[dsts[i]]
+            y = src
+            dest = dsts[i]%regSize
+
+            # do an operation
+            if op == 0:
+                regs[dest] = x+y
+            elif op == 1:
+                regs[dest] = x-y
+            elif op == 2:
+                regs[dest] = x*2
+            elif op == 3:
+                regs[dest] = x/2
+            elif op == 4:
+                if x < y:
+                    regs[dest] = x*(-1)
+            elif op == 5:
+                index = srcs[i]
+                index %= (memRows*memCols)
+                row = int(index / memRows)
+                col = index % memCols
+                regs[dest] = memMatrix[row, col]
+            elif op == 6:
+                # row offset (start from center, go to edges)
+                halfRows = int(memRows/2) # save half rows for faster recall
+                pi = np.pi
+                for i in range(halfRows):
+                    # probability to write (gets smaller as i increases)
+                    writeProb = 0.25/(0.5*(pi*(i)**2 + 0.25))
+                    # column to maybe write corresponding value into
+                    for col in range(memCols):
+                        # try write to lower half
+                        if np.random.rand(1)[0] < writeProb:
+                            row = (halfRows - i) - 1
+                            memMatrix[row,col] = regs[col]
+                        # try write to upper half
+                        if np.random.rand(1)[0] < writeProb:
+                            row = halfRows + i
                             memMatrix[row,col] = regs[col]
 
             if math.isnan(regs[dest]):

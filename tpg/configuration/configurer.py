@@ -13,7 +13,7 @@ actions.
 """
 
 def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
-        doMemory, doReal):
+        doMemory, memType, doReal):
 
     # make keys global to be accessed by other modele to create namedtuple
     global mutateParamKeys
@@ -36,7 +36,7 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
 
     # configure stuff for using the memory module
     if doMemory:
-        configureMemory(trainer, Learner, Program, actVarKeys, actVarVals)
+        configureMemory(trainer, Learner, Program, actVarKeys, actVarVals, memType)
 
     # configure stuff for using real valued actions
     if doReal:
@@ -49,9 +49,14 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
 
     import tpg.configuration.extra_params
 
-def configureMemory(trainer, Learner, Program, actVarKeys, actVarVals):
+def configureMemory(trainer, Learner, Program, actVarKeys, actVarVals, memType):
     # change functions as needed
-    Program.execute = ConfProgram.execute_mem
+    if memType == "cauchy1":
+        Program.execute = ConfProgram.execute_mem_cauchy1
+    elif memType == "cauchyHalf":
+        Program.execute = ConfProgram.execute_mem_cauchyHalf
+    else:
+        Program.execute = ConfProgram.execute_mem_def
     Learner.bid = ConfLearner.bid_mem
 
     # change other needed params
