@@ -51,12 +51,13 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
 
 def configureMemory(trainer, Learner, Program, actVarKeys, actVarVals, memType):
     # change functions as needed
+    Program.execute = ConfProgram.execute_mem
     if memType == "cauchy1":
-        Program.execute = ConfProgram.execute_mem_cauchy1
+        Program.memWriteProbFunc = ConfProgram.memWriteProb_cauchy1
     elif memType == "cauchyHalf":
-        Program.execute = ConfProgram.execute_mem_cauchyHalf
+        Program.memWriteProbFunc = ConfProgram.memWriteProb_cauchyHalf
     else:
-        Program.execute = ConfProgram.execute_mem_def
+        Program.memWriteProbFunc = ConfProgram.memWriteProb_def
     Learner.bid = ConfLearner.bid_mem
 
     # change other needed params

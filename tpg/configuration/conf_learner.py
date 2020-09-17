@@ -54,7 +54,8 @@ class ConfLearner:
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3],
-                        actVars.memMatrix, actVars.memMatrix.shape[0], actVars.memMatrix.shape[1])
+                        actVars.memMatrix, actVars.memMatrix.shape[0], actVars.memMatrix.shape[1],
+                        Program.memWriteProbFunc)
 
         return self.registers[0]
 

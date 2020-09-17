@@ -124,7 +124,7 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     env = gym.make(envName)
     acts = env.action_space.n
 
-    trainer = Trainer(actions=acts, teamPopSize=popSize, memType="cauchy1", rampancy=(5,5,10))
+    trainer = Trainer(actions=acts, teamPopSize=popSize, memType="default", rampancy=(5,5,10))
 
     tStart = time.time()
 
