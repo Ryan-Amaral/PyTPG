@@ -33,7 +33,8 @@ class Trainer:
         inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
-        doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(-1,0,1)):
+        doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(-1,0,1),
+        operationSet="def"):
 
         # store all necessary params
 
@@ -78,8 +79,7 @@ class Trainer:
             rampancy[2] = rampancy[1]+1
         self.rampancy = rampancy
 
-        # how many operations programs can do, must match with program execute
-        self.nOperations = 5 # TODO move to config
+        self.operationSet = operationSet
 
         # core components of TPG
         self.teams = []
@@ -91,7 +91,7 @@ class Trainer:
 
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
-            memType is not None, memType, doReal)
+            memType is not None, memType, doReal, operationSet)
 
         from tpg.configuration.extra_params import MutateParams, ActVars
 

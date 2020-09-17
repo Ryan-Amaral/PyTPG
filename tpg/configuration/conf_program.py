@@ -1,6 +1,9 @@
 from numba import njit
 import numpy as np
+from numpy import pi, inf, NINF, float64, finfo
+from numpy.random import rand
 import math
+from math import isnan, cos, log, exp
 
 """
 A program that is executed to help obtain the bid for a learner.
@@ -57,12 +60,12 @@ class ConfProgram:
                 if x < y:
                     regs[dest] = x*(-1)
 
-            if math.isnan(regs[dest]):
+            if isnan(regs[dest]):
                 regs[dest] = 0
-            elif regs[dest] == np.inf:
-                regs[dest] = np.finfo(np.float64).max
-            elif regs[dest] == np.NINF:
-                regs[dest] = np.finfo(np.float64).min
+            elif regs[dest] == inf:
+                regs[dest] = finfo(float64).max
+            elif regs[dest] == NINF:
+                regs[dest] = finfo(float64).min
 
     """
     Executes the program which returns a single final value using shared memory.
@@ -112,20 +115,137 @@ class ConfProgram:
                     # column to maybe write corresponding value into
                     for col in range(memCols):
                         # try write to lower half
-                        if np.random.rand(1)[0] < writeProb:
+                        if rand(1)[0] < writeProb:
                             row = (halfRows - i) - 1
                             memMatrix[row,col] = regs[col]
                         # try write to upper half
-                        if np.random.rand(1)[0] < writeProb:
+                        if rand(1)[0] < writeProb:
                             row = halfRows + i
                             memMatrix[row,col] = regs[col]
 
-            if math.isnan(regs[dest]):
+            if isnan(regs[dest]):
                 regs[dest] = 0
-            elif regs[dest] == np.inf:
-                regs[dest] = np.finfo(np.float64).max
-            elif regs[dest] == np.NINF:
-                regs[dest] = np.finfo(np.float64).min
+            elif regs[dest] == inf:
+                regs[dest] = finfo(float64).max
+            elif regs[dest] == NINF:
+                regs[dest] = finfo(float64).min
+
+    """
+    Executes the program which returns a single final value.
+    """
+    @njit
+    def execute_full(inpt, regs, modes, ops, dsts, srcs):
+        regSize = len(regs)
+        inptLen = len(inpt)
+        for i in range(len(modes)):
+            # first get source
+            if modes[i] == 0:
+                src = regs[srcs[i]%regSize]
+            else:
+                src = inpt[srcs[i]%inptLen]
+
+            # get data for operation
+            op = ops[i]
+            x = regs[dsts[i]]
+            y = src
+            dest = dsts[i]%regSize
+
+            # do an operation
+            if op == 0:
+                regs[dest] = x+y
+            elif op == 1:
+                regs[dest] = x-y
+            elif op == 2:
+                regs[dest] = x*2
+            elif op == 3:
+                regs[dest] = x/2
+            elif op == 4:
+                if x < y:
+                    regs[dest] = x*(-1)
+            elif op == 5:
+                regs[dest] = cos(y)
+            elif op == 6:
+                if y > 0:
+                    regs[dest] = log(y)
+            elif op == 7:
+                regs[dest] = exp(y)
+
+            if isnan(regs[dest]):
+                regs[dest] = 0
+            elif regs[dest] == inf:
+                regs[dest] = finfo(float64).max
+            elif regs[dest] == NINF:
+                regs[dest] = finfo(float64).min
+
+    """
+    Executes the program which returns a single final value using shared memory.
+    """
+    @njit
+    def execute_mem_full(inpt, regs, modes, ops, dsts, srcs,
+            memMatrix, memRows, memCols, memWriteProbFunc):
+        regSize = len(regs)
+        inptLen = len(inpt)
+        for i in range(len(modes)):
+            # first get source
+            if modes[i] == 0:
+                src = regs[srcs[i]%regSize]
+            else:
+                src = inpt[srcs[i]%inptLen]
+
+            # get data for operation
+            op = ops[i]
+            x = regs[dsts[i]]
+            y = src
+            dest = dsts[i]%regSize
+
+            # do an operation
+            if op == 0:
+                regs[dest] = x+y
+            elif op == 1:
+                regs[dest] = x-y
+            elif op == 2:
+                regs[dest] = x*2
+            elif op == 3:
+                regs[dest] = x/2
+            elif op == 4:
+                if x < y:
+                    regs[dest] = x*(-1)
+            elif op == 5:
+                regs[dest] = cos(y)
+            elif op == 6:
+                if y > 0:
+                    regs[dest] = log(y)
+            elif op == 7:
+                regs[dest] = exp(y)
+            elif op == 8:
+                index = srcs[i]
+                index %= (memRows*memCols)
+                row = int(index / memRows)
+                col = index % memCols
+                regs[dest] = memMatrix[row, col]
+            elif op == 9:
+                # row offset (start from center, go to edges)
+                halfRows = int(memRows/2) # halfRows
+                for i in range(halfRows):
+                    # probability to write (gets smaller as i increases)
+                    writeProb = memWriteProbFunc(i)
+                    # column to maybe write corresponding value into
+                    for col in range(memCols):
+                        # try write to lower half
+                        if rand(1)[0] < writeProb:
+                            row = (halfRows - i) - 1
+                            memMatrix[row,col] = regs[col]
+                        # try write to upper half
+                        if rand(1)[0] < writeProb:
+                            row = halfRows + i
+                            memMatrix[row,col] = regs[col]
+
+            if isnan(regs[dest]):
+                regs[dest] = 0
+            elif regs[dest] == inf:
+                regs[dest] = finfo(float64).max
+            elif regs[dest] == NINF:
+                regs[dest] = finfo(float64).min
 
     """
     Returns probability of write at given index using default distribution.
@@ -140,7 +260,7 @@ class ConfProgram:
     """
     @njit
     def memWriteProb_cauchy1(i):
-        return 1/(pi*(i)**2 + 1)
+        return 1/(pi*(i**2+1))
 
     """
     Returns probability of write at given index using cauchy distribution with
@@ -148,7 +268,7 @@ class ConfProgram:
     """
     @njit
     def memWriteProb_cauchyHalf(i):
-        return 0.25/(0.5*(pi*(i)**2 + 0.25))
+        return 0.25/(0.5*pi*(i**2+0.25))
 
     """
     Mutates the program, by performing some operations on the instructions.
