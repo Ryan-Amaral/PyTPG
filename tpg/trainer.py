@@ -76,7 +76,7 @@ class Trainer:
 
         # fix range of rampancy if invalid
         if rampancy[2] <= rampancy[1]:
-            rampancy[2] = rampancy[1]+1
+            rampancy = (rampancy[0], rampancy[1], rampancy[1]+1)
         self.rampancy = rampancy
 
         self.operationSet = operationSet
