@@ -71,6 +71,8 @@ class Trainer:
         # whether to keep elites
         self.doElites = doElites
 
+        if memType == "None":
+            self.memType = None
         self.memType = memType
         self.memMatrixShape = memMatrixShape
 
