@@ -15,7 +15,7 @@ actions.
 def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
         doMemory, memType, doReal, operationSet):
 
-    # make keys global to be accessed by other modele to create namedtuple
+    # make keys global to be accessed by other modules
     global mutateParamKeys
     global actVarKeys
 

@@ -2,6 +2,18 @@ from extras import runPopulation, runPopulationParallel
 from tpg.agent import loadAgent
 from tpg.trainer import loadTrainer
 
+"""
+# load agent
+spAgent = loadAgent("spAgent.pkl")
+print(spAgent.team.outcomes)
+mpAgent = loadAgent("mpAgent.pkl")
+print(mpAgent.team.outcomes)
+
+spTrainer = loadTrainer("spTrainer.pkl")
+mpTrainer = loadTrainer("mpTrainer.pkl")
+tests["loadTrainer"] = "Pass"
+"""
+
 tests = {
     "spRun" : "None",
     "mpRun" : "None",

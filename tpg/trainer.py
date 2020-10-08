@@ -39,7 +39,7 @@ class Trainer:
         # store all necessary params
 
         # first store actions properly
-        doReal = self.setUpActions(actions)
+        self.doReal = self.setUpActions(actions)
 
         # population params
         self.teamPopSize = teamPopSize
@@ -93,7 +93,7 @@ class Trainer:
 
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
-            memType is not None, memType, doReal, operationSet)
+            memType is not None, memType, self.doReal, operationSet)
 
         from tpg.configuration.extra_params import MutateParams, ActVars
 
