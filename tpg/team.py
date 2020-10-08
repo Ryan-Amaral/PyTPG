@@ -76,9 +76,9 @@ class Team:
     def mutate(self, mutateParams, allLearners, teams):
 
         # repeats of mutation
-        if (mutateParams.generation % mutateParams.rampantGen == 0 and
-                mutateParams.generation > mutateParams.rampantGen and mutateParams.rampantGen > 0):
-            rampantReps = random.randrange(mutateParams.rampantMin, mutateParams.rampantMax)
+        if (mutateParams["generation"] % mutateParams["rampantGen"] == 0 and
+                mutateParams["generation"] > mutateParams["rampantGen"] and mutateParams["rampantGen"] > 0):
+            rampantReps = random.randrange(mutateParams["rampantMin"], mutateParams["rampantMax"])
         else:
             rampantReps = 1
 
@@ -86,9 +86,9 @@ class Team:
         for i in range(rampantReps):
 
             # delete some learners
-            p = mutateParams.pLrnDel
+            p = mutateParams["pLrnDel"]
             while flip(p) and len(self.learners) > 2: # must have >= 2 learners
-                p *= mutateParams.pLrnDel # decrease next chance
+                p *= mutateParams["pLrnDel"] # decrease next chance
 
                 # choose non-atomic learners if only one atomic remaining
                 learner = random.choice([l for l in self.learners
@@ -97,9 +97,9 @@ class Team:
                 self.removeLearner(learner)
 
             # add some learners
-            p = mutateParams.pLrnAdd
+            p = mutateParams["pLrnAdd"]
             while flip(p):
-                p *= mutateParams.pLrnAdd # decrease next chance
+                p *= mutateParams["pLrnAdd"] # decrease next chance
 
                 learner = random.choice([l for l in allLearners
                                          if l not in self.learners and
@@ -109,11 +109,11 @@ class Team:
             # give chance to mutate all learners
             oLearners = list(self.learners)
             for learner in oLearners:
-                if flip(mutateParams.pLrnMut):
+                if flip(mutateParams["pLrnMut"]):
                     if self.numAtomicActions() == 1 and learner.isActionAtomic():
                         pActAtom0 = 1.1 # action must be kept atomic if only one
                     else:
-                        pActAtom0 = mutateParams.pActAtom
+                        pActAtom0 = mutateParams["pActAtom"]
 
                     # must remove then re-add fresh mutated learner
                     self.removeLearner(learner)

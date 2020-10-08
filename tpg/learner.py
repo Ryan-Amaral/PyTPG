@@ -73,11 +73,11 @@ class Learner:
         changed = False
         while not changed:
             # mutate the program
-            if flip(mutateParams.pProgMut):
+            if flip(mutateParams["pProgMut"]):
                 changed = True
                 self.program.mutate(mutateParams)
 
             # mutate the action
-            if flip(mutateParams.pActMut):
+            if flip(mutateParams["pActMut"]):
                 changed = True
                 self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)

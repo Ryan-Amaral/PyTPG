@@ -16,7 +16,7 @@ class ActionObject:
             self.teamAction = actionObj.teamAction
         else:
             # no cloning
-            self.actionCode = initParams.actionCodes[actionIndex]
+            self.actionCode = initParams["actionCodes"][actionIndex]
             self.teamAction = teamAction
 
         # increase references to team
@@ -52,7 +52,7 @@ class ActionObject:
         # mutate action
         if flip(pActAtom):
             # atomic
-            self.actionCode = random.choice(mutateParams.actionCodes)
+            self.actionCode = random.choice(mutateParams["actionCodes"])
         else:
             # team action
             self.teamAction = random.choice([t for t in teams

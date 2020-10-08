@@ -2,7 +2,6 @@ from tpg.configuration.conf_learner import ConfLearner
 from tpg.configuration.conf_action_object import ConfActionObject
 from tpg.configuration.conf_program import ConfProgram
 
-from collections import namedtuple
 import numpy as np
 
 """
@@ -14,10 +13,6 @@ actions.
 
 def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
         doMemory, memType, doReal, operationSet):
-
-    # make keys global to be accessed by other modules
-    global mutateParamKeys
-    global actVarKeys
 
     # keys and values used in key value pairs for suplementary function args
     # for mutation and creation
@@ -43,11 +38,8 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
         configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals,
                             doMemory)
 
-    # save values to trainer so it can crete the extra parameters
-    trainer.mutateParamVals = mutateParamVals
-    trainer.actVarVals = actVarVals
-
-    import tpg.configuration.extra_params
+    trainer.mutateParams = dict(zip(mutateParamKeys, mutateParamVals))
+    trainer.actVars = dict(zip(actVarKeys, actVarVals))
 
 def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
         mutateParamKeys, mutateParamVals, doMemory, memType, operationSet):

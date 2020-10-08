@@ -75,7 +75,7 @@ class Program:
     def mutate(self, mutateParams):
         # mutations repeatedly, random probably small amount
         mutated = False
-        while not mutated or flip(mutateParams.pProgMut):
+        while not mutated or flip(mutateParams["pProgMut"]):
             self.mutateInstructions(mutateParams)
             mutated = True
 
@@ -88,7 +88,7 @@ class Program:
 
         while not changed:
             # maybe delete instruction
-            if len(self.instructions) > 1 and flip(mutateParams.pInstDel):
+            if len(self.instructions) > 1 and flip(mutateParams["pInstDel"]):
                 # delete random row/instruction
                 self.instructions = np.delete(self.instructions,
                                     random.randint(0, len(self.instructions)-1),
@@ -97,7 +97,7 @@ class Program:
                 changed = True
 
             # maybe mutate an instruction (flip a bit)
-            if flip(mutateParams.pInstMut):
+            if flip(mutateParams["pInstMut"]):
                 # index of instruction and part of instruction
                 idx1 = random.randint(0, len(self.instructions)-1)
                 idx2 = random.randint(0,3)
@@ -106,11 +106,11 @@ class Program:
                 if idx2 == 0:
                     maxVal = 1
                 elif idx2 == 1:
-                    maxVal = mutateParams.nOperations-1
+                    maxVal = mutateParams["nOperations"]-1
                 elif idx2 == 2:
-                    maxVal = mutateParams.nDestinations-1
+                    maxVal = mutateParams["nDestinations"]-1
                 elif idx2 == 3:
-                    maxVal = mutateParams.inputSize-1
+                    maxVal = mutateParams["inputSize"]-1
 
                 # change it
                 self.instructions[idx1, idx2] = random.randint(0, maxVal)
@@ -118,7 +118,7 @@ class Program:
                 changed = True
 
             # maybe swap two instructions
-            if len(self.instructions) > 1 and flip(mutateParams.pInstSwp):
+            if len(self.instructions) > 1 and flip(mutateParams["pInstSwp"]):
                 # indices to swap
                 idx1, idx2 = random.sample(range(len(self.instructions)), 2)
 
@@ -130,13 +130,13 @@ class Program:
                 changed = True
 
             # maybe add instruction
-            if flip(mutateParams.pInstAdd):
+            if flip(mutateParams["pInstAdd"]):
                 # insert new random instruction
                 self.instructions = np.insert(self.instructions,
                         random.randint(0,len(self.instructions)),
                             (random.randint(0,1),
-                            random.randint(0, mutateParams.nOperations-1),
-                            random.randint(0, mutateParams.nDestinations-1),
-                            random.randint(0, mutateParams.inputSize-1)),0)
+                            random.randint(0, mutateParams["nOperations"]-1),
+                            random.randint(0, mutateParams["nDestinations"]-1),
+                            random.randint(0, mutateParams["inputSize"]-1)),0)
 
                 changed = True

@@ -54,7 +54,7 @@ class ConfLearner:
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3],
-                        actVars.memMatrix, actVars.memMatrix.shape[0], actVars.memMatrix.shape[1],
+                        actVars["memMatrix"], actVars["memMatrix"].shape[0], actVars["memMatrix"].shape[1],
                         Program.memWriteProbFunc)
 
         return self.registers[0]
@@ -86,11 +86,11 @@ class ConfLearner:
         changed = False
         while not changed:
             # mutate the program
-            if flip(mutateParams.pProgMut):
+            if flip(mutateParams["pProgMut"]):
                 changed = True
                 self.program.mutate(mutateParams)
 
             # mutate the action
-            if flip(mutateParams.pActMut):
+            if flip(mutateParams["pActMut"]):
                 changed = True
                 self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)

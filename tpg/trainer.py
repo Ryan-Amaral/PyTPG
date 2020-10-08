@@ -3,10 +3,11 @@ from tpg.program import Program
 from tpg.learner import Learner
 from tpg.team import Team
 from tpg.agent import Agent
+from tpg.configuration import configurer
 import random
 import numpy as np
 import pickle
-from tpg.configuration import configurer
+from collections import namedtuple
 
 """
 Functionality for actually growing TPG and evolving it to be functional.
@@ -94,11 +95,6 @@ class Trainer:
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
             memType is not None, memType, self.doReal, operationSet)
-
-        from tpg.configuration.extra_params import MutateParams, ActVars
-
-        self.mutateParams = MutateParams(*self.mutateParamVals)
-        self.actVars = ActVars(*self.actVarVals)
 
         self.initializePopulations()
 
@@ -382,7 +378,7 @@ class Trainer:
         oTeams = list(self.teams)
 
         # update generation in mutateParams
-        self.mutateParams = self.mutateParams._replace(generation=self.generation)
+        self.mutateParams["generation"] = self.generation
 
         while (len(self.teams) < self.teamPopSize or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):

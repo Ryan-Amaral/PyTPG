@@ -2,6 +2,14 @@ from extras import runPopulation, runPopulationParallel
 from tpg.agent import loadAgent
 from tpg.trainer import loadTrainer
 
+tests = {
+    "spRun" : "None",
+    "mpRun" : "None",
+    "saveAgent" : "None",
+    "saveTrainer" : "None",
+    "loadAgent" : "None",
+    "loadTrainer" : "None"}
+
 """
 # load agent
 spAgent = loadAgent("spAgent.pkl")
@@ -13,14 +21,6 @@ spTrainer = loadTrainer("spTrainer.pkl")
 mpTrainer = loadTrainer("mpTrainer.pkl")
 tests["loadTrainer"] = "Pass"
 """
-
-tests = {
-    "spRun" : "None",
-    "mpRun" : "None",
-    "saveAgent" : "None",
-    "saveTrainer" : "None",
-    "loadAgent" : "None",
-    "loadTrainer" : "None"}
 
 # single processing run
 spTrainer, spScore = runPopulation(

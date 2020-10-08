@@ -17,7 +17,7 @@ class ConfActionObject:
             self.teamAction = actionObj.teamAction
         else:
             # no cloning
-            self.actionCode = initParams.actionCodes[actionIndex]
+            self.actionCode = initParams["actionCodes"][actionIndex]
             self.teamAction = teamAction
 
         # increase references to team
@@ -35,13 +35,13 @@ class ConfActionObject:
                                     initParams=initParams)
         else:
             # no cloning
-            self.actionCode = initParams.actionCodes[actionIndex]
-            self.actionLength = initParams.actionLengths[actionIndex]
+            self.actionCode = initParams["actionCodes"][actionIndex]
+            self.actionLength = initParams["actionLengths"][actionIndex]
             self.teamAction = teamAction
 
             if program is None:
                 # create new program
-                self.program = Program(maxProgramLength=initParams.initMaxProgSize)
+                self.program = Program(maxProgramLength=initParams["initMaxProgSize"])
             else:
                 # copy program
                 self.program = Program(instructions=program.instructions)
@@ -50,7 +50,7 @@ class ConfActionObject:
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing += 1
 
-        self.registers = np.zeros(initParams.nDestinations)
+        self.registers = np.zeros(initParams["nDestinations"])
 
     """
     Returns the action code, and if applicable corresponding real action.
@@ -94,7 +94,7 @@ class ConfActionObject:
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3],
-                        actVars.memMatrix, actVars.memMatrix.shape[0], actVars.memMatrix.shape[1])
+                        actVars["memMatrix"], actVars["memMatrix"].shape[0], actVars["memMatrix"].shape[1])
 
         return self.registers[:self.actionLength]
 
@@ -116,7 +116,7 @@ class ConfActionObject:
         # mutate action
         if flip(pActAtom):
             # atomic
-            self.actionCode = random.choice(mutateParams.actionCodes)
+            self.actionCode = random.choice(mutateParams["actionCodes"])
         else:
             # team action
             self.teamAction = random.choice([t for t in teams
@@ -137,10 +137,10 @@ class ConfActionObject:
                 self.teamAction = None
 
             # mutate action
-            if flip(mutateParams.pActAtom):
+            if flip(mutateParams["pActAtom"]):
                 # atomic
-                self.actionCode = random.choice(mutateParams.actionCodes)
-                self.actionLength = mutateParams.actionLengths[self.actionCode]
+                self.actionCode = random.choice(mutateParams["actionCodes"])
+                self.actionLength = mutateParams["actionLengths"][self.actionCode]
             else:
                 # team action
                 self.teamAction = random.choice([t for t in teams
