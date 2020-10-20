@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 """
 Various useful functions for use within TPG, and for using TPG, like metrics,
@@ -12,10 +13,10 @@ def flip(prob):
     return random.uniform(0.0,1.0) < prob
 
 """
-Returns the number of teams that this team references, either immediate or
+Returns the teams that this team references, either immediate or
 recursively.
 """
-def numTeams(team, rec=True, visited=None):
+def getTeams(team, rec=True, visited=None):
     if rec:
         # recursively search all teams
         nTeams = 0
@@ -30,18 +31,19 @@ def numTeams(team, rec=True, visited=None):
         for lrnr in team.learners:
             lrnrTeam = lrnr.getActionTeam()
             if lrnrTeam not in visited:
-                nTeams += numTeams(lrnrTeam, rec=True, visited=visited)
+                getTeams(lrnrTeam, rec=True, visited=visited)
 
-        return nTeams
+        return list(visited)
 
     else:
         # just the teams attached directly to this team
-        return len(team.learners) - team.numAtomicActions()
+        return [lrnr.getActionTeam() for lrnr in team.learners
+            if not lrnr.isActionAtomic()]
 
 """
-Returns the number of learners on this team, immediately or recursively.
+Returns the learners on this team, immediately or recursively.
 """
-def numLearners(team, rec=True, tVisited=None, lVisited=None):
+def getLearners(team, rec=True, tVisited=None, lVisited=None):
     if rec:
 
         # recursively search all learners
@@ -59,11 +61,11 @@ def numLearners(team, rec=True, tVisited=None, lVisited=None):
             if lrnrTeam not in tVisited:
                 numLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited)
 
-        return len(lVisited)
+        return list(lVisited)
 
     else:
         # just the teams attached directly to this team
-        return len(team.learners)
+        return list(team.learners)
 
 """
 
@@ -78,7 +80,39 @@ def meanLearners():
     pass
 
 """
-
+Returns a dictionary containing counts of each type of instruction and other basic
+stats relating to instructions.
+"learners" is a list of learners that you want the stats from. "operations" is a
+list of strings representing the current operation set, can be obtained from Program.
 """
-def numInstructions():
-    pass
+def learnerInstructionStats(learners, operations):
+
+    # stats tracked for each operation and overall
+    partialStats = {
+        "total": 0,
+        "min": 0,
+        "max": 0,
+        "avg": 0
+    }
+
+    # dictionary that we put results in and return
+    results = {"overall": partialStats.copy()}
+    for op in operations:
+        results[op] = partialStats.copy()
+
+    # get instruction data from all provided learners
+    for lrnr in learners:
+        insts = lrnr.program.instructions
+        results["overall"]["total"] += len(insts)
+        results["overall"]["min"] = min(len(insts), results["overall"]["min"])
+        results["overall"]["max"] = max(len(insts), results["overall"]["max"])
+        results["overall"]["avg"] += len(insts)/len(learners)
+
+        for i, op in enumerate(operations):
+            opCount = np.count_nonzero(insts[:,1]==i)
+            results[op]["total"] += opCount
+            results[op]["min"] = min(opCount, results[op]["min"])
+            results[op]["max"] = max(opCount, results[op]["max"])
+            results[op]["avg"] += opCount/len(learners)
+
+    return results
