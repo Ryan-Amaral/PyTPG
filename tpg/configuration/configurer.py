@@ -49,9 +49,11 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
         if operationSet == "def":
             Program.execute = ConfProgram.execute_mem
             trainer.nOperations = 7
+            trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "MEM_READ", "MEM_WRITE"]
         elif operationSet == "full":
             Program.execute = ConfProgram.execute_mem_full
             trainer.nOperations = 10
+            trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP", "MEM_READ", "MEM_WRITE"]
 
         # select appropriate memory write function
         if memType == "cauchy1":
@@ -75,9 +77,11 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
         if operationSet == "def":
             Program.execute = ConfProgram.execute_def
             trainer.nOperations = 5
+            trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG"]
         elif operationSet == "full":
             Program.execute = ConfProgram.execute_full
             trainer.nOperations = 8
+            trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP"]
 
         Learner.bid = ConfLearner.bid_def
 
