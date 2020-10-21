@@ -23,14 +23,14 @@ def getTeams(team, rec=True, visited=None):
 
         # track visited teams to not repeat
         if visited is None:
-            visited = set([None])
+            visited = set()
 
         visited.add(team)
 
         # get team count from each learner that has a team
         for lrnr in team.learners:
             lrnrTeam = lrnr.getActionTeam()
-            if lrnrTeam not in visited:
+            if lrnrTeam is not None and lrnrTeam not in visited:
                 getTeams(lrnrTeam, rec=True, visited=visited)
 
         return list(visited)
@@ -46,19 +46,18 @@ Returns the learners on this team, immediately or recursively.
 def getLearners(team, rec=True, tVisited=None, lVisited=None):
     if rec:
 
-        # recursively search all learners
-        lVisited.add(team.learners)
-
         # track visited teams to not repeat
         if tVisited is None:
-            tVisited = set([None])
+            tVisited = set()
+            lVisited = set()
 
         tVisited.add(team)
+        [lVisited.add(lrnr) for lrnr in team.learners]
 
         # get team count from each learner that has a team
         for lrnr in team.learners:
             lrnrTeam = lrnr.getActionTeam()
-            if lrnrTeam not in tVisited:
+            if lrnrTeam is not None and lrnrTeam not in tVisited:
                 numLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited)
 
         return list(lVisited)
@@ -90,7 +89,7 @@ def learnerInstructionStats(learners, operations):
     # stats tracked for each operation and overall
     partialStats = {
         "total": 0,
-        "min": 0,
+        "min": float("inf"),
         "max": 0,
         "avg": 0
     }
