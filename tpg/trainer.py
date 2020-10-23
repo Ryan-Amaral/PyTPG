@@ -29,13 +29,29 @@ class Trainer:
     are always roughly the same amount of root teams (uses more RAM).
     Else it ensures the total team population size is 'teamPopSize' (uses
     less RAM).
+
+    memType: Type of memory distribution to use for writing. None or "None" if not
+    using memory, otherwise "default", "cauchy1", or "cauchyHalf".
+
+    rampancy: How often to do rampant mutation: (a, b) or (a, b, c). a is to do it every
+    a'th generation (keep as zero to not do it), b and c are the range for how
+    many times to repeat rampancy (b inclusive, c exclusive/not required).
+
+    operationSet: "def" for ["ADD", "SUB", "MULT", "DIV", "NEG"], or "full" for
+    ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP"]. "MEM_READ" and
+    "MEM_WRITE" may be added in if applicable. May change to just including the
+    list of desired operations in the future.
+
+    traversal: "team" to traverse for an action without repeating any team visits.
+    "learner" is similar but with repeat visits to teams and no repeat visits to
+    learners.
     """
     def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
         inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(-1,0,1),
-        operationSet="def"):
+        operationSet="def", traversal="team"):
 
         # store all necessary params
 
@@ -78,7 +94,7 @@ class Trainer:
         self.memMatrixShape = memMatrixShape
 
         # fix range of rampancy if invalid
-        if rampancy[2] <= rampancy[1]:
+        if len(rampancy) == 2 or rampancy[2] <= rampancy[1]:
             rampancy = (rampancy[0], rampancy[1], rampancy[1]+1)
         self.rampancy = rampancy
 
