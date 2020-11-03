@@ -37,10 +37,18 @@ class ConfLearner:
         self.id = Learner.idCount
         Learner.idCount += 1
 
+        self.frameNum = 0
+
     """
     Get the bid value, highest gets its action selected.
     """
     def bid_def(self, state, actVars=None):
+        # exit early if we already got bidded this frame
+        if self.frameNum == actVars["frameNum"]:
+            return self.registers[0]
+
+        self.frameNum = actVars["frameNum"]
+
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3])
@@ -51,6 +59,12 @@ class ConfLearner:
     Get the bid value, highest gets its action selected. Passes memory args to program.
     """
     def bid_mem(self, state, actVars=None):
+        # exit early if we already got bidded this frame
+        if self.frameNum == actVars["frameNum"]:
+            return self.registers[0]
+
+        self.frameNum = actVars["frameNum"]
+        
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3],

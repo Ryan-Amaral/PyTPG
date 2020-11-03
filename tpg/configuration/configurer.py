@@ -1,3 +1,5 @@
+from tpg.configuration.conf_agent import ConfAgent
+from tpg.configuration.conf_team import ConfTeam
 from tpg.configuration.conf_learner import ConfLearner
 from tpg.configuration.conf_action_object import ConfActionObject
 from tpg.configuration.conf_program import ConfProgram
@@ -12,7 +14,7 @@ actions.
 """
 
 def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
-        doMemory, memType, doReal, operationSet):
+        doMemory, memType, doReal, operationSet, traversal):
 
     # keys and values used in key value pairs for suplementary function args
     # for mutation and creation
@@ -26,8 +28,8 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
         trainer.rampancy[0], trainer.rampancy[1], trainer.rampancy[2]]
 
     # additional stuff for act, like memory matrix possible
-    actVarKeys = []
-    actVarVals = []
+    actVarKeys = ["frameNum"]
+    actVarVals = [0]
 
     # configure Program execution stuff, affected by memory and operations set
     configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
@@ -37,6 +39,10 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
     if doReal:
         configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals,
                             doMemory)
+
+    # do learner traversal
+    if traversal == "learner":
+        configureLearnerTraversal(Agent, Team, actVarKeys, actVarVals)
 
     trainer.mutateParams = dict(zip(mutateParamKeys, mutateParamVals))
     trainer.actVars = dict(zip(actVarKeys, actVarVals))
@@ -101,3 +107,7 @@ def configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals,
     # mutateParams needs to have lengths of actions
     mutateParamKeys += ["actionLengths"]
     mutateParamVals += [trainer.actionLengths]
+
+
+def configureLearnerTraversal(Agent, Team, actVarKeys, actVarVals):
+    Team.act = ConfTeam.act_learnerTrav

@@ -100,6 +100,8 @@ class Trainer:
 
         self.operationSet = operationSet
 
+        self.traversal = traversal
+
         # core components of TPG
         self.teams = []
         self.rootTeams = []
@@ -110,7 +112,7 @@ class Trainer:
 
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
-            memType is not None, memType, self.doReal, operationSet)
+            memType is not None, memType, self.doReal, operationSet, traversal)
 
         self.initializePopulations()
 

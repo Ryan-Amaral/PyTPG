@@ -81,7 +81,8 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     acts = env.action_space.n
     del env
 
-    trainer = Trainer(actions=acts, teamPopSize=popSize, memType=None, operationSet="full", rampancy=(1,5))
+    trainer = Trainer(actions=acts, teamPopSize=popSize, memType=None,
+        operationSet="full", rampancy=(1,5), traversal="learner")
 
     man = mp.Manager()
     pool = mp.Pool(processes=processes, maxtasksperchild=1)
@@ -124,7 +125,8 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     env = gym.make(envName)
     acts = env.action_space.n
 
-    trainer = Trainer(actions=acts, teamPopSize=popSize, memType=None, operationSet="full", rampancy=(5,5,10))
+    trainer = Trainer(actions=acts, teamPopSize=popSize, memType=None,
+        operationSet="full", rampancy=(5,5,10), traversal="learner")
 
     tStart = time.time()
 

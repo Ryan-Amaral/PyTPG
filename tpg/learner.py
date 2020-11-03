@@ -36,6 +36,8 @@ class Learner:
         self.id = Learner.idCount
         Learner.idCount += 1
 
+        self.frameNum = 0
+
     """
     Get the bid value, highest gets its action selected.
     """
