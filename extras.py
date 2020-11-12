@@ -3,6 +3,7 @@ import gym
 import multiprocessing as mp
 import time
 from tpg.trainer import Trainer
+from tpg.utils import getTeams, getLearners, learnerInstructionStats
 
 """
 Transform visual input from ALE to flat vector.
@@ -82,7 +83,7 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     del env
 
     trainer = Trainer(actions=acts, teamPopSize=popSize, memType=None,
-        operationSet="full", rampancy=(1,5), traversal="learner")
+        operationSet="full", rampancy=(5,5), traversal="team")
 
     man = mp.Manager()
     pool = mp.Pool(processes=processes, maxtasksperchild=1)
@@ -101,6 +102,10 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
 
         # prepare population for next gen
         teams = trainer.applyScores(scoreList)
+        champ = trainer.getAgents(sortTasks=[envName])[0].team
+        print("teams: {}, rTeams: {}, learners: {}, Champ Teams: {}, Champ Learners: {}, Champ Instructions: {}."
+            .format(len(trainer.teams), len(trainer.rootTeams), len(trainer.learners),
+                len(getTeams(champ)), len(getLearners(champ)), learnerInstructionStats(getLearners(champ), trainer.operations)))
         trainer.evolve(tasks=[envName]) # go into next gen
 
         # track stats
@@ -110,7 +115,11 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         #print('Time Taken (Hours): ' + str((time.time() - tStart)/3600))
         #print('Gen: ' + str(gen))
         #print('Results so far: ' + str(allScores))
+        print("teams: {}, rTeams: {}, learners: {}, Champ Teams: {}, Champ Learners: {}, Champ Instructions: {}."
+            .format(len(trainer.teams), len(trainer.rootTeams), len(trainer.learners),
+                len(getTeams(champ)), len(getLearners(champ)), learnerInstructionStats(getLearners(champ), trainer.operations)))
         print(f"Gen: {gen}, Best Score: {scoreStats['max']}, Time: {str((time.time() - tStart)/3600)}")
+
 
     print('Time Taken (Hours): ' + str((time.time() - tStart)/3600))
     print('Results:\nMin, Max, Avg')

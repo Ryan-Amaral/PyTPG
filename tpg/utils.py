@@ -58,7 +58,7 @@ def getLearners(team, rec=True, tVisited=None, lVisited=None):
         for lrnr in team.learners:
             lrnrTeam = lrnr.getActionTeam()
             if lrnrTeam is not None and lrnrTeam not in tVisited:
-                numLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited)
+                getLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited)
 
         return list(lVisited)
 
