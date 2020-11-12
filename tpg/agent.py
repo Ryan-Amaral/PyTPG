@@ -19,6 +19,7 @@ class Agent:
     Gets an action from the root team of this agent / this agent.
     """
     def act(self, state):
+        self.actVars["frameNum"] = random()
         return self.team.act(state, actVars=self.actVars)
 
     """

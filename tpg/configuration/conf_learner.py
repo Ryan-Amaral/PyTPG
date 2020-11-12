@@ -64,7 +64,7 @@ class ConfLearner:
             return self.registers[0]
 
         self.frameNum = actVars["frameNum"]
-        
+
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3],
