@@ -8,13 +8,14 @@ action to take in the graph.
 """
 class ConfTeam:
 
-    def init_def(self, initParams=None):
+    def init_def(self, initParams):
         self.learners = []
         self.outcomes = {} # scores at various tasks
         self.fitness = None
         self.numLearnersReferencing = 0 # number of learners that reference this
         self.id = Team.idCount
         Team.idCount += 1
+        self.genCreate = initParams["generation"]
 
     """
     Returns an action to use based on the current state. Team traversal.
@@ -58,6 +59,7 @@ class ConfTeam:
     Removes learner from the team and updates number of references to that program.
     """
     def removeLearner_def(self, learner):
+        # only delete if actually in this team
         if learner in self.learners:
             learner.numTeamsReferencing -= 1
             self.learners.remove(learner)
@@ -104,6 +106,12 @@ class ConfTeam:
                 learner = random.choice([l for l in self.learners
                                          if not l.isActionAtomic()
                                             or self.numAtomicActions() > 1])
+
+                # if created this gen, derefence team it references
+                if (i > 1 and learner.genCreate == mutateParams["generation"]
+                        and not learner.isActionAtomic()):
+                    learner.getActionTeam().numLearnersReferencing -= 1
+
                 self.removeLearner(learner)
 
             # add some learners
@@ -126,7 +134,11 @@ class ConfTeam:
                         pActAtom0 = mutateParams["pActAtom"]
 
                     # must remove then re-add fresh mutated learner
+                    # if created this gen, derefence team it references
+                    if (i > 0 and learner.genCreate == mutateParams["generation"]
+                            and not learner.isActionAtomic()):
+                        learner.getActionTeam().numLearnersReferencing -= 1
                     self.removeLearner(learner)
-                    newLearner = Learner(learner=learner, initParams=mutateParams)
+                    newLearner = Learner(mutateParams, learner=learner)
                     newLearner.mutate(mutateParams, self, teams, pActAtom0)
                     self.addLearner(newLearner)

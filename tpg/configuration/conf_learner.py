@@ -17,8 +17,8 @@ class ConfLearner:
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
     """
-    def init_def(self, learner=None, program=None, actionObj=None, numRegisters=8,
-            nOperations=5, nDestinations=8, inputSize=30720, initParams=None):
+    def init_def(self, initParams, learner=None, program=None, actionObj=None,
+            numRegisters=8, nOperations=5, nDestinations=8, inputSize=30720):
         if learner is not None:
             self.program = Program(instructions=learner.program.instructions,
                 nOperations=nOperations, nDestinations=nDestinations, inputSize=inputSize,

@@ -16,8 +16,8 @@ class Learner:
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
     """
-    def __init__(self, learner=None, program=None, actionObj=None, numRegisters=8,
-            nOperations=5, nDestinations=8, inputSize=30720, initParams=None):
+    def __init__(self, initParams, learner=None, program=None, actionObj=None, numRegisters=8,
+            nOperations=5, nDestinations=8, inputSize=30720):
         if learner is not None:
             self.program = Program(instructions=learner.program.instructions,
                 nOperations=nOperations, nDestinations=nDestinations, inputSize=inputSize,
@@ -35,6 +35,8 @@ class Learner:
 
         self.id = Learner.idCount
         Learner.idCount += 1
+
+        self.genCreate = initParams["generation"]
 
         self.frameNum = 0
 

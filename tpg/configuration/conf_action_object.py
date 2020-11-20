@@ -111,12 +111,12 @@ class ConfActionObject:
         # dereference if old action is team
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing -= 1
-            self.teamAction = None
 
         # mutate action
         if flip(pActAtom):
             # atomic
             self.actionCode = random.choice(mutateParams["actionCodes"])
+            self.teamAction = None
         else:
             # team action
             self.teamAction = random.choice([t for t in teams
@@ -134,13 +134,13 @@ class ConfActionObject:
             # dereference if old action is team
             if self.teamAction is not None:
                 self.teamAction.numLearnersReferencing -= 1
-                self.teamAction = None
 
             # mutate action
             if flip(mutateParams["pActAtom"]):
                 # atomic
                 self.actionCode = random.choice(mutateParams["actionCodes"])
                 self.actionLength = mutateParams["actionLengths"][self.actionCode]
+                self.teamAction = None
             else:
                 # team action
                 self.teamAction = random.choice([t for t in teams

@@ -45,13 +45,21 @@ class Trainer:
     traversal: "team" to traverse for an action without repeating any team visits.
     "learner" is similar but with repeat visits to teams and no repeat visits to
     learners.
+
+    prevPops: Either a list of the the root teams from a previous population, or
+    a dicitonary with the keys being the environment and the values being a list
+    of root teams trained on that environment.
+
+    doMutate: Whether to continue mutating newly created root teams below the team
+    level. If true only mutates teams by changing up the learners, but doesn't
+    mutate the learners or
     """
     def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
         inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(-1,0,1),
-        operationSet="def", traversal="team"):
+        operationSet="def", traversal="team", prevPops=None, mutatePrevs=True):
 
         # store all necessary params
 
@@ -142,29 +150,29 @@ class Trainer:
             # create 2 unique actions and learners
             a1,a2 = random.sample(range(len(self.actionCodes)), 2)
 
-            l1 = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
+            l1 = Learner(self.mutateParams,
+                        program=Program(maxProgramLength=self.initMaxProgSize,
                                          nOperations=self.nOperations,
                                          nDestinations=self.nRegisters,
                                          inputSize=self.inputSize,
                                          initParams=self.mutateParams),
                         actionObj=ActionObject(actionIndex=a1, initParams=self.mutateParams),
-                        numRegisters=self.nRegisters,
-                        initParams=self.mutateParams)
-            l2 = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
+                        numRegisters=self.nRegisters)
+            l2 = Learner(self.mutateParams,
+                        program=Program(maxProgramLength=self.initMaxProgSize,
                                          nOperations=self.nOperations,
                                          nDestinations=self.nRegisters,
                                          inputSize=self.inputSize,
                                          initParams=self.mutateParams),
                         actionObj=ActionObject(actionIndex=a2, initParams=self.mutateParams),
-                        numRegisters=self.nRegisters,
-                        initParams=self.mutateParams)
+                        numRegisters=self.nRegisters)
 
             # save learner population
             self.learners.append(l1)
             self.learners.append(l2)
 
             # create team and add initial learners
-            team = Team()
+            team = Team(initParams=self.mutateParams)
             team.addLearner(l1)
             team.addLearner(l2)
 
@@ -175,14 +183,14 @@ class Trainer:
                 act = random.choice(range(len(self.actionCodes)))
 
                 # create new learner
-                learner = Learner(program=Program(maxProgramLength=self.initMaxProgSize,
+                learner = Learner(initParams=self.mutateParams,
+                            program=Program(maxProgramLength=self.initMaxProgSize,
                                              nOperations=self.nOperations,
                                              nDestinations=self.nRegisters,
                                              inputSize=self.inputSize,
                                              initParams=self.mutateParams),
                             actionObj=ActionObject(actionIndex=act, initParams=self.mutateParams),
-                            numRegisters=self.nRegisters,
-                            initParams=self.mutateParams)
+                            numRegisters=self.nRegisters)
 
                 team.addLearner(learner)
                 self.learners.append(learner)
@@ -363,7 +371,7 @@ class Trainer:
         return scoreStats
 
     """
-    Delete a portion of the population according to gap size.
+    Select a portion of the root team population to keep according to gap size.
     """
     def select(self):
         rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
@@ -398,12 +406,15 @@ class Trainer:
         # update generation in mutateParams
         self.mutateParams["generation"] = self.generation
 
+        # get all the current root teams to be parents
+        self.setRoots()
+
         while (len(self.teams) < self.teamPopSize or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
 
             # get parent root team, and child to be based on that
             parent = random.choice(self.rootTeams)
-            child = Team()
+            child = Team(initParams=self.mutateParams)
 
             # child starts just like parent
             for learner in parent.learners:
@@ -413,7 +424,6 @@ class Trainer:
             child.mutate(self.mutateParams, oLearners, oTeams)
 
             self.teams.append(child)
-            self.rootTeams.append(child)
 
     """
     Finalize populations and prepare for next generation/epoch.
@@ -433,6 +443,8 @@ class Trainer:
 
         self.generation += 1
 
+        
+
     """
     Get the number of root teams currently residing in the teams population.
     """
@@ -443,6 +455,15 @@ class Trainer:
                 numRTeams += 1
 
         return numRTeams
+
+    "Sets the root teams list."
+    def setRoots(self):
+        self.rootTeams = []
+        for team in self.teams:
+            if team.numLearnersReferencing == 0 or team in self.elites:
+                self.rootTeams.append(team)
+
+        return self.rootTeams
 
     """
     Save the trainer to the file, saving any class values to the instance.
