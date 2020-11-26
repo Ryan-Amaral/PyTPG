@@ -6,11 +6,9 @@ import random
 The main building block of TPG. Each team has multiple learning which decide the
 action to take in the graph.
 """
-class Team:
+class ConfTeam:
 
-    idCount = 0
-
-    def __init__(self, initParams):
+    def init_def(self, initParams):
         self.learners = []
         self.outcomes = {} # scores at various tasks
         self.fitness = None
@@ -20,9 +18,9 @@ class Team:
         self.genCreate = initParams["generation"]
 
     """
-    Returns an action to use based on the current state.
+    Returns an action to use based on the current state. Team traversal.
     """
-    def act(self, state, visited=set(), actVars=None):
+    def act_def(self, state, visited=set(), actVars=None):
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
@@ -32,9 +30,21 @@ class Team:
         return topLearner.getAction(state, visited=visited, actVars=actVars)
 
     """
+    Returns an action to use based on the current state. Learner traversal.
+    """
+    def act_learnerTrav(self, state, visited=set(), actVars=None):
+
+        topLearner = max([lrnr for lrnr in self.learners
+                if lrnr.isActionAtomic() or lrnr not in visited],
+            key=lambda lrnr: lrnr.bid(state, actVars=actVars))
+
+        visited.add(topLearner)
+        return topLearner.getAction(state, visited=visited, actVars=actVars)
+
+    """
     Adds learner to the team and updates number of references to that program.
     """
-    def addLearner(self, learner=None):
+    def addLearner_def(self, learner=None):
         program = learner.program
         # don't add duplicate program
         if any([lrnr.program == program for lrnr in self.learners]):
@@ -48,7 +58,7 @@ class Team:
     """
     Removes learner from the team and updates number of references to that program.
     """
-    def removeLearner(self, learner):
+    def removeLearner_def(self, learner):
         # only delete if actually in this team
         if learner in self.learners:
             learner.numTeamsReferencing -= 1
@@ -57,14 +67,14 @@ class Team:
     """
     Bulk removes learners from teams.
     """
-    def removeLearners(self):
+    def removeLearners_def(self):
         for lrnr in list(self.learners):
             self.removeLearner(lrnr)
 
     """
     Number of learners with atomic actions on this team.
     """
-    def numAtomicActions(self):
+    def numAtomicActions_def(self):
         num = 0
         for lrnr in self.learners:
             if lrnr.isActionAtomic():
@@ -75,7 +85,7 @@ class Team:
     """
     Mutates the learner set of this team.
     """
-    def mutate(self, mutateParams, allLearners, teams):
+    def mutate_def(self, mutateParams, allLearners, teams):
 
         # repeats of mutation
         if (mutateParams["generation"] % mutateParams["rampantGen"] == 0 and
@@ -98,7 +108,7 @@ class Team:
                                             or self.numAtomicActions() > 1])
 
                 # if created this gen, derefence team it references
-                if (i > 0 and learner.genCreate == mutateParams["generation"]
+                if (i > 1 and learner.genCreate == mutateParams["generation"]
                         and not learner.isActionAtomic()):
                     learner.getActionTeam().numLearnersReferencing -= 1
 

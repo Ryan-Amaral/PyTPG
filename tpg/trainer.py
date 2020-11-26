@@ -1,10 +1,13 @@
+from tpg.action_object import ActionObject
 from tpg.program import Program
 from tpg.learner import Learner
 from tpg.team import Team
 from tpg.agent import Agent
+from tpg.configuration import configurer
 import random
 import numpy as np
 import pickle
+from collections import namedtuple
 
 """
 Functionality for actually growing TPG and evolving it to be functional.
@@ -27,99 +30,168 @@ class Trainer:
     Else it ensures the total team population size is 'teamPopSize' (uses
     less RAM).
 
-    sharedMemory: Whether to use the shared memory module to have more long term
-    memory.
+    memType: Type of memory distribution to use for writing. None or "None" if not
+    using memory, otherwise "default", "cauchy1", or "cauchyHalf".
+
+    rampancy: How often to do rampant mutation: (a, b) or (a, b, c). a is to do it every
+    a'th generation (keep as zero to not do it), b and c are the range for how
+    many times to repeat rampancy (b inclusive, c exclusive/not required).
+
+    operationSet: "def" for ["ADD", "SUB", "MULT", "DIV", "NEG"], or "full" for
+    ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP"]. "MEM_READ" and
+    "MEM_WRITE" may be added in if applicable. May change to just including the
+    list of desired operations in the future.
+
+    traversal: "team" to traverse for an action without repeating any team visits.
+    "learner" is similar but with repeat visits to teams and no repeat visits to
+    learners.
+
+    prevPops: Either a list of the the root teams from a previous population, or
+    a dicitonary with the keys being the environment and the values being a list
+    of root teams trained on that environment.
+
+    doMutate: Whether to continue mutating newly created root teams below the team
+    level. If true only mutates teams by changing up the learners, but doesn't
+    mutate the learners or
     """
-    def __init__(self, actions, teamPopSize=360, rootBasedPop=True, sharedMemory=False,
-        gap=0.5, uniqueProgThresh=0, initMaxTeamSize=5, initMaxProgSize=128, registerSize=8,
-        pDelLrn=0.7, pAddLrn=0.7, pMutLrn=0.3, pMutProg=0.66, pMutAct=0.33,
-        pActAtom=0.5, pDelInst=0.5, pAddInst=0.5, pSwpInst=1.0, pMutInst=1.0,
-        pSwapMultiAct=0.66, pChangeMultiAct=0.40, doElites=True,
-        sourceRange=30720, memMatrixShape=(100,8)):
+    def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
+        inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
+        pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
+        pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
+        doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(-1,0,1),
+        operationSet="def", traversal="team", prevPops=None, mutatePrevs=True):
 
         # store all necessary params
-        self.actions = actions
-        self.multiAction = isinstance(self.actions, int)
 
+        # first store actions properly
+        self.doReal = self.setUpActions(actions)
+
+        # population params
         self.teamPopSize = teamPopSize
+        # whether population size is based on root teams or all teams
         self.rootBasedPop = rootBasedPop
         self.gap = gap # portion of root teams to remove each generation
-        # threshold to accept mutated programs
-        self.uniqueProgThresh = uniqueProgThresh # about 1e-5 is good
 
-        self.pDelLrn = pDelLrn
-        self.pAddLrn = pAddLrn
-        self.pMutLrn = pMutLrn
-        self.pMutProg = pMutProg
-        self.pMutAct = pMutAct
+        # input to agent (must be at-least size of input/state from environment)
+        self.inputSize = inputSize # defaulted to number of Atari screen pixels
+        # number of local memory registers each learner will have
+        self.nRegisters = nRegisters
+
+        # params for initializing evolution
+        self.initMaxTeamSize = initMaxTeamSize # size of team = # of learners
+        self.initMaxProgSize = initMaxProgSize # size of program = # of instructions
+
+        # params for continued evolution
+        self.pLrnDel = pLrnDel
+        self.pLrnAdd = pLrnAdd
+        self.pLrnMut = pLrnMut
+        self.pProgMut = pProgMut
+        self.pActMut = pActMut
         self.pActAtom = pActAtom
-        self.pDelInst = pDelInst
-        self.pAddInst = pAddInst
-        self.pSwpInst = pSwpInst
-        self.pMutInst = pMutInst
-        self.pSwapMultiAct = pSwapMultiAct
-        self.pChangeMultiAct = pChangeMultiAct
+        self.pInstDel = pInstDel
+        self.pInstAdd = pInstAdd
+        self.pInstSwp = pInstSwp
+        self.pInstMut = pInstMut
+
+        # whether to keep elites
         self.doElites = doElites
 
+        if memType == "None":
+            self.memType = None
+        self.memType = memType
+        self.memMatrixShape = memMatrixShape
+
+        # fix range of rampancy if invalid
+        if len(rampancy) == 2 or rampancy[2] <= rampancy[1]:
+            rampancy = (rampancy[0], rampancy[1], rampancy[1]+1)
+        self.rampancy = rampancy
+
+        self.operationSet = operationSet
+
+        self.traversal = traversal
+
+        # core components of TPG
         self.teams = []
         self.rootTeams = []
         self.learners = []
-
         self.elites = [] # save best at each task
 
-        self.generation = 0
+        self.generation = 0 # track this
 
-        # extra operations if memory
-        if not sharedMemory:
-            Program.operationRange = 6
-        else:
-            Program.operationRange = 8
+        # configure tpg functions and variable appropriately now
+        configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
+            memType is not None, memType, self.doReal, operationSet, traversal)
 
-        Program.destinationRange = registerSize
-        Program.sourceRange = sourceRange
+        self.initializePopulations()
 
-        self.initializePopulations(initMaxTeamSize, initMaxProgSize, registerSize)
+    """
+    Sets up the actions properly, splitting action codes, and if needed, action
+    lengths. Returns whether doing real actions.
+    """
+    def setUpActions(self, actions):
+        if isinstance(actions, int):
+            # all discrete actions
+            self.actionCodes = range(actions)
+            doReal = False
+        else: # list of lengths of each action
+            # some may be real actions
+            self.actionCodes = range(len(actions))
+            self.actionLengths = list(actions)
+            doReal = True
 
-        self.memMatrix = np.zeros(shape=memMatrixShape)
+        return doReal
 
     """
     Initializes a popoulation of teams and learners generated randomly with only
     atomic actions.
     """
-    def initializePopulations(self, initMaxTeamSize, initMaxProgSize, registerSize):
+    def initializePopulations(self):
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
-            if self.multiAction == False:
-                a1,a2 = random.sample(self.actions, 2)
-            else:
-                a1 = [random.uniform(0,1) for _ in range(self.actions)]
-                a2 = [random.uniform(0,1) for _ in range(self.actions)]
-            l1 = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                         action=a1, numRegisters=registerSize)
-            l2 = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                         action=a2, numRegisters=registerSize)
+            a1,a2 = random.sample(range(len(self.actionCodes)), 2)
+
+            l1 = Learner(self.mutateParams,
+                        program=Program(maxProgramLength=self.initMaxProgSize,
+                                         nOperations=self.nOperations,
+                                         nDestinations=self.nRegisters,
+                                         inputSize=self.inputSize,
+                                         initParams=self.mutateParams),
+                        actionObj=ActionObject(actionIndex=a1, initParams=self.mutateParams),
+                        numRegisters=self.nRegisters)
+            l2 = Learner(self.mutateParams,
+                        program=Program(maxProgramLength=self.initMaxProgSize,
+                                         nOperations=self.nOperations,
+                                         nDestinations=self.nRegisters,
+                                         inputSize=self.inputSize,
+                                         initParams=self.mutateParams),
+                        actionObj=ActionObject(actionIndex=a2, initParams=self.mutateParams),
+                        numRegisters=self.nRegisters)
 
             # save learner population
             self.learners.append(l1)
             self.learners.append(l2)
 
             # create team and add initial learners
-            team = Team()
+            team = Team(initParams=self.mutateParams)
             team.addLearner(l1)
             team.addLearner(l2)
 
             # add more learners
-            moreLearners = random.randint(0, initMaxTeamSize-2)
+            moreLearners = random.randint(0, self.initMaxTeamSize-2)
             for i in range(moreLearners):
                 # select action
-                if self.multiAction == False:
-                    act = random.choice(self.actions)
-                else:
-                    act = [random.uniform(0,1) for _ in range(self.actions)]
+                act = random.choice(range(len(self.actionCodes)))
+
                 # create new learner
-                learner = Learner(program=Program(maxProgramLength=initMaxProgSize),
-                                  action=act,
-                                  numRegisters=registerSize)
+                learner = Learner(initParams=self.mutateParams,
+                            program=Program(maxProgramLength=self.initMaxProgSize,
+                                             nOperations=self.nOperations,
+                                             nDestinations=self.nRegisters,
+                                             inputSize=self.inputSize,
+                                             initParams=self.mutateParams),
+                            actionObj=ActionObject(actionIndex=act, initParams=self.mutateParams),
+                            numRegisters=self.nRegisters)
+
                 team.addLearner(learner)
                 self.learners.append(learner)
 
@@ -138,14 +210,14 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            return [Agent(team, self.memMatrix, num=i) for i,team in enumerate(rTeams)]
+            return [Agent(team, num=i, actVars=self.actVars)
+                    for i,team in enumerate(rTeams)]
         else:
             # apply scores/fitness to root teams
-            self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType,
-                                                                doElites=False)
+            self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
             # return teams sorted by fitness
-            return [Agent(team, self.memMatrix, num=i) for i,team in
-                    enumerate(sorted(rTeams,
+            return [Agent(team, num=i, actVars=self.actVars)
+                    for i,team in enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 
     """
@@ -299,7 +371,7 @@ class Trainer:
         return scoreStats
 
     """
-    Delete a portion of the population according to gap size.
+    Select a portion of the root team population to keep according to gap size.
     """
     def select(self):
         rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
@@ -314,7 +386,7 @@ class Trainer:
                 if learner.numTeamsReferencing == 1:
                     # remove reference to team if applicable
                     if not learner.isActionAtomic():
-                        learner.action.numLearnersReferencing -= 1
+                        learner.getActionTeam().numLearnersReferencing -= 1
 
                     self.learners.remove(learner) # permanently remove
 
@@ -331,41 +403,24 @@ class Trainer:
         oLearners = list(self.learners)
         oTeams = list(self.teams)
 
-        # multiActs for action pool for multiaction mutation
-        if self.multiAction:
-            multiActs = []
-            for learner in oLearners:
-                if learner.isActionAtomic():
-                    multiActs.append(list(learner.action))
-        else:
-            multiActs = None
+        # update generation in mutateParams
+        self.mutateParams["generation"] = self.generation
 
+        # get all the current root teams to be parents
         while (len(self.teams) < self.teamPopSize or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
-
             # get parent root team, and child to be based on that
             parent = random.choice(self.rootTeams)
-            child = Team()
+            child = Team(initParams=self.mutateParams)
 
             # child starts just like parent
             for learner in parent.learners:
                 child.addLearner(learner)
 
-            if self.uniqueProgThresh > 0:
-                inputs, outputs = self.getLearnersInsOuts(oLearners)
-            else:
-                inputs = None
-                outputs = None
             # then mutates
-            child.mutate(self.pDelLrn, self.pAddLrn, self.pMutLrn, oLearners,
-                        self.pMutProg, self.pMutAct, self.pActAtom,
-                        self.actions, oTeams,
-                        self.pDelInst, self.pAddInst, self.pSwpInst, self.pMutInst,
-                        multiActs, self.pSwapMultiAct, self.pChangeMultiAct,
-                        self.uniqueProgThresh, inputs=inputs, outputs=outputs)
+            child.mutate(self.mutateParams, oLearners, oTeams)
 
             self.teams.append(child)
-            self.rootTeams.append(child)
 
     """
     Finalize populations and prepare for next generation/epoch.
@@ -397,41 +452,12 @@ class Trainer:
         return numRTeams
 
     """
-    Returns the input and output of each learner bid in each state.
-    As [learner, stateNum]. Inputs being states, outputs being floats (bid values)
-    """
-    def getLearnersInsOuts(self, learners, clearStates=True):
-        inputs = []
-        outputs = []
-        for lrnr in learners:
-            lrnrInputs = []
-            lrnrOutputs = []
-            for state in lrnr.states:
-                regs = np.zeros(len(lrnr.registers))
-                Program.execute(state, regs,
-                                lrnr.program.modes, lrnr.program.operations,
-                                lrnr.program.destinations, lrnr.program.sources)
-                lrnrInputs.append(state)
-                lrnrOutputs.append(regs[0])
-
-            if clearStates: # free up some space
-                lrnr.states = []
-
-            inputs.append(lrnrInputs)
-            outputs.append(lrnrOutputs)
-
-        return inputs, outputs
-
-    """
     Save the trainer to the file, saving any class values to the instance.
     """
     def saveToFile(self, fileName):
         self.teamIdCount = Team.idCount
         self.learnerIdCount = Learner.idCount
         self.programIdCount = Program.idCount
-        self.operationRange = Program.operationRange
-        self.destinationRange = Program.destinationRange
-        self.sourceRange = Program.sourceRange
 
         pickle.dump(self, open(fileName, 'wb'))
 
@@ -444,8 +470,5 @@ def loadTrainer(fileName):
     Team.idCount = trainer.teamIdCount
     Learner.idCount = trainer.learnerIdCount
     Program.idCount = trainer.programIdCount
-    Program.operationRange = trainer.operationRange
-    Program.destinationRange = trainer.destinationRange
-    Program.sourceRange = trainer.sourceRange
 
     return trainer
