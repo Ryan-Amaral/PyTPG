@@ -407,11 +407,8 @@ class Trainer:
         self.mutateParams["generation"] = self.generation
 
         # get all the current root teams to be parents
-        self.setRoots()
-
         while (len(self.teams) < self.teamPopSize or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
-
             # get parent root team, and child to be based on that
             parent = random.choice(self.rootTeams)
             child = Team(initParams=self.mutateParams)
@@ -443,8 +440,6 @@ class Trainer:
 
         self.generation += 1
 
-        
-
     """
     Get the number of root teams currently residing in the teams population.
     """
@@ -455,15 +450,6 @@ class Trainer:
                 numRTeams += 1
 
         return numRTeams
-
-    "Sets the root teams list."
-    def setRoots(self):
-        self.rootTeams = []
-        for team in self.teams:
-            if team.numLearnersReferencing == 0 or team in self.elites:
-                self.rootTeams.append(team)
-
-        return self.rootTeams
 
     """
     Save the trainer to the file, saving any class values to the instance.
