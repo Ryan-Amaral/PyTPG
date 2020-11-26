@@ -4,7 +4,7 @@ setup(
     name='PyTPG',
     version='0.95',
     packages=['tpg', 'tpg.configuration'],
-    install_requires=['numba','numpy'],
+    install_requires=['numba','numpy', 'unittest-xml-reporting'],
     license='MIT',
     description='Python implementation of Tangled Program Graphs.',
     long_description=open('README.md').read(),
