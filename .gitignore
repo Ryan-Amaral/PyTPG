@@ -108,3 +108,4 @@ tpg_examples-Copy1.ipynb
 
 test-reports
 *.log
+TEST-*.xml
