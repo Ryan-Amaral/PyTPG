@@ -68,8 +68,9 @@ The above were just some of the important functions, and left out some necessary
 
 The test files and `extras.py` file shows more examples, those files are used for testing.
 
-## TODO
-- Implement alternative mutation methods.
+## Testing
+`coverage run --source=. -m xmlrunner tpg_tests/*_test.py`
+`coverage html`
 
 ## Some Projects PyTPG was Used in
 - https://github.com/Ryan-Amaral/general-game-playing-tpg (old API version)
