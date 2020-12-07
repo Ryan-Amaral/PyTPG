@@ -27,6 +27,28 @@ class Program:
         self.id = Program.idCount
         Program.idCount += 1
 
+    def __eq__(self, object):
+        
+        # If the other object's class name isn't Program it's not a program
+        if type(object).__name__ != "Program":
+            return False
+
+        # Compare instructions
+
+        # If we don't have the same number of instructions we're not the same
+        if len(object.instructions) != len(self.instructions):
+            return False
+
+        # Check that our instructions match one for one, otherwise we're not equal
+        for index in range(len(self.instructions)):
+            if (self.instructions[index,0] != object.instructions[index,0] or
+            self.instructions[index,1] != object.instructions[index,1] or
+            self.instructions[index,2] != object.instructions[index,2] or
+            self.instructions[index,3] != object.instructions[index,3]):
+                return False
+
+        return True
+
 
     """
     Executes the program which returns a single final value.
