@@ -3,8 +3,18 @@ import xmlrunner
 import unittest
 import numpy as np
 from tpg.program import Program
+from extras import runPopulationParallel
 
 class ProgramTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # do a quick test run to get results
+        cls.trainer, _ = runPopulationParallel(
+            envName="Boxing-v0", gens=2, popSize=4, reps=1,
+            frames=10, processes=4, nRandFrames=5, rootBasedPop=True,
+            memType=None, operationSet="full", rampancy=(5,5), traversal="team")
+
     '''
     Tests the initalization of a program in the most
     simple case.
@@ -14,12 +24,17 @@ class ProgramTest(unittest.TestCase):
         max_length = 128
 
         # Assert that the id count starts at 0
-        self.assertEqual(0, Program.idCount)
+        #self.assertEqual(0, Program.idCount)
 
-        program = Program(maxProgramLength=max_length)
+        # needed for mutation and initialization
+        mutateParams = {
+            'idCountProgram': 0
+        }
+
+        program = Program(maxProgramLength=max_length, initParams=mutateParams)
 
         # Assert that, after creating a program the id count has been incremented
-        self.assertEqual(1, Program.idCount)
+        self.assertEqual(0, program.id)
 
         print(np.shape(program.instructions))
 
@@ -40,13 +55,18 @@ class ProgramTest(unittest.TestCase):
         num_attempts = 1000
         max_length = 128
 
+        # needed for mutation and initialization
+        mutateParams = {
+            'idCountProgram': 0
+        }
+
         for i in range(num_attempts):
             with self.subTest():
-                p = Program(maxProgramLength=max_length)
+                p = Program(maxProgramLength=max_length, initParams=mutateParams)
                 self.assertLessEqual(np.shape(p.instructions)[0], max_length)
 
         # Ensure programs have been created
-        self.assertEqual(num_attempts + 1, Program.idCount)
+        self.assertEqual(num_attempts-1, p.id)
 
     '''
     Checks if a program is still valid after numerous mutations are done.
@@ -61,7 +81,7 @@ class ProgramTest(unittest.TestCase):
         dests = 8
         inputs = 10000
 
-        # needed for mutation
+        # needed for mutation and initialization
         mutateParams = {
             'pProgMut': 0.5,
             'nOperations': ops,
@@ -70,13 +90,15 @@ class ProgramTest(unittest.TestCase):
             'pInstDel': 0.5,
             'pInstMut': 0.5,
             'pInstSwp': 0.5,
-            'pInstAdd': 0.5
+            'pInstAdd': 0.5,
+            'idCountProgram': 0
         }
 
         # mutate all the progs many times
         for i in range(progs):
             p = Program(maxProgramLength=100,
-                nOperations=ops, nDestinations=dests, inputSize=inputs)
+                nOperations=ops, nDestinations=dests, inputSize=inputs,
+                initParams=mutateParams)
             for i in range(muts):
                 p.mutate(mutateParams)
 

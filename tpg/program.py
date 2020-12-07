@@ -9,10 +9,9 @@ A program that is executed to help obtain the bid for a learner.
 """
 class Program:
 
-    idCount = 0 # unique id of each program
-
     def __init__(self, instructions=None, maxProgramLength=128, nOperations=5,
             nDestinations=8, inputSize=30720, initParams=None):
+        """
 
         if instructions is not None: # copy from existing
             self.instructions = np.array(instructions, dtype=np.int32)
@@ -24,8 +23,10 @@ class Program:
                     random.randint(0, inputSize-1))
                 for _ in range(random.randint(1, maxProgramLength))], dtype=np.int32)
 
-        self.id = Program.idCount
-        Program.idCount += 1
+        self.id = initParams["idCountProgram"]
+        initParams["idCountProgram"] += 1
+        """
+        pass
 
 
     """
@@ -33,6 +34,7 @@ class Program:
     """
     @njit
     def execute(inpt, regs, modes, ops, dsts, srcs):
+        """
         regSize = len(regs)
         inptLen = len(inpt)
         for i in range(len(modes)):
@@ -67,22 +69,28 @@ class Program:
                 regs[dest] = np.finfo(np.float64).max
             elif regs[dest] == np.NINF:
                 regs[dest] = np.finfo(np.float64).min
+        """
+        pass
 
 
     """
     Mutates the program, by performing some operations on the instructions.
     """
     def mutate(self, mutateParams):
+        """
         # mutations repeatedly, random probably small amount
         mutated = False
         while not mutated or flip(mutateParams["pProgMut"]):
             self.mutateInstructions(mutateParams)
             mutated = True
+        """
+        pass
 
     """
     Potentially modifies the instructions in a few ways.
     """
     def mutateInstructions(self, mutateParams):
+        """
 
         changed = False
 
@@ -140,3 +148,5 @@ class Program:
                             random.randint(0, mutateParams["inputSize"]-1)),0)
 
                 changed = True
+        """
+        pass

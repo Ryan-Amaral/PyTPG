@@ -21,15 +21,18 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
     mutateParamKeys = ["generation", "pLrnDel", "pLrnAdd", "pLrnMut",
         "pProgMut", "pActMut", "pActAtom", "pInstDel", "pInstAdd", "pInstSwp", "pInstMut",
         "actionCodes", "nDestinations", "inputSize", "initMaxProgSize",
-        "rampantGen", "rampantMin", "rampantMax"]
+        "rampantGen", "rampantMin", "rampantMax", "idCountTeam", "idCountLearner", "idCountProgram"]
     mutateParamVals = [trainer.generation, trainer.pLrnDel, trainer.pLrnAdd, trainer.pLrnMut,
         trainer.pProgMut, trainer.pActMut, trainer.pActAtom, trainer.pInstDel, trainer.pInstAdd, trainer.pInstSwp, trainer.pInstMut,
         trainer.actionCodes, trainer.nRegisters, trainer.inputSize, trainer.initMaxProgSize,
-        trainer.rampancy[0], trainer.rampancy[1], trainer.rampancy[2]]
+        trainer.rampancy[0], trainer.rampancy[1], trainer.rampancy[2], 0, 0, 0]
 
     # additional stuff for act, like memory matrix possible
     actVarKeys = ["frameNum"]
     actVarVals = [0]
+
+    # before doing any special configuration, set all methods to defaults
+    configureDefaults(trainer, Trainer, Agent, Team, Learner, ActionObject, Program)
 
     # configure Program execution stuff, affected by memory and operations set
     configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
@@ -47,6 +50,52 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
     trainer.mutateParams = dict(zip(mutateParamKeys, mutateParamVals))
     trainer.actVars = dict(zip(actVarKeys, actVarVals))
 
+"""
+For each class in TPG, sets the functions to their defaults.
+"""
+def configureDefaults(trainer, Trainer, Agent, Team, Learner, ActionObject, Program):
+    # set trainer functions
+    # TODO: add learner configurable
+
+    # set agent functions
+    Agent.__init__ = ConfAgent.init_def
+    Agent.act = ConfAgent.act_def
+    Agent.reward = ConfAgent.reward_def
+    Agent.taskDone = ConfAgent.taskDone_def
+    Agent.saveToFile = ConfAgent.saveToFile_def
+
+    # set team functions
+    Team.__init__ = ConfTeam.init_def
+    Team.act = ConfTeam.act_def
+    Team.addLearner = ConfTeam.addLearner_def
+    Team.removeLearner = ConfTeam.removeLearner_def
+    Team.removeLearners = ConfTeam.removeLearners_def
+    Team.numAtomicActions = ConfTeam.numAtomicActions_def
+    Team.mutate = ConfTeam.mutate_def
+
+    # set learner functions
+    Learner.__init__ = ConfLearner.init_def
+    Learner.bid = ConfLearner.bid_def
+    Learner.getAction = ConfLearner.getAction_def
+    Learner.getActionTeam = ConfLearner.getActionTeam_def
+    Learner.isActionAtomic = ConfLearner.isActionAtomic_def
+    Learner.mutate = ConfLearner.mutate_def
+
+    # set action object functions
+    ActionObject.__init__ = ConfActionObject.init_def
+    ActionObject.getAction = ConfActionObject.getAction_def
+    ActionObject.isAtomic = ConfActionObject.isAtomic_def
+    ActionObject.mutate = ConfActionObject.mutate_def
+
+    # set program functions
+    Program.__init__ = ConfProgram.init_def
+    Program.execute = ConfProgram.execute_def
+    Program.mutate = ConfProgram.mutate_def
+    Program.mutateInstructions = ConfProgram.mutateInstructions_def
+
+"""
+Decides the operations and functions to be used in program execution.
+"""
 def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
         mutateParamKeys, mutateParamVals, doMemory, memType, operationSet):
     # change functions as needed
@@ -94,6 +143,9 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
     mutateParamKeys += ["nOperations"]
     mutateParamVals += [trainer.nOperations]
 
+"""
+Make the appropriate changes needed to be able to use real actions.
+"""
 def configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals, doMemory):
     # change functions as needed
     ActionObject.__init__ = ConfActionObject.init_real
@@ -108,6 +160,8 @@ def configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals,
     mutateParamKeys += ["actionLengths"]
     mutateParamVals += [trainer.actionLengths]
 
-
+"""
+Switch to learner traversal.
+"""
 def configureLearnerTraversal(Agent, Team, actVarKeys, actVarVals):
     Team.act = ConfTeam.act_learnerTrav

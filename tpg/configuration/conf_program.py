@@ -4,6 +4,8 @@ from numpy import pi, inf, NINF, float64, finfo
 from numpy.random import rand
 import math
 from math import isnan, cos, log, exp
+import random
+from tpg.utils import flip
 
 """
 A program that is executed to help obtain the bid for a learner.
@@ -23,8 +25,8 @@ class ConfProgram:
                     random.randint(0, inputSize-1))
                 for _ in range(random.randint(1, maxProgramLength))], dtype=np.int32)
 
-        self.id = Program.idCount
-        Program.idCount += 1
+        self.id = initParams["idCountProgram"]
+        initParams["idCountProgram"] += 1
 
 
     """

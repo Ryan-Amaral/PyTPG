@@ -13,8 +13,8 @@ class ConfTeam:
         self.outcomes = {} # scores at various tasks
         self.fitness = None
         self.numLearnersReferencing = 0 # number of learners that reference this
-        self.id = Team.idCount
-        Team.idCount += 1
+        self.id = initParams["idCountTeam"]
+        initParams["idCountTeam"] += 1
         self.genCreate = initParams["generation"]
 
     """
@@ -108,7 +108,7 @@ class ConfTeam:
                                             or self.numAtomicActions() > 1])
 
                 # if created this gen, derefence team it references
-                if (i > 1 and learner.genCreate == mutateParams["generation"]
+                if (i > 0 and learner.genCreate == mutateParams["generation"]
                         and not learner.isActionAtomic()):
                     learner.getActionTeam().numLearnersReferencing -= 1
 

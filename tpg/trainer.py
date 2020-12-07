@@ -455,10 +455,6 @@ class Trainer:
     Save the trainer to the file, saving any class values to the instance.
     """
     def saveToFile(self, fileName):
-        self.teamIdCount = Team.idCount
-        self.learnerIdCount = Learner.idCount
-        self.programIdCount = Program.idCount
-
         pickle.dump(self, open(fileName, 'wb'))
 
 """
@@ -466,9 +462,4 @@ Load some trainer from the file, returning it and repopulate class values.
 """
 def loadTrainer(fileName):
     trainer = pickle.load(open(fileName, 'rb'))
-
-    Team.idCount = trainer.teamIdCount
-    Learner.idCount = trainer.learnerIdCount
-    Program.idCount = trainer.programIdCount
-
     return trainer

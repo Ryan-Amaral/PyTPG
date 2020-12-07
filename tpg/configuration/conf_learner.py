@@ -11,8 +11,6 @@ produce the bid value for this learner's action.
 """
 class ConfLearner:
 
-    idCount = 0 # unique learner id
-
     """
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
@@ -34,8 +32,10 @@ class ConfLearner:
 
         self.numTeamsReferencing = 0 # amount of teams with references to this
 
-        self.id = Learner.idCount
-        Learner.idCount += 1
+        self.id = initParams["idCountLearner"]
+        initParams["idCountLearner"] += 1
+
+        self.genCreate = initParams["generation"]
 
         self.frameNum = 0
 

@@ -40,9 +40,3 @@ class ConfAgent:
     """
     def saveToFile_def(self, fileName):
         pickle.dump(self, open(fileName, 'wb'))
-
-"""
-Load some agent from the file, returning it and repopulate class values.
-"""
-def loadAgent_def(fileName):
-    return pickle.load(open(fileName, 'rb'))
