@@ -40,14 +40,7 @@ class Program:
             return False
 
         # Check that our instructions match one for one, otherwise we're not equal
-        for index in range(len(self.instructions)):
-            if (self.instructions[index,0] != object.instructions[index,0] or
-            self.instructions[index,1] != object.instructions[index,1] or
-            self.instructions[index,2] != object.instructions[index,2] or
-            self.instructions[index,3] != object.instructions[index,3]):
-                return False
-
-        return True
+        return np.array_equal(self.instructions, object.instructions)
 
 
     """
