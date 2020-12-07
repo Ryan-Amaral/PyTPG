@@ -28,6 +28,21 @@ class Program:
         """
         pass
 
+    def __eq__(self, object):
+        
+        # If the other object's class name isn't Program it's not a program
+        if type(object).__name__ != "Program":
+            return False
+
+        # Compare instructions
+
+        # If we don't have the same number of instructions we're not the same
+        if len(object.instructions) != len(self.instructions):
+            return False
+
+        # Check that our instructions match one for one, otherwise we're not equal
+        return np.array_equal(self.instructions, object.instructions)
+
 
     """
     Executes the program which returns a single final value.
