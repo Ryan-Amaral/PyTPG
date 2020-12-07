@@ -74,7 +74,8 @@ for however many generations on the supplied environmental parameters.
 On an OpenAI gym environment.
 """
 def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
-        frames=18000, processes=4, nRandFrames=30):
+        frames=18000, processes=4, nRandFrames=30, rootBasedPop=True,
+        memType=None, operationSet="full", rampancy=(5,5), traversal="team"):
     tStart = time.time()
 
     # get num actions
@@ -82,8 +83,9 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     acts = env.action_space.n
     del env
 
-    trainer = Trainer(actions=acts, teamPopSize=popSize, memType=None,
-        operationSet="full", rampancy=(5,5), traversal="team")
+    trainer = Trainer(actions=acts, teamPopSize=popSize, rootBasedPop=rootBasedPop,
+        memType=memType, operationSet=operationSet, rampancy=rampancy,
+        traversal=traversal)
 
     man = mp.Manager()
     pool = mp.Pool(processes=processes, maxtasksperchild=1)

@@ -13,7 +13,8 @@ class TrainerTest(unittest.TestCase):
         # do a quick test run to get results
         cls.trainer, _ = runPopulationParallel(
             envName="Boxing-v0", gens=100, popSize=50, reps=1,
-            frames=1000, processes=4, nRandFrames=5)
+            frames=1000, processes=4, nRandFrames=5, rootBasedPop=True,
+            memType=None, operationSet="full", rampancy=(5,5), traversal="team")
 
     '''
     Runs tpg for a while measuring the reference counts on teams and learners,
