@@ -11,7 +11,7 @@ class ProgramTest(unittest.TestCase):
     def setUpClass(cls):
         # do a quick test run to get results
         cls.trainer, _ = runPopulationParallel(
-            envName="Boxing-v0", gens=2, popSize=4, reps=1,
+            envName="Boxing-v0", gens=2, popSize=10, reps=1,
             frames=10, processes=4, nRandFrames=5, rootBasedPop=True,
             memType=None, operationSet="full", rampancy=(5,5), traversal="team")
 

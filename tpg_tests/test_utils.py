@@ -9,18 +9,21 @@ dummy_init_params = {
     'generation': 0,
     'actionCodes':[
         0,1,2,3,4,5,6,7,8,9,10,11
-    ]
+    ],
+    'idCountTeam': 0,
+    'idCountProgram': 0,
+    'idCountLearner': 0
 }
 
 '''
 Dummy Creates
     These should be used to test constructs other than the ones
-    being created by the function. For example, to test a Team 
+    being created by the function. For example, to test a Team
     you would create dummy programs and learners. But you wouldn't
     use the create_dummy_team function to test the creation of a team.
-    
+
     This is because these methods verify nothing about the init procedure
-    of the class they're returning an object of. 
+    of the class they're returning an object of.
 '''
 
 '''

@@ -10,10 +10,10 @@ class TeamTest(unittest.TestCase):
 
 
     def test_create_team(self):
-        original_id_count = Team.idCount
+        original_id_count = dummy_init_params['idCountTeam']
 
         # Create the team
-        team = Team(dummy_init_params) 
+        team = Team(dummy_init_params)
 
         # Verify instance variables and id
         self.assertIsNotNone(team.learners)
@@ -21,7 +21,7 @@ class TeamTest(unittest.TestCase):
         self.assertIsNone(team.fitness)
         self.assertEqual(0,team.numLearnersReferencing)
         self.assertEqual(original_id_count, team.id)
-        self.assertEqual(original_id_count+1, Team.idCount)
+        self.assertEqual(original_id_count+1, dummy_init_params['idCountTeam'])
         self.assertEqual(dummy_init_params['generation'], team.genCreate)
 
 
@@ -75,5 +75,3 @@ class TeamTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports'))
-
-
