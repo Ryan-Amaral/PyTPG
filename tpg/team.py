@@ -9,7 +9,6 @@ action to take in the graph.
 class Team:
 
     def __init__(self, initParams):
-        """
         self.learners = []
         self.outcomes = {} # scores at various tasks
         self.fitness = None
@@ -17,14 +16,11 @@ class Team:
         self.id = initParams["idCountTeam"]
         initParams["idCountTeam"] += 1
         self.genCreate = initParams["generation"]
-        """
-        pass
 
     """
     Returns an action to use based on the current state.
     """
     def act(self, state, visited=set(), actVars=None):
-        """
         visited.add(self) # track visited teams
 
         topLearner = max([lrnr for lrnr in self.learners
@@ -32,14 +28,11 @@ class Team:
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
 
         return topLearner.getAction(state, visited=visited, actVars=actVars)
-        """
-        pass
 
     """
     Adds learner to the team and updates number of references to that program.
     """
     def addLearner(self, learner=None):
-        """
         program = learner.program
         # don't add duplicate program
         if any([lrnr.program == program for lrnr in self.learners]):
@@ -49,50 +42,38 @@ class Team:
         learner.numTeamsReferencing += 1
 
         return True
-        """
-        pass
 
     """
     Removes learner from the team and updates number of references to that program.
     """
     def removeLearner(self, learner):
-        """
         # only delete if actually in this team
         if learner in self.learners:
             learner.numTeamsReferencing -= 1
             self.learners.remove(learner)
-        """
-        pass
 
     """
     Bulk removes learners from teams.
     """
     def removeLearners(self):
-        """
         for lrnr in list(self.learners):
             self.removeLearner(lrnr)
-        """
-        pass
 
     """
     Number of learners with atomic actions on this team.
     """
     def numAtomicActions(self):
-        """
         num = 0
         for lrnr in self.learners:
             if lrnr.isActionAtomic():
                 num += 1
 
         return num
-        """
-        pass
 
     """
     Mutates the learner set of this team.
     """
     def mutate(self, mutateParams, allLearners, teams):
-        """
 
         # repeats of mutation
         if (mutateParams["generation"] % mutateParams["rampantGen"] == 0 and
@@ -149,5 +130,3 @@ class Team:
                     newLearner = Learner(mutateParams, learner=learner)
                     newLearner.mutate(mutateParams, self, teams, pActAtom0)
                     self.addLearner(newLearner)
-        """
-        pass

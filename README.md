@@ -1,8 +1,5 @@
 # tpg-python
 A python implementation of Tangled Program Graphs. A graph based genetic programming algorithm.
-You may notice most the functions are commented out in the `tpg` module, this is because the actual implementations are in the `tpg.configurable` module.
-This is done to enable increased flexibility with swapping out functions in TPG to expand capabilities in a more efficient way.
-The original default code is left in there to show what the default implementations are.
 
 ## Setup
 

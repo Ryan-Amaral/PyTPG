@@ -16,7 +16,6 @@ class Learner:
     """
     def __init__(self, initParams, learner=None, program=None, actionObj=None, numRegisters=8,
             nOperations=5, nDestinations=8, inputSize=30720):
-        """
         if learner is not None:
             self.program = Program(instructions=learner.program.instructions,
                 nOperations=nOperations, nDestinations=nDestinations, inputSize=inputSize,
@@ -38,55 +37,40 @@ class Learner:
         self.genCreate = initParams["generation"]
 
         self.frameNum = 0
-        """
-        pass
 
     """
     Get the bid value, highest gets its action selected.
     """
     def bid(self, state, actVars=None):
-        """
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3])
 
         return self.registers[0]
-        """
-        pass
 
     """
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
     def getAction(self, state, visited, actVars=None):
-        """
         return self.actionObj.getAction(state, visited, actVars=actVars)
-        """
-        pass
 
     """
     Gets the team that is the action of the learners action object.
     """
     def getActionTeam(self):
-        """
         return self.actionObj.teamAction
-        """
-        pass
 
     """
     Returns true if the action is atomic, otherwise the action is a team.
     """
     def isActionAtomic(self):
-        """
         return self.actionObj.isAtomic()
-        """
-        pass
 
     """
     Mutates either the program or the action or both.
     """
     def mutate(self, mutateParams, parentTeam, teams, pActAtom):
-        """
 
         changed = False
         while not changed:
@@ -99,5 +83,3 @@ class Learner:
             if flip(mutateParams["pActMut"]):
                 changed = True
                 self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)
-        """
-        pass
