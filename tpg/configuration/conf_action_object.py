@@ -11,6 +11,7 @@ class ConfActionObject:
 
     def init_def(self, actionObj=None, actionIndex=None, teamAction=None,
             initParams=None):
+            
         if actionObj is not None:
             # clone the other action object
             self.actionCode = actionObj.actionCode
@@ -26,6 +27,7 @@ class ConfActionObject:
 
     def init_real(self, actionObj=None, program=None, actionIndex=None, teamAction=None,
             initParams=None):
+
         if actionObj is not None:
             # clone the other action object
             self.actionCode = actionObj.actionCode

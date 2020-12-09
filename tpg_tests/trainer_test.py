@@ -69,6 +69,10 @@ class TrainerTest(unittest.TestCase):
 
             self.assertEqual(atomics, team.numAtomicActions())
 
+    @classmethod
+    def tearDownClass(cls):
+        cls.trainer.cleanup()
+
 
 if __name__ == '__main__':
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports'))

@@ -457,6 +457,13 @@ class Trainer:
     def saveToFile(self, fileName):
         pickle.dump(self, open(fileName, 'wb'))
 
+    """
+    Function to cleanup anything that may interfere with another trainer run in
+    the same thread of execution. Currently just sets tpg module functions to defaults.
+    """
+    def cleanup(self):
+        configurer.configureDefaults(self, Trainer, Agent, Team, Learner, ActionObject, Program)
+
 """
 Load some trainer from the file, returning it and repopulate class values.
 """
