@@ -25,21 +25,25 @@ class Program:
         self.id = initParams["idCountProgram"]
         initParams["idCountProgram"] += 1
 
-    def __eq__(self, object):
+    '''
+    A program is equal to another object if that object:
+        - is an instance of the program class
+        - has identical instructions
+    '''
+    def __eq__(self, o:object) -> bool:
 
-        # If the other object's class name isn't Program it's not a program
-        if type(object).__name__ != "Program":
+        # The other object must be an instance of the Program class
+        if not isinstance(o, Program):
             return False
 
         # Compare instructions
+        return np.array_equal(self.instructions, o.instructions)
 
-        # If we don't have the same number of instructions we're not the same
-        if len(object.instructions) != len(self.instructions):
-            return False
-
-        # Check that our instructions match one for one, otherwise we're not equal
-        return np.array_equal(self.instructions, object.instructions)
-
+    '''
+     Negation of __eq__
+    '''
+    def __ne__(self, o: object) -> bool:
+        return not self.__eq__(o)
 
     """
     Executes the program which returns a single final value.

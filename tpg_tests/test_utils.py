@@ -3,6 +3,7 @@ import random
 from tpg.learner import Learner
 from tpg.action_object import ActionObject
 from tpg.program import Program
+from tpg.team import Team
 
 
 dummy_init_params = {
@@ -40,10 +41,26 @@ def create_dummy_program():
     return program
 
 '''
+Create dummy team with some number of learners.
+Returns the team and the learners added to it
+'''
+def create_dummy_team(num_learners=2):
+
+    team = Team(dummy_init_params)
+    learners = []
+
+    for x in range(0, num_learners):
+        learner = create_dummy_learner()
+        learners.append(learner)
+        team.addLearner(learner)
+    
+    return team, learners
+
+'''
 Create a dummy action object
 '''
 def create_dummy_action_object():
-    action_object = ActionObject(actionIndex=random.randint(0,10), initParams=dummy_init_params)
+    action_object = ActionObject(action=random.randint(0,10), initParams=dummy_init_params)
     return action_object
 
 '''

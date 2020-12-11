@@ -13,6 +13,7 @@ class Team:
         self.outcomes = {} # scores at various tasks
         self.fitness = None
         self.numLearnersReferencing = 0 # number of learners that reference this
+        self.inLearners = [] # ids of learners referencing this team
         self.id = initParams["idCountTeam"]
         initParams["idCountTeam"] += 1
         self.genCreate = initParams["generation"]
@@ -36,10 +37,10 @@ class Team:
         program = learner.program
         # don't add duplicate program
         if any([lrnr.program == program for lrnr in self.learners]):
-            return False
+            raise Exception("Attempted to add learner whose program already exists in our learner pool", learner)
 
         self.learners.append(learner)
-        learner.numTeamsReferencing += 1
+        learner.inTeams.append(self.id) # Add this team's id to the list of teams that reference the learner
 
         return True
 
@@ -47,17 +48,32 @@ class Team:
     Removes learner from the team and updates number of references to that program.
     """
     def removeLearner(self, learner):
+
         # only delete if actually in this team
         if learner in self.learners:
-            learner.numTeamsReferencing -= 1
-            self.learners.remove(learner)
+            '''
+            Have to remove by index so we can update the inTeams accordingly.
+            Attempting to do self.learners.remove(learner) will fail with a ValueError 
+            because once we modify the inTeams it's no longer the same learner. 
+            '''
+            index = self.learners.index(learner)
+            self.learners[index].inTeams.remove(self.id)
+            del self.learners[index]
+            return
+
+        '''
+        TODO log the attempt to remove a learner that doesn't appear in this team
+        '''
+        print("learner not in team")
+        return
 
     """
-    Bulk removes learners from teams.
+    Bulk removes learners from the team.
     """
     def removeLearners(self):
-        for lrnr in list(self.learners):
-            self.removeLearner(lrnr)
+        for learner in self.learners:
+            learner.inTeams.remove(self.id)
+        del self.learners[:]
 
     """
     Number of learners with atomic actions on this team.
