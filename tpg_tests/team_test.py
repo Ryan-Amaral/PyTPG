@@ -1,6 +1,9 @@
 from random import randint
 import unittest
 import copy
+import collections
+import scipy.stats as st
+import math
 
 from numpy.testing._private.utils import assert_equal
 import xmlrunner
@@ -9,6 +12,10 @@ from tpg_tests.test_utils import create_dummy_program, dummy_init_params, create
 
 class TeamTest(unittest.TestCase):
 
+    confidence_level = 95 # Confidence level in mutation probability correctness 95 = 95%
+    confidence_interval = 5 # Confidence interval
+    
+    probabilities = [ 0.1, 0.25, 0.5, 0.66, 0.75, 0.82, 0.9] # probabilities at which to sample mutation functions, no 0 probabilities
 
 
     def test_create_team(self):
@@ -169,6 +176,136 @@ class TeamTest(unittest.TestCase):
 
         # Ensure the number of atomic actions reported by the team is the total - those we made non-atomic
         self.assertEqual(num_learners - random_subset_bound, team.numAtomicActions())
+
+    def test_mutation_delete(self):
+
+
+
+        # Create a team with a random number of learners
+        num_learners = randint(0,256)
+        hi_probability_team, _ = create_dummy_team(num_learners)
+
+        no_atomic_team, _ = create_dummy_team(num_learners)
+        for i in range(0, num_learners):
+            no_atomic_team.learners[i].actionObj.teamAction = -1 # By making the team action not None we have a mock non-atomic action
+
+        self.assertEqual(0, no_atomic_team.numAtomicActions())
+
+        num_learners_before = len(hi_probability_team.learners)
+
+        #Ensure we error out if passing in a probability greater than 1.0
+        with self.assertRaises(Exception) as expected:
+            hi_probability_team.mutation_delete(1.1)
+            msg = expected.exception.args
+            self.assertEqual("pLrnDel is greater than or equal to 1.0!", msg)
+
+        # Ensure nothing was deleted
+        self.assertEqual(num_learners_before, len(hi_probability_team.learners))
+        
+        #Ensure we error out if we have no atomic actions
+        with self.assertRaises(Exception) as expected:
+            no_atomic_team.mutation_delete(0.99)
+
+            # Ensure we spit back the problem team when we error
+            msg, problem_team = expected.exception.args
+            self.assertEqual("Less than one atomic action in team! This shouldn't happen",msg)
+            self.assertTrue(isinstance(problem_team, Team))
+
+        results = {}
+
+        # Create a team with 100 learners
+        template_team, _ = create_dummy_team(100)
+        # Compute samples required to achieve confidence intervals for mutation tests
+        # https://www.statisticshowto.com/probability-and-statistics/find-sample-size/#CI1
+        # https://stackoverflow.com/questions/20864847/probability-to-z-score-and-vice-versa
+        z_a2 = st.uniform.ppf(1-(1-(self.confidence_level/100))/2)
+        margin_of_error = (self.confidence_interval/100)/2
+        mutation_samples = math.ceil(0.25*pow(z_a2/margin_of_error,2)) 
+        mutation_samples = mutation_samples * 2 # Just to be sure
+
+        print('Need {} mutation samples to estabilish {} CL with {} margin of error in mutation probabilities'.format(mutation_samples, self.confidence_level, margin_of_error))
+
+        for i in self.probabilities:
+            print("Testing delete mutation with probability {}".format(i))
+
+
+            # List counting the number of deleted learners over the test samples
+            results[str(i)] = [None] * mutation_samples
+
+            for j in range(0, mutation_samples):
+                #print('sample {}/{} probability={}'.format( j, mutation_samples, i))
+                team = copy.deepcopy(template_team)
+                before = len(team.learners) 
+                
+                # Perform mutation delete
+                team.mutation_delete(i)
+                
+                # Store the number of deleted learners
+                results[str(i)][j] = before - len(team.learners)
+            
+            # Count how often 1 learners where deleted, how often 2 learners were deleted ... etc
+            frequency = collections.Counter(results[str(i)])
+            print(frequency)
+
+            '''
+            Ensure the number of deleted learners conforms to the expected proabilities
+            as given by probability^num_deleted learners. Eg: with a delete probability
+            of 0.5 we expect to delete 2 learers 0.25 or 25% of the time.
+            '''
+            report = {}
+            header_line = "{:<40}".format('num_deleted (X or more) @ probability: {}'.format(i))
+            actual_line = "{:<40}".format("actual")
+            actual_freq_line = "{:<40}".format("actual freqency")
+            expected_line = "{:<40}".format("expected probability")
+            acceptable_error = "{:<40}".format("acceptable error")
+            error_line = "{:<40}".format("error")
+            for num_deleted in range(max(list(frequency.elements()))+1):
+                report[str(num_deleted)] = {}
+
+                occurance = frequency[num_deleted]
+                if num_deleted != 0:
+                    occurance = 0
+                    for cursor in range(num_deleted, max(list(frequency.elements()))+1):
+                        occurance = occurance + frequency[cursor]
+
+
+                report[str(num_deleted)]['occurance'] = occurance
+                report[str(num_deleted)]['actual'] = occurance/mutation_samples
+
+                expected = i
+                for cursor in range(1,num_deleted):
+                    expected *= expected
+                report[str(num_deleted)]['expected'] = expected
+
+            
+
+                
+                header_line = header_line + "\t{:>5}".format(num_deleted)
+                actual_line = actual_line + "\t{:>5}".format(report[str(num_deleted)]['occurance'])
+                actual_freq_line = actual_freq_line + "\t{:>5.4f}".format(report[str(num_deleted)]['actual'])
+                expected_line = expected_line + "\t{:>5.4f}".format(report[str(num_deleted)]['expected'] if num_deleted != 0 else (1-i))
+                acceptable_error = acceptable_error + "\t{:>5.4f}".format((self.confidence_interval/100)*num_deleted if num_deleted != 0 else (self.confidence_interval/100))
+                error_line = error_line + "\t{:>5.4f}".format(abs(report[str(num_deleted)]['actual'] - (report[str(num_deleted)]['expected'] if num_deleted != 0 else (1-i))))
+
+                '''
+                TODO It seems the expected probabilties and the actual ones can deviate sharply when num_deleted > 1. 
+                I expect this is because the margin of error grows equal to the number of successive iterations? But I'm too
+                statistically handicapped to confirm this. 
+                '''
+                if num_deleted == 0:
+                    self.assertAlmostEqual((1-i),report[str(num_deleted)]['actual'],  delta=self.confidence_interval/100)
+                if num_deleted == 1:
+                    self.assertAlmostEqual(report[str(num_deleted)]['expected'],report[str(num_deleted)]['actual'],  delta=(self.confidence_interval/100)*num_deleted)
+
+            print(header_line)
+            print(actual_line)
+            print(actual_freq_line)
+            print(expected_line)
+            print(acceptable_error)
+            print(error_line)
+
+
+
 
 if __name__ == '__main__':
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports'))

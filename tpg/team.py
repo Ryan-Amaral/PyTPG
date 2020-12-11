@@ -86,6 +86,42 @@ class Team:
 
         return num
 
+
+    def mutation_delete(self, probability):
+
+            if probability == 0.0:
+                return
+
+            if probability >= 1.0:
+                # If this were true we'd end up deleting every learner
+                raise Exception("pLrnDel is greater than or equal to 1.0!")
+
+            # delete some learners
+            while flip(probability) and len(self.learners) > 2: # must have >= 2 learners
+                probability *= probability # decrease next chance
+                
+
+                # Freak out if we don't have an atomic action
+                if self.numAtomicActions() < 1:
+                    raise Exception("Less than one atomic action in team! This shouldn't happen", self)
+
+                # If we have more than one learner with an atomic action pick any learner to delete
+                if self.numAtomicActions() > 1:
+                    learner = random.choice(self.learners)
+                else: 
+                    # Otherwise if we only have one, filter it out and pick from the remaining learners
+                    '''
+                    Use filter() to filter a list. 
+                    Call filter(function, iterable) with iterable as a list to get an iterator containing only elements from iterable for which function returns True. 
+                    Call list(iterable) with iterable as the previous result to convert iterable to a list.
+                    '''
+                    valid_choices = list(filter(lambda x: x.isActionAtomic(), self.learners))
+                    learner = random.choice(valid_choices)
+
+                self.removeLearner(learner)
+
+
+
     """
     Mutates the learner set of this team.
     """
