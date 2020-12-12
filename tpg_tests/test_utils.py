@@ -74,3 +74,12 @@ def create_dummy_learner():
         numRegisters=8
     )
     return learner
+
+'''
+Create a list of dummy learners
+'''
+def create_dummy_learners(num_learners=100):
+    learners = []
+    for i in range(num_learners):
+        learners.append(create_dummy_learner())
+    return learners

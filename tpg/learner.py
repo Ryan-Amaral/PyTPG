@@ -105,33 +105,7 @@ class Learner:
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
     """
-    # def __init__(self, initParams, learner=None, program=None, actionObj=None, numRegisters=8,
-    #         nOperations=5, nDestinations=8, inputSize=30720):
 
-    #     if learner is not None:
-    #         self.program = Program(instructions=learner.program.instructions,
-    #             nOperations=nOperations, nDestinations=nDestinations, inputSize=inputSize,
-    #             initParams=initParams)
-    #         self.actionObj = ActionObject(learner.actionObj, initParams=initParams)
-    #         self.registers = np.zeros(len(learner.registers), dtype=float)
-    #     elif program is not None and actionObj is not None:
-    #         self.program = program
-    #         self.actionObj = actionObj
-    #         self.registers = np.zeros(numRegisters, dtype=float)
-
-    #     '''
-    #     TODO What's self.states? 
-    #     '''
-    #     self.states = []
-
-    #     self.numTeamsReferencing = 0 # amount of teams with references to this
-
-    #     self.id = initParams["idCountLearner"]
-    #     initParams["idCountLearner"] += 1
-
-    #     self.genCreate = initParams["generation"]
-
-    #     self.frameNum = 0
 
     """
     Get the bid value, highest gets its action selected.

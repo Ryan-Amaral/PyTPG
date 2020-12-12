@@ -8,7 +8,7 @@ import math
 from numpy.testing._private.utils import assert_equal
 import xmlrunner
 from tpg.team import Team
-from tpg_tests.test_utils import create_dummy_program, dummy_init_params, create_dummy_learner, create_dummy_team
+from tpg_tests.test_utils import create_dummy_program, dummy_init_params, create_dummy_learner, create_dummy_team, create_dummy_learners
 
 class TeamTest(unittest.TestCase):
 
@@ -16,6 +16,15 @@ class TeamTest(unittest.TestCase):
     confidence_interval = 5 # Confidence interval
     
     probabilities = [ 0.1, 0.25, 0.5, 0.66, 0.75, 0.82, 0.9] # probabilities at which to sample mutation functions, no 0 probabilities
+
+    def compute_sample_size(self):
+        # Compute samples required to achieve confidence intervals for mutation tests
+        # https://www.statisticshowto.com/probability-and-statistics/find-sample-size/#CI1
+        # https://stackoverflow.com/questions/20864847/probability-to-z-score-and-vice-versa
+        z_a2 = st.uniform.ppf(1-(1-(self.confidence_level/100))/2)
+        margin_of_error = (self.confidence_interval/100)/2
+        mutation_samples = math.ceil(0.25*pow(z_a2/margin_of_error,2)) 
+        return mutation_samples, margin_of_error
 
 
     def test_create_team(self):
@@ -179,8 +188,6 @@ class TeamTest(unittest.TestCase):
 
     def test_mutation_delete(self):
 
-
-
         # Create a team with a random number of learners
         num_learners = randint(0,256)
         hi_probability_team, _ = create_dummy_team(num_learners)
@@ -215,13 +222,8 @@ class TeamTest(unittest.TestCase):
 
         # Create a team with 100 learners
         template_team, _ = create_dummy_team(100)
-        # Compute samples required to achieve confidence intervals for mutation tests
-        # https://www.statisticshowto.com/probability-and-statistics/find-sample-size/#CI1
-        # https://stackoverflow.com/questions/20864847/probability-to-z-score-and-vice-versa
-        z_a2 = st.uniform.ppf(1-(1-(self.confidence_level/100))/2)
-        margin_of_error = (self.confidence_interval/100)/2
-        mutation_samples = math.ceil(0.25*pow(z_a2/margin_of_error,2)) 
-        mutation_samples = mutation_samples * 2 # Just to be sure
+        
+        mutation_samples, margin_of_error = self.compute_sample_size()
 
         print('Need {} mutation samples to estabilish {} CL with {} margin of error in mutation probabilities'.format(mutation_samples, self.confidence_level, margin_of_error))
 
@@ -238,11 +240,18 @@ class TeamTest(unittest.TestCase):
                 before = len(team.learners) 
                 
                 # Perform mutation delete
-                team.mutation_delete(i)
+                deleted_learners = team.mutation_delete(i)
                 
                 # Store the number of deleted learners
                 results[str(i)][j] = before - len(team.learners)
+                # Ensure the number of returned learners matches the number of deleted learners computed from the size difference
+                self.assertEqual(results[str(i)][j], len(deleted_learners)) 
             
+                # Ensure the deleted learners no longer have the team in their inTeam lists
+                for cursor in deleted_learners:
+                    self.assertNotIn(cursor, team.learners)
+                    self.assertNotIn(team.id, cursor.inTeams)
+
             # Count how often 1 learners where deleted, how often 2 learners were deleted ... etc
             frequency = collections.Counter(results[str(i)])
             print(frequency)
@@ -250,7 +259,7 @@ class TeamTest(unittest.TestCase):
             '''
             Ensure the number of deleted learners conforms to the expected proabilities
             as given by probability^num_deleted learners. Eg: with a delete probability
-            of 0.5 we expect to delete 2 learers 0.25 or 25% of the time.
+            of 0.5 we expect to delete 2 learers 0.25 or 25% of the time...or do we...TODO
             '''
             report = {}
             header_line = "{:<40}".format('num_deleted (X or more) @ probability: {}'.format(i))
@@ -276,7 +285,7 @@ class TeamTest(unittest.TestCase):
                 # Compute consecutive deletion expected probabilities
                 expected = i
                 for cursor in range(1,num_deleted):
-                    expected *= expected
+                    expected *= i
                 report[str(num_deleted)]['expected'] = expected
 
             
@@ -306,7 +315,105 @@ class TeamTest(unittest.TestCase):
             print(acceptable_error)
             print(error_line)
 
+    def test_mutation_add(self):
 
+        # Create several teams with random numbers of learners
+        team_template, learners1 = create_dummy_team(randint(2,256))
+
+        # Create a dummy pool of learners to add from
+        learner_pool = create_dummy_learners()
+
+
+        # Ensure an exception is raised if we add with a probability of 1.0
+        with self.assertRaises(Exception) as expected:
+            team = copy.deepcopy(team_template)
+            team.mutation_add(1.0, learner_pool)
+
+            msg = expected.exception.args
+            self.assertEqual("pLrnAdd is greater than or equal to 1.0!")
+
+        # Ensure nothing is added if we add with a probability of 0
+        team = copy.deepcopy(team_template)
+        original_size = len(team.learners)
+        team.mutation_add(0.0, learner_pool)
+        self.assertEqual(len(team.learners), original_size)
+
+        results = {}
+
+        mutation_samples, margin_of_error = self.compute_sample_size()
+
+        for i in self.probabilities:
+            print("Testing add mutation with probability {}".format(i))
+
+            # List counting the number of added learners over the test sample
+            results[str(i)] = [None] * mutation_samples
+
+            for j in range(0, mutation_samples):
+                team = copy.deepcopy(team_template)
+                before = len(team.learners)
+
+                # Perform mutation add
+                added_learners = team.mutation_add(i, learner_pool)
+
+                # Store the number of added teams
+                results[str(i)][j] = len(team.learners) - before
+
+                # Ensure the number of returned learners matches the number of added learners computed from the size difference
+                self.assertEqual(results[str(i)][j], len(added_learners))
+
+                # Ensure the added learners now have the team in their inTeam list
+                for cursor in added_learners:
+                    self.assertIn(cursor, team.learners)
+                    self.assertIn(team.id, cursor.inTeams)
+
+            frequency = collections.Counter(results[str(i)])
+            print(frequency)
+
+            report = {}
+            header_line = "{:<40}".format('num_added (X or more) @ probability: {}'.format(i))
+            actual_line = "{:<40}".format("actual")
+            actual_freq_line = "{:<40}".format("actual freqency")
+            expected_line = "{:<40}".format("expected probability")
+            acceptable_error = "{:<40}".format("acceptable error")
+            error_line = "{:<40}".format("error")
+
+            for num_added in range(max(list(frequency.elements()))+1):
+                report[str(num_added)] = {}
+
+                # Sum up the frequencies to give the observed frequency of num_added or more learners added
+                occurance = frequency[num_added]
+                if num_added != 0:
+                    occurance = 0
+                    for cursor in range(num_added, max(list(frequency.elements()))+1):
+                        occurance = occurance + frequency[cursor]
+                
+                report[str(num_added)]['occurance'] = occurance
+                report[str(num_added)]['actual'] = occurance/mutation_samples
+
+                # Compute consecutive addition expected probabilities
+                expected  = i
+                for cursor in range(1, num_added):
+                    expected *= i
+                report[str(num_added)]['expected'] = expected
+
+                header_line = header_line + "\t{:>5}".format(num_added)
+                actual_line = actual_line + "\t{:>5}".format(report[str(num_added)]['occurance'])
+                actual_freq_line = actual_freq_line + "\t{:>5.4f}".format(report[str(num_added)]['actual'])
+                expected_line = expected_line + "\t{:>5.4f}".format(report[str(num_added)]['expected'] if num_added != 0 else (1-i))
+                acceptable_error = acceptable_error + "\t{:>5.4f}".format((self.confidence_interval/100)*num_added if num_added != 0 else (self.confidence_interval/100))
+                error_line = error_line + "\t{:>5.4f}".format(abs(report[str(num_added)]['actual'] - (report[str(num_added)]['expected'] if num_added != 0 else (1-i))))
+
+                if num_added == 0:
+                    self.assertAlmostEqual((1-i), report[str(num_added)]['actual'], delta=self.confidence_interval/100)
+                if num_added == 1:
+                    self.assertAlmostEqual(report[str(num_added)]['expected'], report[str(num_added)]['actual'], delta=(self.confidence_interval/100)*num_added)
+
+            print(header_line)
+            print(actual_line)
+            print(actual_freq_line)
+            print(expected_line)
+            print(acceptable_error)
+            print(error_line)
 
 
 if __name__ == '__main__':
