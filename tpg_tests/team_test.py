@@ -262,6 +262,7 @@ class TeamTest(unittest.TestCase):
             for num_deleted in range(max(list(frequency.elements()))+1):
                 report[str(num_deleted)] = {}
 
+                # Sum up the frequencies to give the observed frequency of num_deleted or more learners removed
                 occurance = frequency[num_deleted]
                 if num_deleted != 0:
                     occurance = 0
@@ -272,6 +273,7 @@ class TeamTest(unittest.TestCase):
                 report[str(num_deleted)]['occurance'] = occurance
                 report[str(num_deleted)]['actual'] = occurance/mutation_samples
 
+                # Compute consecutive deletion expected probabilities
                 expected = i
                 for cursor in range(1,num_deleted):
                     expected *= expected
