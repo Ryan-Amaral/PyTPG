@@ -91,6 +91,18 @@ class ActionObject:
 
         return True
 
+    '''
+    Negate __eq__
+    '''
+    def __ne__(self, o: object) -> bool:
+        return not self.__eq__(o)
+
+    def __str__(self):
+        return "TeamAction {} ActionCode: {}".format(
+            self.teamAction if self.teamAction is not None else 'None',
+            self.actionCode if self.actionCode is not None else 'None'
+        )
+
     """
     Returns the action code, and if applicable corresponding real action(s).
     """
@@ -115,14 +127,26 @@ class ActionObject:
         # dereference if old action is team
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing -= 1
+        
+        print("Before mutation: {}".format(self))
 
         # mutate action
         if flip(pActAtom):
             # atomic
-            self.actionCode = random.choice(mutateParams["actionCodes"])
+            '''
+            If we already have an action code make sure not to pick the same one.
+            TODO handle case where there is only 1 action code.
+            '''
+            if self.actionCode is not None:
+                options = list(filter(lambda code: code != self.actionCode,mutateParams["actionCodes"]))
+            else:
+                options = mutateParams["actionCodes"]
+            self.actionCode = random.choice(options)
             self.teamAction = None
         else:
             # team action
             self.teamAction = random.choice([t for t in teams
                     if t is not self.teamAction and t is not parentTeam])
             self.teamAction.numLearnersReferencing += 1
+
+        print("After mutation: {}".format(self))

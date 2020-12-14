@@ -16,6 +16,23 @@ dummy_init_params = {
     'idCountLearner': 0
 }
 
+dummy_mutate_params = {
+    'pProgMut': 0.5,
+    'pActMut': 0.5,
+    'pActAtom': 0.5,
+    'pProgMut': 0.5,
+    'pInstDel': 0.5,
+    'pInstMut': 0.5,
+    'pInstAdd': 0.5,
+    'nOperations': 8,
+    'nDestinations': 8,
+    'inputSize': 8,
+    'actionCodes':[
+        0,1,2,3,4,5,6,7,8,9,10,11
+    ],
+    'pInstSwp':0.5
+}
+
 '''
 Dummy Creates
     These should be used to test constructs other than the ones
@@ -35,7 +52,7 @@ def create_dummy_program():
         maxProgramLength=128,
         nOperations=7,
         nDestinations=8,
-        inputSize=30720,
+        inputSize=8,
         initParams = dummy_init_params
     )
     return program

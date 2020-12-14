@@ -45,12 +45,10 @@ class Team:
         if len(self.learners) != len(o.learners):
             return False
         
-        '''
-        Collection comparison via collection counters
-        https://www.journaldev.com/37089/how-to-compare-two-lists-in-python
-        '''
-        if collections.Counter(self.learners) != collections.Counter(o.learners):
-            return False
+        for l in self.learners:
+            if l not in o.learners:
+                return False
+
         
         '''
         The other object's inLearners must match our own, therefore:
@@ -225,10 +223,32 @@ class Team:
             added_learners.append(learner)
             self.addLearner(learner)
 
-            # Ensure we don't pick the same learner twice
+            # Ensure we don't pick the same learner twice by filtering the learners we've added from the selection pool
             selection_pool = list(filter(lambda x:x not in added_learners, selection_pool))
 
         return added_learners
+
+    '''
+    Iterates through  this team's learners and mutates them with a given probability.
+        - Returns the learners that have mutated
+        - Ensures that if we only have one atomic action the corresponding learner doesn't mutate to a non-atomic action
+    '''
+    def mutation_mutate(self, probability, mutateParams, teams):
+        mutated_learners = []
+
+        for learner in self.learners:
+            if flip(probability):
+                # If we only have one learner with an atomic action and the current learner is it
+                if self.numAtomicActions() == 1 and learner.isActionAtomic():
+                    pActAtom0 = 1.1 # Ensure their action remains atomic
+                else:
+                    # Otherwise let there be a probability that the learner's action is atomic as defined in the mutate params
+                    pActAtom0 = mutateParams['pActAtom']
+
+                mutated_learners.append(learner)
+                learner.mutate(mutateParams, self, teams, pActAtom0)
+
+        return mutated_learners              
 
     """
     Mutates the learner set of this team.
@@ -265,20 +285,5 @@ class Team:
             self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
 
             # give chance to mutate all learners
-            oLearners = list(self.learners)
-            for learner in oLearners:
-                if flip(mutateParams["pLrnMut"]):
-                    if self.numAtomicActions() == 1 and learner.isActionAtomic():
-                        pActAtom0 = 1.1 # action must be kept atomic if only one
-                    else:
-                        pActAtom0 = mutateParams["pActAtom"]
+            self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
 
-                    # must remove then re-add fresh mutated learner
-                    # if created this gen, derefence team it references
-                    if (i > 0 and learner.genCreate == mutateParams["generation"]
-                            and not learner.isActionAtomic()):
-                        learner.getActionTeam().numLearnersReferencing -= 1
-                    self.removeLearner(learner)
-                    newLearner = Learner(mutateParams, learner=learner)
-                    newLearner.mutate(mutateParams, self, teams, pActAtom0)
-                    self.addLearner(newLearner)

@@ -2,6 +2,7 @@ import random
 import numpy as np
 from numba import njit
 import math
+import copy
 from tpg.utils import flip
 
 """
@@ -84,26 +85,18 @@ class Program:
                 regs[dest] = np.finfo(np.float64).max
             elif regs[dest] == np.NINF:
                 regs[dest] = np.finfo(np.float64).min
-
-
-    """
-    Mutates the program, by performing some operations on the instructions.
-    """
-    def mutate(self, mutateParams):
-        # mutations repeatedly, random probably small amount
-        mutated = False
-        while not mutated or flip(mutateParams["pProgMut"]):
-            self.mutateInstructions(mutateParams)
-            mutated = True
+            
 
     """
     Potentially modifies the instructions in a few ways.
     """
-    def mutateInstructions(self, mutateParams):
+    def mutate(self, mutateParams):
+        
+        # Make a copy of our original instructions
+        original_instructions = copy.deepcopy(self.instructions)
 
-        changed = False
-
-        while not changed:
+        # While we haven't changed from our original instructions keep mutating
+        while np.array_equal(self.instructions, original_instructions):
             # maybe delete instruction
             if len(self.instructions) > 1 and flip(mutateParams["pInstDel"]):
                 # delete random row/instruction
@@ -111,7 +104,7 @@ class Program:
                                     random.randint(0, len(self.instructions)-1),
                                     0)
 
-                changed = True
+                
 
             # maybe mutate an instruction (flip a bit)
             if flip(mutateParams["pInstMut"]):
@@ -132,7 +125,7 @@ class Program:
                 # change it
                 self.instructions[idx1, idx2] = random.randint(0, maxVal)
 
-                changed = True
+                
 
             # maybe swap two instructions
             if len(self.instructions) > 1 and flip(mutateParams["pInstSwp"]):
@@ -144,7 +137,7 @@ class Program:
                 self.instructions[idx1] = np.array(self.instructions[idx2])
                 self.instructions[idx2] = tmp
 
-                changed = True
+                
 
             # maybe add instruction
             if flip(mutateParams["pInstAdd"]):
@@ -156,4 +149,6 @@ class Program:
                             random.randint(0, mutateParams["nDestinations"]-1),
                             random.randint(0, mutateParams["inputSize"]-1)),0)
 
-                changed = True
+
+
+                

@@ -2,17 +2,19 @@ from random import randint
 import unittest
 import copy
 import collections
+from unittest import result
 import scipy.stats as st
 import math
+import json
 
 from numpy.testing._private.utils import assert_equal
 import xmlrunner
 from tpg.team import Team
-from tpg_tests.test_utils import create_dummy_program, dummy_init_params, create_dummy_learner, create_dummy_team, create_dummy_learners
+from tpg_tests.test_utils import create_dummy_program, dummy_init_params, dummy_mutate_params, create_dummy_learner, create_dummy_team, create_dummy_learners
 
 class TeamTest(unittest.TestCase):
 
-    confidence_level = 95 # Confidence level in mutation probability correctness 95 = 95%
+    confidence_level = 99 # Confidence level in mutation probability correctness 95 = 95%
     confidence_interval = 5 # Confidence interval
     
     probabilities = [ 0.1, 0.25, 0.5, 0.66, 0.75, 0.82, 0.9] # probabilities at which to sample mutation functions, no 0 probabilities
@@ -186,6 +188,7 @@ class TeamTest(unittest.TestCase):
         # Ensure the number of atomic actions reported by the team is the total - those we made non-atomic
         self.assertEqual(num_learners - random_subset_bound, team.numAtomicActions())
 
+    #@unittest.skip
     def test_mutation_delete(self):
 
         # Create a team with a random number of learners
@@ -285,7 +288,7 @@ class TeamTest(unittest.TestCase):
                 # Compute consecutive deletion expected probabilities
                 expected = i
                 for cursor in range(1,num_deleted):
-                    expected *= i
+                    expected *= pow(i,pow(2,cursor))
                 report[str(num_deleted)]['expected'] = expected
 
             
@@ -305,7 +308,7 @@ class TeamTest(unittest.TestCase):
                 '''
                 if num_deleted == 0:
                     self.assertAlmostEqual((1-i),report[str(num_deleted)]['actual'],  delta=self.confidence_interval/100)
-                if num_deleted == 1:
+                if num_deleted >= 1:
                     self.assertAlmostEqual(report[str(num_deleted)]['expected'],report[str(num_deleted)]['actual'],  delta=(self.confidence_interval/100)*num_deleted)
 
             print(header_line)
@@ -314,7 +317,8 @@ class TeamTest(unittest.TestCase):
             print(expected_line)
             print(acceptable_error)
             print(error_line)
-
+    
+    #@unittest.skip
     def test_mutation_add(self):
 
         # Create several teams with random numbers of learners
@@ -393,7 +397,7 @@ class TeamTest(unittest.TestCase):
                 # Compute consecutive addition expected probabilities
                 expected  = i
                 for cursor in range(1, num_added):
-                    expected *= i
+                    expected *= pow(i,pow(2,cursor))
                 report[str(num_added)]['expected'] = expected
 
                 header_line = header_line + "\t{:>5}".format(num_added)
@@ -405,8 +409,105 @@ class TeamTest(unittest.TestCase):
 
                 if num_added == 0:
                     self.assertAlmostEqual((1-i), report[str(num_added)]['actual'], delta=self.confidence_interval/100)
-                if num_added == 1:
+                if num_added >= 1:
                     self.assertAlmostEqual(report[str(num_added)]['expected'], report[str(num_added)]['actual'], delta=(self.confidence_interval/100)*num_added)
+
+            print(header_line)
+            print(actual_line)
+            print(actual_freq_line)
+            print(expected_line)
+            print(acceptable_error)
+            print(error_line)
+
+    #@unittest.skip
+    def test_mutation_mutate(self):
+
+        # Create a team with num_learners learners
+        num_learners = 5
+        team_template, learners = create_dummy_team(num_learners)
+        aux_team, aux_learners = create_dummy_team(num_learners)
+        aux_team_2, aux_learners_2 = create_dummy_team(num_learners)
+
+        print('Original learner actions')
+        for cursor in learners:
+            print("{}:{}".format( cursor.id, cursor.actionObj))
+
+        team_pool = []
+        team_pool.append(aux_team)
+        team_pool.append(aux_team_2)
+        team_pool.append(team_template)
+
+        mutation_samples, margin_of_error = self.compute_sample_size()
+    
+
+        results = {}
+        print('Need {} mutation samples to establish {} CL with a {} margin of error'.format(mutation_samples, self.confidence_level, margin_of_error))
+
+        for i in self.probabilities:
+            print("Testing mutate mutation with probability {}".format(i))
+
+            # List counting the number of mutated learners over the test
+            results[str(i)] = [None] * mutation_samples
+
+            for j in range(0, mutation_samples):
+                team = copy.deepcopy(team_template)
+
+                # Ensure the copy worked
+                self.assertEqual(team, team_template)
+
+                mutated_learners = team.mutation_mutate(i, dummy_mutate_params, team_pool)
+
+                for cursor in mutated_learners:
+                    '''
+                    Find the mutated learner by id from the template team's learners to get what the learner looked
+                    like before it was mutated.
+                    '''
+                    pre_mutation_learner = next(x for x in team_template.learners if x.id == cursor.id)
+            
+                    # Ensure the mutated learner has changed from it's inital state in the template team
+                    # Meaning it's no longer equal to its past self.
+                    print('checking for mutation in learner {}'.format( pre_mutation_learner.id))
+
+                    
+
+                    self.assertNotEqual(cursor, pre_mutation_learner)    
+                
+                # Count the number of different learners between the template team
+                # and the mutated team
+                diff = 0
+                for learner in team_template.learners:
+                    if learner not in team.learners:
+                        diff += 1
+
+                # Ensure the number of differences corresponds to the length of the mutated_learners list
+                self.assertEqual(diff, len(mutated_learners))
+
+                # Record the number of mutations
+                results[str(i)][j] = diff
+        
+            # Count how often 1 learner was mutated, how often 2 learners were mutated, etc.
+            frequency = collections.Counter(results[str(i)])
+            print(frequency)
+
+            report = {}
+            header_line = "{:<40}".format('num_mutated/{} (X or more) @ probability: {}'.format(num_learners,i))
+            actual_line = "{:<40}".format("actual")
+            actual_freq_line = "{:<40}".format("actual freqency")
+            expected_line = "{:<40}".format("expected probability")
+            acceptable_error = "{:<40}".format("acceptable error")
+            error_line = "{:<40}".format("error")
+            for num_mutated in range(max(list(frequency.elements()))+1):
+                report[str(num_mutated)] = {}
+
+                report[str(num_mutated)]['occurance'] = frequency[num_mutated]
+                report[str(num_mutated)]['actual'] = frequency[num_mutated]/mutation_samples
+                
+                header_line = header_line + "\t{:>5}".format(num_mutated)
+                actual_line = actual_line + "\t{:>5}".format(report[str(num_mutated)]['occurance'])
+                actual_freq_line = actual_freq_line + "\t{:>5.4f}".format(report[str(num_mutated)]['actual'])
+                # expected_line = expected_line + "\t{:>5.4f}".format(report[str(num_mutated)]['expected'] if num_mutated != 0 else (1-i))
+                # acceptable_error = acceptable_error + "\t{:>5.4f}".format((self.confidence_interval/100)*num_mutated if num_mutated != 0 else (self.confidence_interval/100))
+                # error_line = error_line + "\t{:>5.4f}".format(abs(report[str(num_mutated)]['actual'] - (report[str(num_mutated)]['expected'] if num_mutated != 0 else (1-i))))
 
             print(header_line)
             print(actual_line)

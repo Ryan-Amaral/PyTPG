@@ -64,11 +64,11 @@ class Learner:
         # The object's program must be equal to ours
         if self.program != o.program:
             return False
-        
+
         # The object's action object must be equal to ours
         if self.actionObj != o.actionObj:
             return False
-        
+
         '''
         The other object's inTeams must match our own, therefore:
             - len(inTeams) must be equal
@@ -145,10 +145,12 @@ class Learner:
         while not changed:
             # mutate the program
             if flip(mutateParams["pProgMut"]):
+                print('learner {} mutated its program'.format(self.id))
                 changed = True
                 self.program.mutate(mutateParams)
 
             # mutate the action
             if flip(mutateParams["pActMut"]):
+                print('learner {} mutated its action'.format(self.id))
                 changed = True
                 self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)
