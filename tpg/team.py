@@ -255,14 +255,28 @@ class Team:
     """
     def mutate(self, mutateParams, allLearners, teams):
 
-        # repeats of mutation
-        if (mutateParams["generation"] % mutateParams["rampantGen"] == 0 and
-                mutateParams["generation"] > mutateParams["rampantGen"] and mutateParams["rampantGen"] > 0):
-            rampantReps = random.randrange(mutateParams["rampantMin"], mutateParams["rampantMax"])
+        
+        '''
+        With rampant mutations every mutateParams["rampantGen"] generations we do X extra
+        iterations of mutation. Where X is a random number between mutateParams["rampantMin"] 
+        and mutateParams["rampantMax"].
+        '''
+        # Throw an error if rampantMin is undefined but 
+
+        # Throw an error if rampantMin > rampant Max
+        if mutateParams['rampantGen'] != 0 and mutateParams['rampantMin'] > mutateParams['rampantMax']:
+            raise Exception("Min rampant iterations is greater than max rampant iterations!", mutateParams)
+        
+        if (mutateParams["rampantGen"] > 0 and # The rapantGen cannot be 0, as x mod 0 is undefined
+            mutateParams["generation"] % mutateParams["rampantGen"] == 0 and # Determine if this is a rampant generation
+            mutateParams["generation"] > mutateParams["rampantGen"]  # Rampant generations cannot occur before generation passes rampantGen
+            ): 
+            rampantReps = random.randrange(mutateParams["rampantMin"], mutateParams["rampantMax"]) if mutateParams['rampantMin'] < mutateParams['rampantMax'] else mutateParams['rampantMin']
         else:
             rampantReps = 1
 
         # increase diversity by repeating mutations
+
         for i in range(rampantReps):
             
             # delete some learners
@@ -282,8 +296,10 @@ class Team:
             # Filter out learners we just deleted
             selection_pool = list(filter(lambda x: x not in deleted_learners, selection_pool))
             
-            self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
+            added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
 
             # give chance to mutate all learners
-            self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
+            mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
 
+        # return the number of iterations of mutation
+        return rampantReps

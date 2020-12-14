@@ -127,8 +127,6 @@ class ActionObject:
         # dereference if old action is team
         if self.teamAction is not None:
             self.teamAction.numLearnersReferencing -= 1
-        
-        print("Before mutation: {}".format(self))
 
         # mutate action
         if flip(pActAtom):
@@ -148,5 +146,3 @@ class ActionObject:
             self.teamAction = random.choice([t for t in teams
                     if t is not self.teamAction and t is not parentTeam])
             self.teamAction.numLearnersReferencing += 1
-
-        print("After mutation: {}".format(self))
