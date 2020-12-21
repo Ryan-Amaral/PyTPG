@@ -4,6 +4,8 @@ import numpy as np
 from tpg.utils import flip
 import random
 import collections
+import uuid
+import copy
 
 """
 A team has multiple learners, each learner has a program which is executed to
@@ -15,6 +17,8 @@ class Learner:
         self.program = program
         self.actionObj = actionObj
         self.registers = np.zeros(numRegisters, dtype=float)
+
+        self.ancestor = None #By default no ancestor
 
         '''
         TODO What's self.states? 
@@ -33,11 +37,9 @@ class Learner:
         self.frameNum = 0 # Last seen frame is 0
 
         # Assign id from initParams counter
-        self.id = initParams["idCountLearner"]
-        '''
-        TODO is this thread safe?
-        '''
-        initParams["idCountLearner"] += 1 # increment learner params
+        self.id = uuid.uuid4()
+
+        
 
     def numTeamsReferencing(self):
         return len(self.inTeams)
@@ -137,9 +139,20 @@ class Learner:
         return self.actionObj.isAtomic()
 
     """
-    Mutates either the program or the action or both.
+    Mutates either the program or the action or both. 
+    A mutation creates a new instance of the learner, removes it's anscestor and adds itself to the team.
     """
     def mutate(self, mutateParams, parentTeam, teams, pActAtom):
+
+        self.id = uuid.uuid4()
+
+        print('inTeams')
+        for cursor in self.inTeams:
+            print(cursor)
+
+        print('parentId {}'.format(parentTeam.id))
+
+        print('learner has parent in inTeam {}'.format(parentTeam.id in self.inTeams))
 
         changed = False
         while not changed:
@@ -147,10 +160,14 @@ class Learner:
             if flip(mutateParams["pProgMut"]):
 
                 changed = True
-                self.program.mutate(mutateParams)
+                #program.mutate() yields a new instance of program
+                self.program = self.program.mutate(mutateParams)
 
             # mutate the action
             if flip(mutateParams["pActMut"]):
 
                 changed = True
-                self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)
+                #actionObj.mutate yeilds a new instance of actionObj
+                self.actionObj = self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)
+
+        return self

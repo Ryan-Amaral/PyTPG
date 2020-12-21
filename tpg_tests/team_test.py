@@ -6,16 +6,19 @@ from unittest import result
 import scipy.stats as st
 import math
 import json
+import uuid
+
+from tpg.team import Team
 
 from numpy.testing._private.utils import assert_equal
 import xmlrunner
-from tpg.team import Team
+
 from tpg_tests.test_utils import create_dummy_program, dummy_init_params, dummy_mutate_params, create_dummy_learner, create_dummy_team, create_dummy_learners
 
 class TeamTest(unittest.TestCase):
 
     confidence_level = 99 # Confidence level in mutation probability correctness 95 = 95%
-    confidence_interval = 5 # Confidence interval
+    confidence_interval = 5 # Confidence interval (this is padded by 0.05 margin of error when checking probabilities)
     
     probabilities = [ 0.1, 0.25, 0.5, 0.66, 0.75, 0.82, 0.9] # probabilities at which to sample mutation functions, no 0 probabilities
 
@@ -30,7 +33,6 @@ class TeamTest(unittest.TestCase):
 
 
     def test_create_team(self):
-        original_id_count = dummy_init_params['idCountTeam']
 
         # Create the team
         team = Team(dummy_init_params)
@@ -40,8 +42,7 @@ class TeamTest(unittest.TestCase):
         self.assertIsNotNone(team.outcomes)
         self.assertIsNone(team.fitness)
         self.assertEqual(0,team.numLearnersReferencing)
-        self.assertEqual(original_id_count, team.id)
-        self.assertEqual(original_id_count+1, dummy_init_params['idCountTeam'])
+        self.assertIsInstance(team.id, uuid.UUID)
         self.assertEqual(dummy_init_params['generation'], team.genCreate)
 
 
@@ -92,14 +93,6 @@ class TeamTest(unittest.TestCase):
         # Add the first learner
         team.addLearner(l1)
 
-        # Assert that the second learner isn't added as it has an identical program
-        with self.assertRaises(Exception) as expected:
-            team.addLearner(l2)
-
-            # Ensure the raised exception contains the correct message and the learner that triggered it
-            msg, dupLearner = expected.exception.args
-            self.assertEqual("Attempted to add learner whose program already exists in our learner pool", msg)
-            self.assertEqual(dupLearner, l2)
     
     '''
     Verify that the team removes a given learner
@@ -192,14 +185,15 @@ class TeamTest(unittest.TestCase):
     def test_mutation_delete(self):
 
         # Create a team with a random number of learners
-        num_learners = randint(0,256)
+        num_learners = randint(2,20)
         hi_probability_team, _ = create_dummy_team(num_learners)
 
-        no_atomic_team, _ = create_dummy_team(num_learners)
-        for i in range(0, num_learners):
-            no_atomic_team.learners[i].actionObj.teamAction = -1 # By making the team action not None we have a mock non-atomic action
+        one_atomic_team, _ = create_dummy_team(num_learners)
+        for i in range(0, num_learners-1):
+            one_atomic_team.learners[i].actionObj.teamAction = -1 # By making the team action not None we have a mock non-atomic action
 
-        self.assertEqual(0, no_atomic_team.numAtomicActions())
+        self.assertEqual(1, one_atomic_team.numAtomicActions())
+        one_atomic_team.mutation_delete(0.99)
 
         num_learners_before = len(hi_probability_team.learners)
 
@@ -212,23 +206,35 @@ class TeamTest(unittest.TestCase):
         # Ensure nothing was deleted
         self.assertEqual(num_learners_before, len(hi_probability_team.learners))
         
+        no_atomic_team, _ = create_dummy_team(1)
+        no_atomic_team.learners[0].actionObj.teamAction = -1 #Make only learner non-atomic
+
+        # Ensure only learner is not action atomic
+        self.assertFalse(no_atomic_team.learners[0].isActionAtomic())
+        self.assertEqual(0, no_atomic_team.numAtomicActions())
+
         #Ensure we error out if we have no atomic actions
         with self.assertRaises(Exception) as expected:
             no_atomic_team.mutation_delete(0.99)
+
+            print('Expected Exception: {}'.format(expected.exception))
 
             # Ensure we spit back the problem team when we error
             msg, problem_team = expected.exception.args
             self.assertEqual("Less than one atomic action in team! This shouldn't happen",msg)
             self.assertTrue(isinstance(problem_team, Team))
 
+        #Ensure using a probability of 0 returns an empty list of deletions
+        self.assertEqual(0, len(create_dummy_team()[0].mutation_delete(0.0)))
+
         results = {}
 
         # Create a team with 100 learners
-        template_team, _ = create_dummy_team(100)
+        template_team, _ = create_dummy_team(20)
         
         mutation_samples, margin_of_error = self.compute_sample_size()
 
-        print('Need {} mutation samples to estabilish {} CL with {} margin of error in mutation probabilities'.format(mutation_samples, self.confidence_level, margin_of_error))
+        print('Need {} mutation samples to estabilish {} CL with {} margin of error in mutation probabilities'.format(mutation_samples, self.confidence_level, margin_of_error + 0.05))
 
         for i in self.probabilities:
             print("Testing delete mutation with probability {}".format(i))
@@ -288,8 +294,7 @@ class TeamTest(unittest.TestCase):
                 # Compute consecutive deletion expected probabilities
                 expected = i
                 for cursor in range(1,num_deleted):
-                    #expected *= pow(i,pow(2,cursor))
-                    expected *= i
+                    expected *= pow(i, cursor+1)
                 report[str(num_deleted)]['expected'] = expected
 
             
@@ -299,7 +304,7 @@ class TeamTest(unittest.TestCase):
                 actual_line = actual_line + "\t{:>5}".format(report[str(num_deleted)]['occurance'])
                 actual_freq_line = actual_freq_line + "\t{:>5.4f}".format(report[str(num_deleted)]['actual'])
                 expected_line = expected_line + "\t{:>5.4f}".format(report[str(num_deleted)]['expected'] if num_deleted != 0 else (1-i))
-                acceptable_error = acceptable_error + "\t{:>5.4f}".format((self.confidence_interval/100)*num_deleted if num_deleted != 0 else (self.confidence_interval/100))
+                acceptable_error = acceptable_error + "\t{:>5.4f}".format((self.confidence_interval/100) if num_deleted != 0 else (self.confidence_interval/100))
                 error_line = error_line + "\t{:>5.4f}".format(abs(report[str(num_deleted)]['actual'] - (report[str(num_deleted)]['expected'] if num_deleted != 0 else (1-i))))
 
                 '''
@@ -308,10 +313,10 @@ class TeamTest(unittest.TestCase):
                 statistically handicapped to confirm this. 
                 '''
                 if num_deleted == 0:
-                    self.assertAlmostEqual((1-i),report[str(num_deleted)]['actual'],  delta=self.confidence_interval/100)
+                    self.assertAlmostEqual((1-i),report[str(num_deleted)]['actual'],  delta=(self.confidence_interval/100)+0.05)
                 if num_deleted >= 1:
-                #    self.assertAlmostEqual(report[str(num_deleted)]['expected'],report[str(num_deleted)]['actual'],  delta=(self.confidence_interval/100)*num_deleted)
-                    print('')
+                    self.assertAlmostEqual(report[str(num_deleted)]['expected'],report[str(num_deleted)]['actual'],  delta=(self.confidence_interval/100)+0.05)
+
             print(header_line)
             print(actual_line)
             print(actual_freq_line)
@@ -319,11 +324,11 @@ class TeamTest(unittest.TestCase):
             print(acceptable_error)
             print(error_line)
     
-    @unittest.skip
+    #@unittest.skip
     def test_mutation_add(self):
 
         # Create several teams with random numbers of learners
-        team_template, learners1 = create_dummy_team(randint(2,256))
+        team_template, learners1 = create_dummy_team(randint(2,20))
 
         # Create a dummy pool of learners to add from
         learner_pool = create_dummy_learners()
@@ -398,20 +403,20 @@ class TeamTest(unittest.TestCase):
                 # Compute consecutive addition expected probabilities
                 expected  = i
                 for cursor in range(1, num_added):
-                    expected *= pow(i,pow(2,cursor))
+                    expected *= pow(i, cursor+1)
                 report[str(num_added)]['expected'] = expected
 
                 header_line = header_line + "\t{:>5}".format(num_added)
                 actual_line = actual_line + "\t{:>5}".format(report[str(num_added)]['occurance'])
                 actual_freq_line = actual_freq_line + "\t{:>5.4f}".format(report[str(num_added)]['actual'])
                 expected_line = expected_line + "\t{:>5.4f}".format(report[str(num_added)]['expected'] if num_added != 0 else (1-i))
-                acceptable_error = acceptable_error + "\t{:>5.4f}".format((self.confidence_interval/100)*num_added if num_added != 0 else (self.confidence_interval/100))
+                acceptable_error = acceptable_error + "\t{:>5.4f}".format((self.confidence_interval/100) if num_added != 0 else (self.confidence_interval/100))
                 error_line = error_line + "\t{:>5.4f}".format(abs(report[str(num_added)]['actual'] - (report[str(num_added)]['expected'] if num_added != 0 else (1-i))))
 
                 if num_added == 0:
-                    self.assertAlmostEqual((1-i), report[str(num_added)]['actual'], delta=self.confidence_interval/100)
+                    self.assertAlmostEqual((1-i), report[str(num_added)]['actual'], delta=(self.confidence_interval/100)+0.05)
                 if num_added >= 1:
-                    self.assertAlmostEqual(report[str(num_added)]['expected'], report[str(num_added)]['actual'], delta=(self.confidence_interval/100)*num_added)
+                    self.assertAlmostEqual(report[str(num_added)]['expected'], report[str(num_added)]['actual'], delta=(self.confidence_interval/100)+0.05)
 
             print(header_line)
             print(actual_line)
@@ -420,7 +425,7 @@ class TeamTest(unittest.TestCase):
             print(acceptable_error)
             print(error_line)
 
-    @unittest.skip
+    #@unittest.skip
     def test_mutation_mutate(self):
 
         # Create a team with num_learners learners
@@ -428,6 +433,7 @@ class TeamTest(unittest.TestCase):
         team_template, learners = create_dummy_team(num_learners)
         aux_team, aux_learners = create_dummy_team(num_learners)
         aux_team_2, aux_learners_2 = create_dummy_team(num_learners)
+        aux_team_3, aux_learners_3 = create_dummy_team(num_learners)
 
         print('Original learner actions')
         for cursor in learners:
@@ -437,6 +443,17 @@ class TeamTest(unittest.TestCase):
         team_pool.append(aux_team)
         team_pool.append(aux_team_2)
         team_pool.append(team_template)
+
+        atomic_learner = create_dummy_learner()
+        aux_team_3.addLearner(atomic_learner)
+        self.assertIsNone(aux_team_3.learners[0].actionObj.teamAction)
+        mutated_learners_3 = aux_team_3.mutation_mutate(0.99,dummy_mutate_params, team_pool)
+        
+        print("mutated_learners_3[0].actionObj.teamAction")
+        print(mutated_learners_3[0].actionObj.teamAction )
+
+        self.assertIsNone(mutated_learners_3[0].actionObj.teamAction)
+
 
         mutation_samples, margin_of_error = self.compute_sample_size()
     
@@ -456,22 +473,7 @@ class TeamTest(unittest.TestCase):
                 # Ensure the copy worked
                 self.assertEqual(team, team_template)
 
-                mutated_learners = team.mutation_mutate(i, dummy_mutate_params, team_pool)
-
-                for cursor in mutated_learners:
-                    '''
-                    Find the mutated learner by id from the template team's learners to get what the learner looked
-                    like before it was mutated.
-                    '''
-                    pre_mutation_learner = next(x for x in team_template.learners if x.id == cursor.id)
-            
-                    # Ensure the mutated learner has changed from it's inital state in the template team
-                    # Meaning it's no longer equal to its past self.
-                    #print('checking for mutation in learner {}'.format( pre_mutation_learner.id))
-
-                    
-
-                    self.assertNotEqual(cursor, pre_mutation_learner)    
+                mutated_learners = team.mutation_mutate(i, dummy_mutate_params, team_pool)  
                 
                 # Count the number of different learners between the template team
                 # and the mutated team
@@ -522,10 +524,11 @@ class TeamTest(unittest.TestCase):
 
     def test_mutate(self):
 
-        # Generate 3 teams for a mutation test
+        # Generate 4 teams for a mutation test
         alpha_t, alpha_l = create_dummy_team(10)
         beta_t, beta_l = create_dummy_team(10)
         charlie_t, charlie_l = create_dummy_team(10)
+        delta_t, delta_l = create_dummy_team(10)
 
         mutate_params_1 = copy.deepcopy(dummy_mutate_params)
         mutate_params_1['generation'] = 1
@@ -547,8 +550,15 @@ class TeamTest(unittest.TestCase):
         mutate_params_3['rampantMin'] = 3 
         mutate_params_3['rampantMax'] = 3 
 
-        learner_pool = alpha_l + beta_l + charlie_l
-        team_pool = [alpha_t, beta_t, charlie_t]
+        mutate_params_4 = copy.deepcopy(dummy_mutate_params)
+        mutate_params_4['generation'] = 2
+        mutate_params_4['rampantGen'] = 1
+        mutate_params_4['rampantMin'] = 4
+        mutate_params_4['rampantMax'] = 2
+
+
+        learner_pool = alpha_l + beta_l + charlie_l + delta_l
+        team_pool = [alpha_t, beta_t, charlie_t, delta_t]
 
         # Mutate alpha_t
         mutations = alpha_t.mutate(mutate_params_1, learner_pool, team_pool)
@@ -562,7 +572,52 @@ class TeamTest(unittest.TestCase):
         mutations = charlie_t.mutate(mutate_params_3, learner_pool, team_pool)
         self.assertEqual(mutations, mutate_params_3['rampantMin'])
 
+        # Mutate delta_t
+        with self.assertRaises(Exception) as expected:
+            mutations = delta_t.mutate(mutate_params_4, learner_pool, team_pool)
 
+            msg, err_params = expected.exception.args
+
+            self.assertEqual(msg, "Min rampant iterations is greater than max rampant iterations!")
+            self.assertIsNotNone(err_params)
+
+
+    def test_equality(self):
+
+        team1,_ = create_dummy_team()
+        
+
+        # Ensure a learner isn't equal to a team
+        self.assertFalse(team1 == create_dummy_learner())
+
+        # Ensure a team isn't equal if they have different genCreates
+        team2 = copy.deepcopy(team1)
+        team2.genCreate = team1.genCreate + 1
+
+        self.assertFalse(team1 == team2)
+
+        # Ensure teams aren't equal if they have different learners or different numbers of learners
+        team2 = copy.deepcopy(team1)
+        team2.learners.append(create_dummy_learner())
+
+        self.assertFalse(team1 == team2)
+
+        team2 = copy.deepcopy(team1)
+        team2.learners[0].genCreate = team1.learners[0].genCreate + 1
+
+        self.assertFalse(team1 == team2)
+
+        # Ensure teams aren't equal if they have different inLearners
+        team2 = copy.deepcopy(team1)
+        team2.inLearners.append(create_dummy_learner().id)
+
+        self.assertFalse(team1 == team2)
+
+        team1.inLearners.append(create_dummy_learner().id)
+        team2 = copy.deepcopy(team1)
+        team2.inLearners[0] = uuid.uuid4()
+
+        self.assertFalse(team1 == team2)
 
 if __name__ == '__main__':
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports'))

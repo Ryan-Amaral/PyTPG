@@ -4,6 +4,7 @@ from numba import njit
 import math
 import copy
 from tpg.utils import flip
+import uuid
 
 """
 A program that is executed to help obtain the bid for a learner.
@@ -23,8 +24,7 @@ class Program:
                     random.randint(0, inputSize-1))
                 for _ in range(random.randint(1, maxProgramLength))], dtype=np.int32)
 
-        self.id = initParams["idCountProgram"]
-        initParams["idCountProgram"] += 1
+        self.id = uuid.uuid4()
 
     '''
     A program is equal to another object if that object:
@@ -148,6 +148,8 @@ class Program:
                             random.randint(0, mutateParams["nOperations"]-1),
                             random.randint(0, mutateParams["nDestinations"]-1),
                             random.randint(0, mutateParams["inputSize"]-1)),0)
+            
+            return self
 
 
 

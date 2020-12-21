@@ -10,10 +10,7 @@ dummy_init_params = {
     'generation': 0,
     'actionCodes':[
         0,1,2,3,4,5,6,7,8,9,10,11
-    ],
-    'idCountTeam': 0,
-    'idCountProgram': 0,
-    'idCountLearner': 0
+    ]
 }
 
 dummy_mutate_params = {
@@ -33,7 +30,8 @@ dummy_mutate_params = {
     'actionCodes':[
         0,1,2,3,4,5,6,7,8,9,10,11
     ],
-    'pInstSwp':0.5
+    'pInstSwp':0.5,
+    'generation': 1
 }
 
 '''

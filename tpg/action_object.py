@@ -2,6 +2,7 @@ from logging import fatal
 
 import numpy as np
 import random
+import copy 
 from tpg.utils import flip
 
 """
@@ -124,9 +125,7 @@ class ActionObject:
     Change action to team or atomic action.
     """
     def mutate(self, mutateParams, parentTeam, teams, pActAtom):
-        # dereference if old action is team
-        if self.teamAction is not None:
-            self.teamAction.numLearnersReferencing -= 1
+
 
         # mutate action
         if flip(pActAtom):
@@ -145,4 +144,6 @@ class ActionObject:
             # team action
             self.teamAction = random.choice([t for t in teams
                     if t is not self.teamAction and t is not parentTeam])
-            self.teamAction.numLearnersReferencing += 1
+        
+        return self
+            

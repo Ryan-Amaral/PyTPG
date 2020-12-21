@@ -1,7 +1,10 @@
+
+import uuid
 from tpg.utils import flip
 from tpg.learner import Learner
 import random
 import collections
+import copy
 
 """
 The main building block of TPG. Each team has multiple learning which decide the
@@ -15,8 +18,8 @@ class Team:
         self.fitness = None
         self.numLearnersReferencing = 0 # number of learners that reference this
         self.inLearners = [] # ids of learners referencing this team
-        self.id = initParams["idCountTeam"]
-        initParams["idCountTeam"] += 1
+        self.id = uuid.uuid4()
+
         self.genCreate = initParams["generation"]
 
     '''
@@ -91,9 +94,6 @@ class Team:
     """
     def addLearner(self, learner=None):
         program = learner.program
-        # don't add duplicate program
-        if any([lrnr.program == program for lrnr in self.learners]):
-            raise Exception("Attempted to add learner whose program already exists in our learner pool", learner)
 
         self.learners.append(learner)
         learner.inTeams.append(self.id) # Add this team's id to the list of teams that reference the learner
@@ -147,9 +147,9 @@ class Team:
         - Returns immediately if the probability of deletion is 0.0
         - Raises an exception if the probability of deleition is 1.0 or greater as that would
           simply remove most learners from the team.
-        - Probability to delete compounds, that is, if the given probability of delition is 0.5
-          there is a 0.5 * 0.5 probability of 2 learners being erased. 
-          0.25 * 0.5 probability of 3 learners being erased, and so on.
+        - Probability to delete compounds, that is, if the given probability of deletion is 0.5
+          there is a 0.5 * (0.5)^2 probability of 2 learners being erased. 
+          0.5 * (0.5)^2 * (0.5)^3 probability of 3 learners being erased, and so on.
         - Will not delete any learners if there are 2 or fewer learners on the team
         - Verifies that there is always at least one learner pointing to an atomic action on a team
           raises an exception otherwise.
@@ -168,15 +168,17 @@ class Team:
                 # If this were true we'd end up deleting every learner
                 raise Exception("pLrnDel is greater than or equal to 1.0!")
 
+            # Freak out if we don't have an atomic action
+            if self.numAtomicActions() < 1:
+                raise Exception("Less than one atomic action in team! This shouldn't happen", self)
+
+
             deleted_learners = []
 
             # delete some learners
             while flip(probability) and len(self.learners) > 2: # must have >= 2 learners
                 probability *= original_probability # decrease next chance
 
-                # Freak out if we don't have an atomic action
-                if self.numAtomicActions() < 1:
-                    raise Exception("Less than one atomic action in team! This shouldn't happen", self)
 
                 # If we have more than one learner with an atomic action pick any learner to delete
                 if self.numAtomicActions() > 1:
@@ -188,7 +190,7 @@ class Team:
                     Call filter(function, iterable) with iterable as a list to get an iterator containing only elements from iterable for which function returns True. 
                     Call list(iterable) with iterable as the previous result to convert iterable to a list.
                     '''
-                    valid_choices = list(filter(lambda x: x.isActionAtomic(), self.learners))
+                    valid_choices = list(filter(lambda x: not x.isActionAtomic(), self.learners))
                     learner = random.choice(valid_choices)
 
                 deleted_learners.append(learner)
@@ -203,6 +205,9 @@ class Team:
         - Returns immediately if the probability of addition is 0.0
         - Raises an exception if the probability of addition is 1.0 or greater
         - Returns immediately if the selection pool is empty
+        - Probability to add compounds, that is, if the given probability of addition is 0.5
+          there is a 0.5 * (0.5)^2 probability of 2 learners being added. 
+          0.5 * (0.5)^2 * (0.5)^3 probability of 3 learners being added, and so on.
     '''
     def mutation_add(self, probability, selection_pool):
         original_probability = float(probability)
@@ -245,8 +250,11 @@ class Team:
                     # Otherwise let there be a probability that the learner's action is atomic as defined in the mutate params
                     pActAtom0 = mutateParams['pActAtom']
 
-                mutated_learners.append(learner)
-                learner.mutate(mutateParams, self, teams, pActAtom0)
+                mutated_learners.append(learner.mutate(mutateParams, self, teams, pActAtom0))
+
+        # Add all the mutated learners
+        for cursor in mutated_learners:
+            self.addLearner(cursor)
 
         return mutated_learners              
 
@@ -255,6 +263,8 @@ class Team:
     """
     def mutate(self, mutateParams, allLearners, teams):
 
+
+        self.learners = copy.deepcopy(self.learners)
         
         '''
         With rampant mutations every mutateParams["rampantGen"] generations we do X extra
@@ -303,3 +313,5 @@ class Team:
 
         # return the number of iterations of mutation
         return rampantReps
+
+    
