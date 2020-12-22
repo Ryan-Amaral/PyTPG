@@ -31,6 +31,7 @@ class ActionObject:
         '''
         if isinstance(action, Team):
             self.teamAction = action
+    
 
         # The action is another action object
         if isinstance(action, ActionObject):
@@ -110,7 +111,6 @@ class ActionObject:
     def getAction(self, state, visited, actVars=None):
         if self.teamAction is not None:
             # action from team
-            print('team act')
             return self.teamAction.act(state, visited, actVars=actVars)
         else:
             # atomic action
@@ -125,7 +125,7 @@ class ActionObject:
     """
     Change action to team or atomic action.
     """
-    def mutate(self, mutateParams, parentTeam, teams, pActAtom):
+    def mutate(self, mutateParams, parentTeam, teams, pActAtom, learner_id):
 
 
         # mutate action
@@ -140,11 +140,18 @@ class ActionObject:
             else:
                 options = mutateParams["actionCodes"]
             self.actionCode = random.choice(options)
+
+            # If we previously pointed to a team, remove our learner from the list of learners who point to them
+            if self.teamAction is not None and not -1: # We use -1 in unit tests don't touch this
+                self.teamAction.inLearners.remove(str(learner_id))
+
             self.teamAction = None
         else:
             # team action
             self.teamAction = random.choice([t for t in teams
                     if t is not self.teamAction and t is not parentTeam])
+            # Add the learner to the team's in learers
+            self.teamAction.inLearners.append(str(learner_id))
         
         return self
             

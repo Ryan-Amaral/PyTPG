@@ -8,6 +8,7 @@ import math
 import json
 import uuid
 import numpy as np
+import pprint
 
 from tpg.team import Team
 
@@ -119,7 +120,7 @@ class TeamTest(unittest.TestCase):
         
         # Ensure the learner about to be removed has the team removing it in its inTeams list
         reference_to_removed_learner = team.learners[random_index_in_learners]
-        self.assertTrue(team.id in reference_to_removed_learner.inTeams)
+        self.assertTrue(str(team.id) in reference_to_removed_learner.inTeams)
 
         team.removeLearner(selected_learner)
 
@@ -143,7 +144,7 @@ class TeamTest(unittest.TestCase):
 
         # Ensure the learner that has been removed from the team no longer has the team's id in it's inTeams list
         print("reference to removed inTeams: {}".format(reference_to_removed_learner.inTeams))
-        self.assertFalse(team.id in reference_to_removed_learner.inTeams)
+        self.assertFalse(str(team.id) in reference_to_removed_learner.inTeams)
 
     '''
     Verify that removing all learners from a team does so, without 
@@ -533,7 +534,7 @@ class TeamTest(unittest.TestCase):
         # Generate 4 teams for a mutation test
         alpha_t, alpha_l = create_dummy_team(10)
         beta_t, beta_l = create_dummy_team(10)
-        charlie_t, charlie_l = create_dummy_team(10)
+        charlie_t, charlie_l = create_dummy_team(100)
         delta_t, delta_l = create_dummy_team(10)
 
         mutate_params_1 = copy.deepcopy(dummy_mutate_params)
@@ -551,6 +552,8 @@ class TeamTest(unittest.TestCase):
         mutate_params_3 = copy.deepcopy(dummy_mutate_params)
         mutate_params_3['generation'] = 2
         mutate_params_3['rampantGen'] = 1 # Rampancy every generation
+        mutate_params_3['pLrnDel'] = 0.9
+        mutate_params_3['pLrnAdd'] = 0.9
 
         # 3 iterations of mutation every generation
         mutate_params_3['rampantMin'] = 3 
@@ -567,25 +570,31 @@ class TeamTest(unittest.TestCase):
         team_pool = [alpha_t, beta_t, charlie_t, delta_t]
 
         # Mutate alpha_t
-        mutations = alpha_t.mutate(mutate_params_1, learner_pool, team_pool)
+        mutations, delta = alpha_t.mutate(mutate_params_1, learner_pool, team_pool)
         self.assertEqual(1, mutations)
 
         # Mutate beta_t
-        mutations = beta_t.mutate(mutate_params_2, learner_pool, team_pool)
+        mutations, delta = beta_t.mutate(mutate_params_2, learner_pool, team_pool)
         self.assertTrue(mutations >= mutate_params_2['rampantMin'] and mutations <= mutate_params_2['rampantMax'])
 
         # Mutate charlie_t
-        mutations = charlie_t.mutate(mutate_params_3, learner_pool, team_pool)
+        mutations, delta = charlie_t.mutate(mutate_params_3, learner_pool, team_pool)
         self.assertEqual(mutations, mutate_params_3['rampantMin'])
+
+        pp = pprint.PrettyPrinter(indent=4)
+
+        pp.pprint(delta)
 
         # Mutate delta_t
         with self.assertRaises(Exception) as expected:
-            mutations = delta_t.mutate(mutate_params_4, learner_pool, team_pool)
+            mutations, delta = delta_t.mutate(mutate_params_4, learner_pool, team_pool)
 
             msg, err_params = expected.exception.args
 
             self.assertEqual(msg, "Min rampant iterations is greater than max rampant iterations!")
             self.assertIsNotNone(err_params)
+
+        
 
 
     def test_equality(self):
@@ -648,7 +657,7 @@ class TeamTest(unittest.TestCase):
         for cursor in learners:
             bid = cursor.bid(state=state)
 
-            if top_bid < bid:
+            if top_bid <= bid:
                 top_bid = bid
                 top_learner = cursor
 
@@ -699,6 +708,84 @@ class TeamTest(unittest.TestCase):
             # Ensure team_1 string uuid appears in visited set
             self.assertIn(str(team_1.id), visited)
 
+    '''
+    Test that, given some mutations, we correctly track the number of references
+    between teams and learners.
+    '''
+    def test_reference_tracking(self):
+        # Setup pretty printer
+        pp = pprint.PrettyPrinter(indent=4)
+
+        # Generate 4 teams for a mutation test
+        alpha_t, alpha_l = create_dummy_team(10)
+        beta_t, beta_l = create_dummy_team(10)
+        charlie_t, charlie_l = create_dummy_team(10)
+        delta_t, delta_l = create_dummy_team(10)
+
+        mutate_params_3 = copy.deepcopy(dummy_mutate_params)
+        mutate_params_3['generation'] = 2
+        mutate_params_3['rampantGen'] = 0 # No rampancy
+        mutate_params_3['pLrnDel'] = 0.9
+        mutate_params_3['pLrnAdd'] = 0.9
+
+        learner_pool = alpha_l + beta_l + charlie_l + delta_l
+        team_pool = [alpha_t, beta_t, charlie_t, delta_t]
+
+        print("Before")
+        for cursor in team_pool:
+            print("{} inLearners length: {} ".format(str(cursor.id),len(cursor.inLearners)))
+            for inner_cursor in cursor.inLearners:
+                print(inner_cursor)
+
+        mutations_1, delta_1 = charlie_t.mutate(mutate_params_3, learner_pool, team_pool)
+        learner_pool += delta_1[0]['added_learners']
+        mutations_2, delta_2 = alpha_t.mutate(mutate_params_3, learner_pool, team_pool)
+        learner_pool += delta_2[0]['added_learners']
+        mutations_3, delta_3 = beta_t.mutate(mutate_params_3, learner_pool, team_pool)
+        learner_pool += delta_3[0]['added_learners']
+        mutations_4, delta_4 = delta_t.mutate(mutate_params_3, learner_pool, team_pool)
+
+        
+        pp.pprint(delta_1)
+        pp.pprint(delta_2)
+        pp.pprint(delta_3)
+        pp.pprint(delta_4)
+
+        print("After")
+        for cursor in team_pool:
+            print("{} inLearners length: {} ".format(str(cursor.id),len(cursor.inLearners)))
+            for inner_cursor in cursor.inLearners:
+                print(inner_cursor)
+
+
+        all_learners = alpha_t.learners + beta_t.learners + charlie_t.learners + delta_t.learners
+        
+
+        all_teams = team_pool
+
+        self.assertEqual(len(all_teams), len(team_pool))
+
+        # For every inLearner mentioned in a team, ensure that learner exists and points to the team
+        for cursor in all_teams:
+            for inner_cursor in cursor.inLearners:
+                target_learners = [x for x in all_learners if str(x.id) == inner_cursor]
+                print("target learners: {}".format(len(target_learners)))
+                if len(target_learners) == 0:
+                    print("could not find learner {} mentioned by team {}".format( str(inner_cursor), str(cursor.id)))
+                target_learner = target_learners[0]
+                self.assertIsNotNone(target_learner)
+                self.assertIsNotNone(target_learner.actionObj.teamAction)
+                self.assertEqual(target_learner.actionObj.teamAction, cursor)
+
+        # For every inTeam mentioned in a learner, ensure that team exists and has the learner in its list of learners
+        for cursor in all_learners:
+            for inner_cursor in cursor.inTeams:
+                target_teams = [x for x in all_teams if str(x.id) == str(inner_cursor)]
+                if len(target_teams) == 0:
+                    print("somehow team {} mentioned by learner {} does not exist...".format(inner_cursor, str(cursor.id)))
+                target_team = target_teams[0]
+                self.assertIsNotNone(target_team)
+                self.assertIn(cursor, target_team.learners)
 
 
 if __name__ == '__main__':

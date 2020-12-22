@@ -82,7 +82,6 @@ class Team:
     """
     def act(self, state, visited=set(), actVars=None):
         visited.add(str(self.id)) # track visited teams
-        print('acted')
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
@@ -96,7 +95,7 @@ class Team:
         program = learner.program
 
         self.learners.append(learner)
-        learner.inTeams.append(self.id) # Add this team's id to the list of teams that reference the learner
+        learner.inTeams.append(str(self.id)) # Add this team's id to the list of teams that reference the learner
 
         return True
 
@@ -113,8 +112,16 @@ class Team:
             because once we modify the inTeams it's no longer the same learner. 
             '''
             index = self.learners.index(learner)
-            self.learners[index].inTeams.remove(self.id)
+            target_learner = self.learners[index]
+            target_learner.inTeams.remove(str(self.id))
             del self.learners[index]
+
+            # If that learner is pointed to by no other teams, remove it entirely
+            if len(target_learner.inTeams) == 0:
+                # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
+                if target_learner.actionObj.teamAction != None and target_learner.actionObj.teamAction != -1:
+                    target_learner.actionObj.teamAction.inLearners.remove(str(target_learner.id))
+                del target_learner
             return
 
         '''
@@ -128,7 +135,13 @@ class Team:
     """
     def removeLearners(self):
         for learner in self.learners:
-            learner.inTeams.remove(self.id)
+            learner.inTeams.remove(str(self.id))
+            # If that learner is pointed to by no other teams, remove it entirely
+            if len(learner.inTeams) == 0:
+                # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
+                if learner.actionObj.teamAction != None and learner.actionObj.teamAction != -1:
+                    learner.actionObj.teamAction.inLearners.remove(str(learner.id))
+                del learner
         del self.learners[:]
 
     """
@@ -173,7 +186,7 @@ class Team:
                 raise Exception("Less than one atomic action in team! This shouldn't happen", self)
 
 
-            deleted_learners = []
+            deleted_learners = list()
 
             # delete some learners
             while flip(probability) and len(self.learners) > 2: # must have >= 2 learners
@@ -220,7 +233,7 @@ class Team:
             # If this were true, we'd end up adding the entire selection pool
             raise Exception("pLrnAdd is greater than or equal to 1.0!")
 
-        added_learners = []   
+        added_learners = list()   
         while flip(probability):
             probability *= original_probability # decrease next chance
 
@@ -312,6 +325,8 @@ class Team:
 
         # increase diversity by repeating mutations
 
+        mutation_delta = {}
+
         for i in range(rampantReps):
             
             # delete some learners
@@ -336,7 +351,13 @@ class Team:
             # give chance to mutate all learners
             mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
 
+            # Compile mutation_delta for this iteration
+            mutation_delta[i] = {} 
+            mutation_delta[i]['deleted_learners'] = deleted_learners
+            mutation_delta[i]['added_learners'] = added_learners
+            mutation_delta[i]['mutated_learners'] = mutated_learners
+
         # return the number of iterations of mutation
-        return rampantReps
+        return rampantReps, mutation_delta
 
     

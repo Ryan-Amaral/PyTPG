@@ -39,6 +39,12 @@ class Learner:
         # Assign id from initParams counter
         self.id = uuid.uuid4()
 
+        # If we point to a team, ensure we're in that team's inLearners
+        if not self.actionObj.isAtomic():
+            if str(self.id) not in self.actionObj.teamAction.inLearners:
+                self.actionObj.teamAction.inLearners.append(str(self.id))
+            
+
         
 
     def numTeamsReferencing(self):
@@ -171,6 +177,6 @@ class Learner:
 
                 changed = True
                 #actionObj.mutate yeilds a new instance of actionObj
-                self.actionObj = self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)
+                self.actionObj = self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom, learner_id=self.id)
 
         return self
