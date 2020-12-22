@@ -110,6 +110,7 @@ class ActionObject:
     def getAction(self, state, visited, actVars=None):
         if self.teamAction is not None:
             # action from team
+            print('team act')
             return self.teamAction.act(state, visited, actVars=actVars)
         else:
             # atomic action

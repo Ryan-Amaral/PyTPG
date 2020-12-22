@@ -1,4 +1,6 @@
 import random
+import numpy as np
+
 
 from tpg.learner import Learner
 from tpg.action_object import ActionObject
@@ -53,7 +55,7 @@ def create_dummy_program():
         maxProgramLength=128,
         nOperations=7,
         nDestinations=8,
-        inputSize=8,
+        inputSize=100,
         initParams = dummy_init_params
     )
     return program
@@ -82,6 +84,13 @@ def create_dummy_action_object():
     return action_object
 
 '''
+Create a dummy action object with a given team
+'''
+def create_dummy_team_action(team):
+    action_object = ActionObject(team, initParams=dummy_init_params)
+    return action_object
+
+'''
 Create a dummy learner with some preset values
 '''
 def create_dummy_learner():
@@ -101,3 +110,16 @@ def create_dummy_learners(num_learners=100):
     for i in range(num_learners):
         learners.append(create_dummy_learner())
     return learners
+
+"""
+Transform visual input from ALE to flat vector.
+inState should be made int32 before passing in.
+"""
+def getStateALE(inState):
+    # each row is all 1 color
+    rgbRows = np.reshape(inState,(len(inState[0])*len(inState), 3)).T
+
+    # add each with appropriate shifting
+    # get RRRRRRRR GGGGGGGG BBBBBBBB
+    return np.add(np.left_shift(rgbRows[0], 16),
+        np.add(np.left_shift(rgbRows[1], 8), rgbRows[2]))

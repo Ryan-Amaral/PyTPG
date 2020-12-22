@@ -7,13 +7,14 @@ import scipy.stats as st
 import math
 import json
 import uuid
+import numpy as np
 
 from tpg.team import Team
 
 from numpy.testing._private.utils import assert_equal
 import xmlrunner
 
-from tpg_tests.test_utils import create_dummy_program, dummy_init_params, dummy_mutate_params, create_dummy_learner, create_dummy_team, create_dummy_learners
+from tpg_tests.test_utils import create_dummy_program, create_dummy_team_action,getStateALE, dummy_init_params, dummy_mutate_params, create_dummy_learner, create_dummy_team, create_dummy_learners
 
 class TeamTest(unittest.TestCase):
 
@@ -433,7 +434,8 @@ class TeamTest(unittest.TestCase):
         team_template, learners = create_dummy_team(num_learners)
         aux_team, aux_learners = create_dummy_team(num_learners)
         aux_team_2, aux_learners_2 = create_dummy_team(num_learners)
-        aux_team_3, aux_learners_3 = create_dummy_team(num_learners)
+        #Test that we don't mutate away the only atomic action
+        aux_team_3, aux_learners_3 = create_dummy_team(num_learners) 
 
         print('Original learner actions')
         for cursor in learners:
@@ -444,15 +446,27 @@ class TeamTest(unittest.TestCase):
         team_pool.append(aux_team_2)
         team_pool.append(team_template)
 
-        atomic_learner = create_dummy_learner()
-        aux_team_3.addLearner(atomic_learner)
-        self.assertIsNone(aux_team_3.learners[0].actionObj.teamAction)
-        mutated_learners_3 = aux_team_3.mutation_mutate(0.99,dummy_mutate_params, team_pool)
-        
-        print("mutated_learners_3[0].actionObj.teamAction")
-        print(mutated_learners_3[0].actionObj.teamAction )
+        # Remove all learners from aux_team_3
+        aux_team_3.removeLearners()
 
-        self.assertIsNone(mutated_learners_3[0].actionObj.teamAction)
+        # Ensure deletion
+        self.assertEqual(0, len(aux_team_3.learners))
+
+        # Create a single atomic action learner
+        atomic_learner = create_dummy_learner()
+
+        # Ensure created learner's action object is atomic
+        self.assertTrue(atomic_learner.isActionAtomic())
+
+        # Add it to aux_team_3
+        aux_team_3.addLearner(atomic_learner)
+        
+        # Ensure there is only 1 atomic action on the team now
+        self.assertEqual(1, aux_team_3.numAtomicActions())
+
+        mutated_learners_3 = aux_team_3.mutation_mutate(1.0,dummy_mutate_params, team_pool)
+        
+        self.assertIsNone(aux_team_3.learners[0].actionObj.teamAction)
 
 
         mutation_samples, margin_of_error = self.compute_sample_size()
@@ -470,23 +484,15 @@ class TeamTest(unittest.TestCase):
             for j in range(0, mutation_samples):
                 team = copy.deepcopy(team_template)
 
+                self.assertEqual(num_learners, len(team.learners))
+
                 # Ensure the copy worked
                 self.assertEqual(team, team_template)
 
                 mutated_learners = team.mutation_mutate(i, dummy_mutate_params, team_pool)  
-                
-                # Count the number of different learners between the template team
-                # and the mutated team
-                diff = 0
-                for learner in team_template.learners:
-                    if learner not in team.learners:
-                        diff += 1
-
-                # Ensure the number of differences corresponds to the length of the mutated_learners list
-                self.assertEqual(diff, len(mutated_learners))
 
                 # Record the number of mutations
-                results[str(i)][j] = diff
+                results[str(i)][j] = len(mutated_learners.items())
         
             # Count how often 1 learner was mutated, how often 2 learners were mutated, etc.
             frequency = collections.Counter(results[str(i)])
@@ -501,7 +507,7 @@ class TeamTest(unittest.TestCase):
             floor = math.floor(num_learners * i)
             ceiling = math.ceil(num_learners * i)
 
-            for num_mutated in range(max(list(frequency.elements()))+1):
+            for num_mutated in range(len(team_template.learners)):
                 report[str(num_mutated)] = {}
 
                 report[str(num_mutated)]['occurance'] = frequency[num_mutated]
@@ -511,7 +517,6 @@ class TeamTest(unittest.TestCase):
                 actual_line = actual_line + "\t{:>5}".format(report[str(num_mutated)]['occurance'])
                 actual_freq_line = actual_freq_line + "\t{:>5.4f}".format(report[str(num_mutated)]['actual'])
                 
-
                 # Ensure number of mutations is concentrated at probability * number of learners
                 if num_mutated != floor and num_mutated != ceiling:
                     self.assertLessEqual(report[str(num_mutated)]['actual'] , (frequency[floor]/mutation_samples) + (frequency[ceiling]/mutation_samples))
@@ -522,6 +527,7 @@ class TeamTest(unittest.TestCase):
             print(actual_line)
             print(actual_freq_line)
 
+    #@unittest.skip
     def test_mutate(self):
 
         # Generate 4 teams for a mutation test
@@ -618,6 +624,82 @@ class TeamTest(unittest.TestCase):
         team2.inLearners[0] = uuid.uuid4()
 
         self.assertFalse(team1 == team2)
+
+        # Test __ne__
+        self.assertTrue(team1 != team2)
+
+
+    def test_act(self):
+        
+        # Test that the top bid is selected during an action
+        '''
+        Create a random state. Note the random state should be run through
+        getStateALE as it would during an actual atari game, and must follow
+        the format (screen_width, screen_height, num_color_channels) where
+        num_color channels should always be 3.
+        '''
+        random_state = np.random.randint(20, size=(5,5,3), dtype=np.int32)
+        state = getStateALE(random_state)
+
+        team, learners = create_dummy_team()
+
+        top_bid = -1
+        top_learner = None
+        for cursor in learners:
+            bid = cursor.bid(state=state)
+
+            if top_bid < bid:
+                top_bid = bid
+                top_learner = cursor
+
+        action = team.act(state=state)
+
+        self.assertEqual(top_learner.getAction(state=state, visited=set()), action)
+
+    def test_recursive_act(self):
+
+        # Test that act doesn't revisit teams
+        team_1, learners_1 = create_dummy_team()
+        team_2, learners_2 = create_dummy_team()
+
+
+        # Every learner in team 1 must point to team_2
+        for cursor in learners_1:
+            cursor.actionObj.teamAction = team_2
+            cursor.actionObj.actionCode = None
+        
+        # Every learner in team 2 must point to team_1
+        for cursor in learners_2:
+            cursor.actionObj.teamAction = team_1
+            cursor.actionObj.actionCode = None
+
+        # No atomic actions anywhere
+        self.assertEqual(0,team_1.numAtomicActions())
+        self.assertEqual(0,team_2.numAtomicActions())
+
+        '''
+        Create a random state. Note the random state should be run through
+        getStateALE as it would during an actual atari game, and must follow
+        the format (screen_width, screen_height, num_color_channels) where
+        num_color channels should always be 3.
+        '''
+        random_state = np.random.randint(20, size=(5,5,3), dtype=np.int32)
+        state = getStateALE(random_state)
+        
+        # Ensure a value error is raised, as there should be no possible action here.
+        with self.assertRaises(ValueError) as expected:
+
+            visited = set()
+
+            action = team_1.act(state=state, visited=visited)
+
+            # Ensure error is raised
+            self.assertIsNotNone(expected.exception)
+
+            # Ensure team_1 string uuid appears in visited set
+            self.assertIn(str(team_1.id), visited)
+
+
 
 if __name__ == '__main__':
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports'))

@@ -60,6 +60,7 @@ class Program:
             else:
                 src = inpt[srcs[i]%inptLen]
 
+
             # get data for operation
             op = ops[i]
             x = regs[dsts[i]]
@@ -94,6 +95,9 @@ class Program:
         
         # Make a copy of our original instructions
         original_instructions = copy.deepcopy(self.instructions)
+
+        # Since we're mutating change our id
+        self.id = uuid.uuid4()
 
         # While we haven't changed from our original instructions keep mutating
         while np.array_equal(self.instructions, original_instructions):

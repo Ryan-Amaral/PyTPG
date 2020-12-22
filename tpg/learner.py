@@ -14,8 +14,8 @@ produce the bid value for this learner's action.
 class Learner:
 
     def __init__(self, initParams, program, actionObj, numRegisters):
-        self.program = program
-        self.actionObj = actionObj
+        self.program = copy.deepcopy(program) #Each learner should have their own copy of the program
+        self.actionObj = copy.deepcopy(actionObj) #Each learner should have their own copy of the action object
         self.registers = np.zeros(numRegisters, dtype=float)
 
         self.ancestor = None #By default no ancestor
@@ -51,6 +51,7 @@ class Learner:
         - has an identical program
         - has the same action object
         - has the same inTeams
+        - has the same id
 
     '''
     def __eq__(self, o: object) -> bool:
@@ -84,6 +85,10 @@ class Learner:
         https://www.journaldev.com/37089/how-to-compare-two-lists-in-python
         '''
         if collections.Counter(self.inTeams) != collections.Counter(o.inTeams):
+            return False
+
+        # The other object's id must be equal to ours
+        if self.id != o.id:
             return False
         
         return True
@@ -144,16 +149,14 @@ class Learner:
     """
     def mutate(self, mutateParams, parentTeam, teams, pActAtom):
 
-        self.id = uuid.uuid4()
 
-        print('inTeams')
-        for cursor in self.inTeams:
-            print(cursor)
+        #print('inTeams')
+        #for cursor in self.inTeams:
+        #    print(cursor)
 
-        print('parentId {}'.format(parentTeam.id))
+        #print('parentId {}'.format(parentTeam.id))
 
-        print('learner has parent in inTeam {}'.format(parentTeam.id in self.inTeams))
-
+        #print('learner has parent in inTeam {}'.format(parentTeam.id in self.inTeams))
         changed = False
         while not changed:
             # mutate the program

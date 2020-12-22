@@ -81,10 +81,10 @@ class Team:
     Returns an action to use based on the current state.
     """
     def act(self, state, visited=set(), actVars=None):
-        visited.add(self) # track visited teams
-
+        visited.add(str(self.id)) # track visited teams
+        print('acted')
         topLearner = max([lrnr for lrnr in self.learners
-                if lrnr.isActionAtomic() or lrnr.getActionTeam() not in visited],
+                if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
 
         return topLearner.getAction(state, visited=visited, actVars=actVars)
@@ -235,14 +235,22 @@ class Team:
 
     '''
     Iterates through  this team's learners and mutates them with a given probability.
-        - Returns the learners that have mutated
+        - Returns a map of the mutations that occured (key: originalLearner)->(value:mutatedLearner)
         - Ensures that if we only have one atomic action the corresponding learner doesn't mutate to a non-atomic action
+        - Mutation: 
+            - clones the target learner
+            - adds the clone to the team
+            - mutates the clone
+            - removed the target learner
+            - records the target and it's mutated result in mutated_learners 
     '''
     def mutation_mutate(self, probability, mutateParams, teams):
-        mutated_learners = []
+        mutated_learners = {}
 
         for learner in self.learners:
+
             if flip(probability):
+
                 # If we only have one learner with an atomic action and the current learner is it
                 if self.numAtomicActions() == 1 and learner.isActionAtomic():
                     pActAtom0 = 1.1 # Ensure their action remains atomic
@@ -250,12 +258,31 @@ class Team:
                     # Otherwise let there be a probability that the learner's action is atomic as defined in the mutate params
                     pActAtom0 = mutateParams['pActAtom']
 
-                mutated_learners.append(learner.mutate(mutateParams, self, teams, pActAtom0))
+                #print("Mutating learner {}".format(str(learner.id)))
+                
+                # Create a new new learner 
+                newLearner = Learner(mutateParams, learner.program, learner.actionObj, len(learner.registers))
+                #print("Cloned learner {} to create learner {}".format(str(learner.id), str(newLearner.id)))
+                # Add the mutated learner to our learners
+                # Must add before mutate so that the new learner has this team in its inTeams
+                self.addLearner(newLearner)
+                #print("cloned learner added to team {}".format(str(self.id)))
 
-        # Add all the mutated learners
-        for cursor in mutated_learners:
-            self.addLearner(cursor)
+                # mutate it
+                newLearner.mutate(mutateParams, self, teams, pActAtom0)
+                #print("mutated cloned learner")
+                #print("mutated learner changed? {}".format(before != newLearner))
+                
+                #print("removing old learner {} from team".format(str(learner.id)))
+                # Remove the existing learner from the team
+                self.removeLearner(learner)
 
+                #print("Adding mutated learner {} to mutated learners".format(str(newLearner.id)))
+                # Add the mutated learner to our list of mutations
+                mutated_learners[str(learner.id)] = str(newLearner.id)
+
+
+      
         return mutated_learners              
 
     """
@@ -263,8 +290,6 @@ class Team:
     """
     def mutate(self, mutateParams, allLearners, teams):
 
-
-        self.learners = copy.deepcopy(self.learners)
         
         '''
         With rampant mutations every mutateParams["rampantGen"] generations we do X extra
