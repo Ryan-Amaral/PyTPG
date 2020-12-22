@@ -376,7 +376,7 @@ class TeamTest(unittest.TestCase):
                 # Ensure the added learners now have the team in their inTeam list
                 for cursor in added_learners:
                     self.assertIn(cursor, team.learners)
-                    self.assertIn(team.id, cursor.inTeams)
+                    self.assertIn(str(team.id), cursor.inTeams)
 
             frequency = collections.Counter(results[str(i)])
             print(frequency)
@@ -656,7 +656,7 @@ class TeamTest(unittest.TestCase):
         top_learner = None
         for cursor in learners:
             bid = cursor.bid(state=state)
-
+            print("learner: {} bid: {} action: {}".format(str(cursor.id), bid, cursor.actionObj.actionCode))
             if top_bid <= bid:
                 top_bid = bid
                 top_learner = cursor
