@@ -121,7 +121,7 @@ class Team:
                 # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
                 if target_learner.actionObj.teamAction != None and target_learner.actionObj.teamAction != -1:
                     target_learner.actionObj.teamAction.inLearners.remove(str(target_learner.id))
-                del target_learner
+                
             return
 
         '''
@@ -141,7 +141,7 @@ class Team:
                 # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
                 if learner.actionObj.teamAction != None and learner.actionObj.teamAction != -1:
                     learner.actionObj.teamAction.inLearners.remove(str(learner.id))
-                del learner
+                
         del self.learners[:]
 
     """
