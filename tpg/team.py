@@ -92,7 +92,7 @@ class Team:
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
-
+        print("[{}][{}] visiting {} ".format(actVars['frameNum'], len(visited), str(self.id)))
         return topLearner.getAction(state, visited=visited, actVars=actVars)
 
     """
