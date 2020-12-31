@@ -87,12 +87,26 @@ class Team:
     """
     Returns an action to use based on the current state.
     """
-    def act(self, state, visited=set(), actVars=None):
-        visited.add(str(self.id)) # track visited teams
+    def act(self, state, visited=list(), actVars=None):
+        visited.append(str(self.id)) # track visited teams
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
-        print("[{}][{}] visiting {} ".format(actVars['frameNum'], len(visited), str(self.id)))
+        # Print the path taken to this atomic action
+        if topLearner.isActionAtomic():
+            path = ""
+            for i,cursor in enumerate(visited):
+                if i == 0:
+                    path += "("
+                else:
+                    path += "->("
+                
+                path += cursor + ")"
+
+            path += "-> " + str(topLearner.actionObj.actionCode)
+
+            print("[{}][{}] {}".format(actVars['frameNum'], len(visited), path))
+
         return topLearner.getAction(state, visited=visited, actVars=actVars)
 
     """
