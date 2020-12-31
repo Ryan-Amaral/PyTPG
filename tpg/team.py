@@ -92,7 +92,6 @@ class Team:
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
-        print("top learner: " + str(topLearner.id))
 
         return topLearner.getAction(state, visited=visited, actVars=actVars)
 
@@ -279,26 +278,19 @@ class Team:
                     # Otherwise let there be a probability that the learner's action is atomic as defined in the mutate params
                     pActAtom0 = mutateParams['pActAtom']
 
-                #print("Mutating learner {}".format(str(learner.id)))
-                
                 # Create a new new learner 
                 newLearner = Learner(mutateParams, learner.program, learner.actionObj, len(learner.registers))
-                #print("Cloned learner {} to create learner {}".format(str(learner.id), str(newLearner.id)))
+                
                 # Add the mutated learner to our learners
                 # Must add before mutate so that the new learner has this team in its inTeams
                 self.addLearner(newLearner)
-                #print("cloned learner added to team {}".format(str(self.id)))
 
                 # mutate it
                 newLearner.mutate(mutateParams, self, teams, pActAtom0)
-                #print("mutated cloned learner")
-                #print("mutated learner changed? {}".format(before != newLearner))
-                
-                #print("removing old learner {} from team".format(str(learner.id)))
+
                 # Remove the existing learner from the team
                 self.removeLearner(learner)
 
-                #print("Adding mutated learner {} to mutated learners".format(str(newLearner.id)))
                 # Add the mutated learner to our list of mutations
                 mutated_learners[str(learner.id)] = str(newLearner.id)
 

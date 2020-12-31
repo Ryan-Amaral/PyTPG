@@ -91,7 +91,8 @@ def configureDefaults(trainer, Trainer, Agent, Team, Learner, ActionObject, Prog
     Program.__init__ = ConfProgram.init_def
     Program.execute = ConfProgram.execute_def
     Program.mutate = ConfProgram.mutate_def
-    Program.mutateInstructions = ConfProgram.mutateInstructions_def
+    #No longer need this after refactorAndTest merge
+    #Program.mutateInstructions = ConfProgram.mutateInstructions_def
 
 """
 Decides the operations and functions to be used in program execution.

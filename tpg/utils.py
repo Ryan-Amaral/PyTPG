@@ -16,7 +16,7 @@ def flip(prob):
 Returns the teams that this team references, either immediate or
 recursively.
 """
-def getTeams(team, rec=True, visited=None):
+def getTeams(team, rec=True, visited=None, result=None):
     if rec:
         # recursively search all teams
         nTeams = 0
@@ -24,16 +24,23 @@ def getTeams(team, rec=True, visited=None):
         # track visited teams to not repeat
         if visited is None:
             visited = set()
+            result = list()
 
-        visited.add(team)
+        visited.add(str(team.id))
+        if team not in result:
+            result.append(team)
 
         # get team count from each learner that has a team
         for lrnr in team.learners:
             lrnrTeam = lrnr.getActionTeam()
-            if lrnrTeam is not None and lrnrTeam not in visited:
-                getTeams(lrnrTeam, rec=True, visited=visited)
+            if lrnrTeam is not None and str(lrnrTeam.id) not in visited:
+                getTeams(lrnrTeam, rec=True, visited=visited, result=result)
 
-        return list(visited)
+        if len(visited) != len(result):
+            print("Visited {} teams but got {} teans. Something is a miss!".format(len(visited), len(result)))
+
+
+        return result
 
     else:
         # just the teams attached directly to this team
@@ -43,24 +50,32 @@ def getTeams(team, rec=True, visited=None):
 """
 Returns the learners on this team, immediately or recursively.
 """
-def getLearners(team, rec=True, tVisited=None, lVisited=None):
+def getLearners(team, rec=True, tVisited=None, lVisited=None, result=None):
     if rec:
 
         # track visited teams to not repeat
         if tVisited is None:
             tVisited = set()
             lVisited = set()
+            result = list()
 
-        tVisited.add(team)
-        [lVisited.add(lrnr) for lrnr in team.learners]
+        tVisited.add(str(team.id))
+        [lVisited.add(str(lrnr.id)) for lrnr in team.learners]
+        
+        for cursor in team.learners:
+            if cursor not in result:
+                result.append(cursor)
 
         # get team count from each learner that has a team
         for lrnr in team.learners:
             lrnrTeam = lrnr.getActionTeam()
-            if lrnrTeam is not None and lrnrTeam not in tVisited:
-                getLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited)
+            if lrnrTeam is not None and str(lrnrTeam.id) not in tVisited:
+                getLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited, result=result)
 
-        return list(lVisited)
+        if len(lVisited) != len(result):
+            print("Visited {} learners but got {} learners. Something is a miss!".format(len(lVisited), len(result)))
+
+        return result
 
     else:
         # just the teams attached directly to this team

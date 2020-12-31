@@ -1,3 +1,4 @@
+from numba.types.scalars import Boolean
 from tpg.action_object import ActionObject
 from tpg.program import Program
 from tpg.learner import Learner
@@ -58,8 +59,75 @@ class Trainer:
         inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
-        doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(-1,0,1),
+        doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(0,0,0),
         operationSet="def", traversal="team", prevPops=None, mutatePrevs=True):
+
+        '''
+        Validate inputs
+        '''
+        int_greater_than_zero = {
+            "teamPopSize": teamPopSize,
+            "inputSize": inputSize,
+            "nRegisters": nRegisters,
+            "initMaxTeamSize": initMaxTeamSize,
+            "initMaxProgSize": initMaxProgSize,
+        }
+
+        for entry in int_greater_than_zero.items():
+            self.must_be_integer_greater_than_zero(entry[0], entry[1])
+
+        # Validate doElites
+        if type(doElites) is not bool:
+            raise Exception("Invalid doElites")
+
+        # Validate rootBasedPop
+        if type(rootBasedPop) is not bool:
+            raise Exception("Invalid rootBasedPop")
+
+        # Validate Traversal
+        valid_traversals = ["team", "learner"]
+        if traversal not in valid_traversals:
+            raise Exception("Invalid traversal")
+        
+        '''
+        Gap must be a float greater than 0 but less than or equal to 1
+        '''
+        if type(gap) is not float or gap == 0.0 or gap > 1.0:
+            raise Exception("gap must be a float greater than 0 but less than or equal to 1")
+
+
+        # Validate Operation Set
+        valid_operation_sets = ["def", "full"]
+        if operationSet not in valid_operation_sets:
+            raise Exception("Invalid operation set")
+
+        # Validate Probability parameters
+        probabilities = {
+            "pLrnDel": pLrnDel,
+            "pLrnAdd": pLrnAdd,
+            "pLrnMut": pLrnMut,
+            "pProgMut": pProgMut,
+            "pActMut": pActMut,
+            "pActAtom": pActAtom,
+            "pInstDel": pInstDel,
+            "pInstAdd": pInstAdd,
+            "pInstSwp": pInstSwp,
+            "pInstMut": pInstMut
+        }
+
+
+        for entry in probabilities.items():
+            self.validate_probability(entry[0],entry[1])
+
+        # Validate rampancy
+        if (
+            len(rampancy) != 3 or
+            rampancy[0] < 0 or
+            rampancy[2] < rampancy[1] or 
+            rampancy[1] < 0 or
+            rampancy[2] < 0
+            ):
+            raise Exception("Invalid rampancy parameter!", rampancy)
 
         # store all necessary params
 
@@ -101,9 +169,6 @@ class Trainer:
         self.memType = memType
         self.memMatrixShape = memMatrixShape
 
-        # fix range of rampancy if invalid
-        if len(rampancy) == 2 or rampancy[2] <= rampancy[1]:
-            rampancy = (rampancy[0], rampancy[1], rampancy[1]+1)
         self.rampancy = rampancy
 
         self.operationSet = operationSet
@@ -123,6 +188,20 @@ class Trainer:
             memType is not None, memType, self.doReal, operationSet, traversal)
 
         self.initializePopulations()
+
+    '''
+    Validation Method
+    '''
+    def must_be_integer_greater_than_zero(self, name, value):
+        if type(value) is not int or value <= 0:
+            raise Exception(name + " must be integer greater than zero. Got " + str(value), name, value)
+
+    '''
+    Validation Method
+    '''
+    def validate_probability(self, name,  value):
+        if type(value) is not float or value > 1.0 or value < 0.0:
+            raise Exception(name + " is a probability, it must not be greater than 1.0 or less than 0.0", name, value)
 
     """
     Sets up the actions properly, splitting action codes, and if needed, action
@@ -156,7 +235,7 @@ class Trainer:
                                          nDestinations=self.nRegisters,
                                          inputSize=self.inputSize,
                                          initParams=self.mutateParams),
-                        actionObj=ActionObject(actionIndex=a1, initParams=self.mutateParams),
+                        actionObj=ActionObject(action=a1, initParams=self.mutateParams),
                         numRegisters=self.nRegisters)
             l2 = Learner(self.mutateParams,
                         program=Program(maxProgramLength=self.initMaxProgSize,
@@ -164,7 +243,7 @@ class Trainer:
                                          nDestinations=self.nRegisters,
                                          inputSize=self.inputSize,
                                          initParams=self.mutateParams),
-                        actionObj=ActionObject(actionIndex=a2, initParams=self.mutateParams),
+                        actionObj=ActionObject(action=a2, initParams=self.mutateParams),
                         numRegisters=self.nRegisters)
 
             # save learner population
@@ -189,7 +268,7 @@ class Trainer:
                                              nDestinations=self.nRegisters,
                                              inputSize=self.inputSize,
                                              initParams=self.mutateParams),
-                            actionObj=ActionObject(actionIndex=act, initParams=self.mutateParams),
+                            actionObj=ActionObject(action=act, initParams=self.mutateParams),
                             numRegisters=self.nRegisters)
 
                 team.addLearner(learner)
@@ -210,6 +289,7 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
+            print("size of rTeams:{}".format(len(rTeams)))
             return [Agent(team, num=i, actVars=self.actVars)
                     for i,team in enumerate(rTeams)]
         else:
@@ -383,11 +463,7 @@ class Trainer:
         for team in [t for t in deleteTeams if t not in self.elites]:
             for learner in team.learners:
                 # delete learner from population if this is last team referencing
-                if learner.numTeamsReferencing == 1:
-                    # remove reference to team if applicable
-                    if not learner.isActionAtomic():
-                        learner.getActionTeam().numLearnersReferencing -= 1
-
+                if learner.numTeamsReferencing() == 1 and str(team.id) in learner.inTeams:
                     self.learners.remove(learner) # permanently remove
 
             # remove learners from team and delete team from populations
@@ -435,7 +511,7 @@ class Trainer:
                     self.learners.append(learner)
 
             # maybe make root team
-            if team.numLearnersReferencing == 0 or team in self.elites:
+            if team.numLearnersReferencing() == 0 or team in self.elites:
                 self.rootTeams.append(team)
 
         self.generation += 1
@@ -446,7 +522,7 @@ class Trainer:
     def countRootTeams(self):
         numRTeams = 0
         for team in self.teams:
-            if team.numLearnersReferencing == 0:
+            if team.numLearnersReferencing() == 0:
                 numRTeams += 1
 
         return numRTeams

@@ -1,77 +1,301 @@
-import io
-import xmlrunner
 import unittest
-from extras import runPopulationParallel
+import xmlrunner
 from tpg.trainer import Trainer
-from tpg.team import Team
-from tpg.learner import Learner
 
 class TrainerTest(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        # do a quick test run to get results
-        cls.trainer, _ = runPopulationParallel(
-            envName="Boxing-v0", gens=100, popSize=50, reps=1,
-            frames=1000, processes=4, nRandFrames=5, rootBasedPop=True,
-            memType=None, operationSet="full", rampancy=(5,5), traversal="team")
+    # Initalization variables to test
+    dummy_actions = 20 # Number of actions
 
+    
     '''
-    Runs tpg for a while measuring the reference counts on teams and learners,
-    comparing tracked and actual amounts.
+    Lists of tuples containing the value to test with and whether the value 
+    is valid (True) or invalid (False). Invalid values should throw an exception.
     '''
-    def test_reference_counts(self):
 
-        # iterate through all learners to see if any mistrack team referencing
-        for lrnr in self.trainer.learners:
-            refs=0
-            for team in self.trainer.teams:
-                if lrnr in team.learners:
-                    refs += 1
+    probability_pool = [
+        (0.1, True),
+        (0.5, True),
+        (1.24, False),
+        (-2.3, False),
+        ("a string", False)]
 
-            # ensure tracked amount and actual amount matches
-            self.assertEqual(refs, lrnr.numTeamsReferencing)
+    teamPopSize = [
+        (10,True),
+        (25,True),
+        (100, True),
+        (-1, False),
+        (2.45, False),
+        (0,False)]
 
-        # iterate through all teams to see if any mistrack learners referencing
-        for team in self.trainer.teams:
-            refs = 0
-            for lrnr in self.trainer.learners:
-                if lrnr.getActionTeam() == team:
-                    refs += 1
+    rootBasedPop = [
+        (True, True),
+        (False, True),
+        (-1, False)]
 
-            # ensure tracked amount and actual amount matches
-            self.assertEqual(refs, team.numLearnersReferencing)
+    gap = [
+        (0.25,True),
+        (0.5, True),
+        (0.75, True),
+        (1.0, True),
+        (-1, False),
+        (1.24, False)]
 
-    '''
-    Checks to make sure the team has at-least 2 learners and at-least one atomic
-    action learner, and no learners self-reference the team after mutations.
-    '''
-    def test_team_learner_constraints(self):
+    inputSize = [
+        (0, False),
+        (1000, True),
+        (-50, False),
+        ( 2.523, False)]
 
-        # make sure ever team in population follows these rules
-        for team in self.trainer.teams:
-            self.assertGreaterEqual(len(team.learners), 2)
-            self.assertGreaterEqual(team.numAtomicActions(), 1)
-            for lrnr in team.learners:
-                self.assertNotEqual(team, lrnr.getActionTeam())
+    nRegisters = [
+        (8, True),
+        (-1, False), 
+        (2.43, False)]
+    
+    initMaxTeamSize = [
+        (10, True),
+        (-1, False),
+        (2.52, False)]
 
-    '''
-    Make sure the numAtomicActions function on teams properly counts the amount.
-    '''
-    def test_team_numAtomicActions(self):
+    initMaxProgSize = [
+        (20,True),
+        (128, True),
+        (-1, False),
+        (2.4532, False)]
+    
+    doElites = [
+        (True, True),
+        (False,True),
+        (-1, False)]
 
-        # get actual count of atomic actions and compare for each team
-        for team in self.trainer.teams:
-            atomics = 0
-            for lrnr in team.learners:
-                if lrnr.actionObj.teamAction is None:
-                    atomics += 1
+    rampancy = [
+        ((-1,0,1), False),
+        ((1,1,5), True),
+        ((0, 0, 0), True),
+        ((0), False),
+        ((1), False),
+        ((0, 3, 2), False)]
 
-            self.assertEqual(atomics, team.numAtomicActions())
+    operationSet = [
+        ("def",True),
+        ("full", True), 
+        ("wtf", False)]
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.trainer.cleanup()
+    traversal = [
+        ("team", True),
+        ("learner", True),
+        ("garbage", False)]
+
+    def test_init(self):
+
+        # Test team pop sizes
+        for cursor in self.teamPopSize:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, teamPopSize=cursor[0])
+                self.assertEqual(cursor[0], trainer.teamPopSize)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,teamPopSize=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test Root Based Pop
+        for cursor in self.rootBasedPop:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, rootBasedPop=cursor[0])
+                self.assertEqual(cursor[0], trainer.rootBasedPop)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,rootBasedPop=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test Gap
+        for cursor in self.gap:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, gap=cursor[0])
+                self.assertEqual(cursor[0], trainer.gap)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,gap=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test Input Size
+        for cursor in self.inputSize:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, inputSize=cursor[0])
+                self.assertEqual(cursor[0], trainer.inputSize)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,inputSize=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test nRegisters
+        for cursor in self.nRegisters:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, nRegisters=cursor[0])
+                self.assertEqual(cursor[0], trainer.nRegisters)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,nRegisters=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+
+        # Test initMaxTeamSize
+        for cursor in self.initMaxTeamSize:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, initMaxTeamSize=cursor[0])
+                self.assertEqual(cursor[0], trainer.initMaxTeamSize)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,initMaxTeamSize=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+
+        # Test initMaxProgSize
+        for cursor in self.initMaxProgSize:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, initMaxProgSize=cursor[0])
+                self.assertEqual(cursor[0], trainer.initMaxProgSize)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,initMaxProgSize=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+
+        # Test doElites
+        for cursor in self.doElites:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, doElites=cursor[0])
+                self.assertEqual(cursor[0], trainer.doElites)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,doElites=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+
+        # Test rampancy
+        for cursor in self.rampancy:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, rampancy=cursor[0])
+                self.assertEqual(cursor[0], trainer.rampancy)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,rampancy=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+
+        # Test operation set
+        for cursor in self.operationSet:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, operationSet=cursor[0])
+                self.assertEqual(cursor[0], trainer.operationSet)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,operationSet=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test traversal
+        for cursor in self.traversal:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, traversal=cursor[0])
+                self.assertEqual(cursor[0], trainer.traversal)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,traversal=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+
+        # Test pLrnDel
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pLrnDel=cursor[0])
+                self.assertEqual(cursor[0], trainer.pLrnDel)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pLrnDel=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test pLrnAdd
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pLrnAdd=cursor[0])
+                self.assertEqual(cursor[0], trainer.pLrnAdd)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pLrnAdd=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test pLrnMut
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pLrnMut=cursor[0])
+                self.assertEqual(cursor[0], trainer.pLrnMut)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pLrnMut=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+
+        # Test pProgMut
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pProgMut=cursor[0])
+                self.assertEqual(cursor[0], trainer.pProgMut)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pProgMut=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test pActMut
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pActMut=cursor[0])
+                self.assertEqual(cursor[0], trainer.pActMut)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pActMut=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test pActAtom
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pActAtom=cursor[0])
+                self.assertEqual(cursor[0], trainer.pActAtom)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pActAtom=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        # Test pInstDel
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pInstDel=cursor[0])
+                self.assertEqual(cursor[0], trainer.pInstDel)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pInstDel=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+                    
+        # Test pInstAdd
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pInstAdd=cursor[0])
+                self.assertEqual(cursor[0], trainer.pInstAdd)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pInstAdd=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test pInstSwp
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pInstSwp=cursor[0])
+                self.assertEqual(cursor[0], trainer.pInstSwp)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pInstSwp=cursor[0])
+                    self.assertIsNotNone(expected.exception)
+        
+        # Test pInstMut
+        for cursor in self.probability_pool:
+            if cursor[1]: # If this input is valid
+                trainer = Trainer(actions = self.dummy_actions, pInstMut=cursor[0])
+                self.assertEqual(cursor[0], trainer.pInstMut)
+            else: # This input is invalid, ensure it throws an exception
+                with self.assertRaises(Exception) as expected:
+                    trainer = Trainer(actions=self.dummy_actions,pInstMut=cursor[0])
+                    self.assertIsNotNone(expected.exception)
 
 
 if __name__ == '__main__':

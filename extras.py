@@ -65,6 +65,7 @@ def runAgentParallel(args):
 
     scoreTotal /= numEpisodes
     env.close()
+    print("Agent {} | {}".format(agent.agentNum,scoreTotal))
     agent.reward(scoreTotal, envName)
     scoreList.append((agent.team.id, agent.team.outcomes))
 
@@ -78,11 +79,13 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         memType=None, operationSet="full", rampancy=(5,5), traversal="team"):
     tStart = time.time()
 
+    print("creating atari environment")
     # get num actions
     env = gym.make(envName)
     acts = env.action_space.n
     del env
 
+    print("creating trainer")
     trainer = Trainer(actions=acts, teamPopSize=popSize, rootBasedPop=rootBasedPop,
         memType=memType, operationSet=operationSet, rampancy=rampancy,
         traversal=traversal)
@@ -92,15 +95,21 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
 
     allScores = [] # track all scores each generation
 
+    print("running generations")
     for gen in range(gens): # do generations of training
+        print("doing generation {}".format(gen))
         scoreList = man.list()
 
         agents = trainer.getAgents() # swap out agents only at start of generation
+
+        print("got agents, mapping them now")
 
         # run the agents
         pool.map(runAgentParallel,
             [(agent, envName, scoreList, reps, frames, nRandFrames)
             for agent in agents])
+
+        print("agents done")
 
         # prepare population for next gen
         teams = trainer.applyScores(scoreList)

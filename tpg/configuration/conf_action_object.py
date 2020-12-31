@@ -2,6 +2,7 @@ from tpg.program import Program
 import numpy as np
 import random
 from tpg.utils import flip
+from tpg.action_object import ActionObject
 
 """
 Action  Object has a program to produce a value for the action, program doesn't
@@ -9,21 +10,40 @@ run if just a discrete action code.
 """
 class ConfActionObject:
 
-    def init_def(self, actionObj=None, actionIndex=None, teamAction=None,
-            initParams=None):
+    def init_def(self, initParams=None, action = None):
             
-        if actionObj is not None:
-            # clone the other action object
-            self.actionCode = actionObj.actionCode
-            self.teamAction = actionObj.teamAction
-        else:
-            # no cloning
-            self.actionCode = initParams["actionCodes"][actionIndex]
-            self.teamAction = teamAction
+        '''
+        Defer importing the Team class to avoid circular dependency.
+        This may require refactoring to fix properly
+        '''
+        from tpg.team import Team
 
-        # increase references to team
-        if self.teamAction is not None:
-            self.teamAction.numLearnersReferencing += 1
+        # The action is a team
+        '''
+        TODO handle team references somehow
+        '''
+        if isinstance(action, Team):
+            self.teamAction = action
+    
+
+        # The action is another action object
+        if isinstance(action, ActionObject):
+            self.actionCode = action.actionCode
+            self.teamAction = action.teamAction
+
+        # An int means the action is an index into the action codes in initParams
+        if isinstance(action, int):
+            
+            if "actionCodes" not in initParams:
+                raise Exception('action codes not found in init params', initParams)
+
+            try:
+                self.actionCode = initParams["actionCodes"][action]
+                self.teamAction = None
+            except IndexError as err:
+                '''
+                TODO log index error
+                '''
 
     def init_real(self, actionObj=None, program=None, actionIndex=None, teamAction=None,
             initParams=None):
@@ -109,21 +129,33 @@ class ConfActionObject:
     """
     Change action to team or atomic action.
     """
-    def mutate_def(self, mutateParams, parentTeam, teams, pActAtom):
-        # dereference if old action is team
-        if self.teamAction is not None:
-            self.teamAction.numLearnersReferencing -= 1
-
+    def mutate_def(self, mutateParams, parentTeam, teams, pActAtom, learner_id):
         # mutate action
         if flip(pActAtom):
             # atomic
-            self.actionCode = random.choice(mutateParams["actionCodes"])
+            '''
+            If we already have an action code make sure not to pick the same one.
+            TODO handle case where there is only 1 action code.
+            '''
+            if self.actionCode is not None:
+                options = list(filter(lambda code: code != self.actionCode,mutateParams["actionCodes"]))
+            else:
+                options = mutateParams["actionCodes"]
+            self.actionCode = random.choice(options)
+
+            # If we previously pointed to a team, remove our learner from the list of learners who point to them
+            if self.teamAction is not None and not -1: # We use -1 in unit tests don't touch this
+                self.teamAction.inLearners.remove(str(learner_id))
+
             self.teamAction = None
         else:
             # team action
             self.teamAction = random.choice([t for t in teams
                     if t is not self.teamAction and t is not parentTeam])
-            self.teamAction.numLearnersReferencing += 1
+            # Add the learner to the team's in learers
+            self.teamAction.inLearners.append(str(learner_id))
+        
+        return self
 
     """
     Change action to team or atomic action.

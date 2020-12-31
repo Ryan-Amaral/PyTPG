@@ -124,6 +124,12 @@ class Learner:
     Get the bid value, highest gets its action selected.
     """
     def bid(self, state, actVars=None):
+        # exit early if we already got bidded this frame
+        if self.frameNum == actVars["frameNum"]:
+            return self.registers[0]
+
+        self.frameNum = actVars["frameNum"]
+
         Program.execute(state, self.registers,
                         self.program.instructions[:,0], self.program.instructions[:,1],
                         self.program.instructions[:,2], self.program.instructions[:,3])
@@ -156,27 +162,20 @@ class Learner:
     def mutate(self, mutateParams, parentTeam, teams, pActAtom):
 
 
-        #print('inTeams')
-        #for cursor in self.inTeams:
-        #    print(cursor)
-
-        #print('parentId {}'.format(parentTeam.id))
-
-        #print('learner has parent in inTeam {}'.format(parentTeam.id in self.inTeams))
         changed = False
         while not changed:
             # mutate the program
             if flip(mutateParams["pProgMut"]):
 
                 changed = True
-                #program.mutate() yields a new instance of program
-                self.program = self.program.mutate(mutateParams)
+              
+                self.program.mutate(mutateParams)
 
             # mutate the action
             if flip(mutateParams["pActMut"]):
 
                 changed = True
-                #actionObj.mutate yeilds a new instance of actionObj
-                self.actionObj = self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom, learner_id=self.id)
+                
+                self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom, learner_id=self.id)
 
         return self

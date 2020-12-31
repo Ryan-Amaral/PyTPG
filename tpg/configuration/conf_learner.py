@@ -4,6 +4,8 @@ import numpy as np
 from tpg.utils import flip
 import random
 import time
+import copy
+import uuid
 
 """
 A team has multiple learners, each learner has a program which is executed to
@@ -15,29 +17,38 @@ class ConfLearner:
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
     """
-    def init_def(self, initParams, learner=None, program=None, actionObj=None,
-            numRegisters=8, nOperations=5, nDestinations=8, inputSize=30720):
-        if learner is not None:
-            self.program = Program(instructions=learner.program.instructions,
-                nOperations=nOperations, nDestinations=nDestinations, inputSize=inputSize,
-                initParams=initParams)
-            self.actionObj = ActionObject(learner.actionObj, initParams=initParams)
-            self.registers = np.zeros(len(learner.registers), dtype=float)
-        elif program is not None and actionObj is not None:
-            self.program = program
-            self.actionObj = actionObj
-            self.registers = np.zeros(numRegisters, dtype=float)
+    def init_def(self, initParams, program, actionObj, numRegisters):
+        self.program = copy.deepcopy(program) #Each learner should have their own copy of the program
+        self.actionObj = copy.deepcopy(actionObj) #Each learner should have their own copy of the action object
+        self.registers = np.zeros(numRegisters, dtype=float)
 
+        self.ancestor = None #By default no ancestor
+
+        '''
+        TODO What's self.states? 
+        '''
         self.states = []
 
-        self.numTeamsReferencing = 0 # amount of teams with references to this
 
-        self.id = initParams["idCountLearner"]
-        initParams["idCountLearner"] += 1
+        self.inTeams = [] # Store a list of teams that reference this learner, incoming edges
+        
 
-        self.genCreate = initParams["generation"]
+        self.genCreate = initParams["generation"] # Store the generation that this learner was created on
 
-        self.frameNum = 0
+        '''
+        TODO should this be -1 before it sees any frames?
+        '''
+        self.frameNum = 0 # Last seen frame is 0
+
+        # Assign id from initParams counter
+        self.id = uuid.uuid4()
+
+        # If we point to a team, ensure we're in that team's inLearners
+        if not self.actionObj.isAtomic():
+            if str(self.id) not in self.actionObj.teamAction.inLearners:
+                self.actionObj.teamAction.inLearners.append(str(self.id))
+            
+
 
     """
     Get the bid value, highest gets its action selected.
@@ -80,6 +91,7 @@ class ConfLearner:
     def getAction_def(self, state, visited, actVars=None):
         return self.actionObj.getAction(state, visited, actVars=actVars)
 
+
     """
     Gets the team that is the action of the learners action object.
     """
@@ -101,10 +113,16 @@ class ConfLearner:
         while not changed:
             # mutate the program
             if flip(mutateParams["pProgMut"]):
+
                 changed = True
+              
                 self.program.mutate(mutateParams)
 
             # mutate the action
             if flip(mutateParams["pActMut"]):
+
                 changed = True
-                self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom)
+                
+                self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom, learner_id=self.id)
+
+        return self
