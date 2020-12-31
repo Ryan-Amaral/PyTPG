@@ -33,7 +33,7 @@ class TeamTest(unittest.TestCase):
         mutation_samples = math.ceil(0.25*pow(z_a2/margin_of_error,2)) 
         return mutation_samples, margin_of_error
 
-
+    #@unittest.skip
     def test_create_team(self):
 
         # Create the team
@@ -43,7 +43,7 @@ class TeamTest(unittest.TestCase):
         self.assertIsNotNone(team.learners)
         self.assertIsNotNone(team.outcomes)
         self.assertIsNone(team.fitness)
-        self.assertEqual(0,team.numLearnersReferencing)
+        self.assertEqual(0,team.numLearnersReferencing())
         self.assertIsInstance(team.id, uuid.UUID)
         self.assertEqual(dummy_init_params['generation'], team.genCreate)
 
@@ -51,6 +51,7 @@ class TeamTest(unittest.TestCase):
     '''
     Add a learner to a team
     '''
+    #@unittest.skip
     def test_add_learners(self):
 
         team = Team(dummy_init_params)
@@ -79,6 +80,7 @@ class TeamTest(unittest.TestCase):
     '''
     Verify that a team does not add a learner with the same program
     '''
+    #@unittest.skip
     def test_no_duplicate_learners(self):
 
         program = create_dummy_program()
@@ -99,15 +101,22 @@ class TeamTest(unittest.TestCase):
     '''
     Verify that the team removes a given learner
     '''
+    #@unittest.skip
     def test_remove_learner(self):
 
         # Create a team with a random number of learners
         num_learners = randint(0, 256)
         random_index_in_learners = randint(0, num_learners-1)
         team, learners = create_dummy_team(num_learners)
+        aux_team, aux_learners = create_dummy_team()
 
         # Ensure the right number of learners appear in the team
         self.assertEqual(num_learners, len(team.learners))
+
+        # Point the randomly selected learner to the aux_team and add it to the aux_team's inLearners
+        team.learners[random_index_in_learners].actionObj.actionCode = None
+        team.learners[random_index_in_learners].actionObj.teamAction = aux_team
+        aux_team.inLearners.append(str(team.learners[random_index_in_learners].id))
 
         print("len(team.learners) before remove: {}".format(len(team.learners)))
 
@@ -128,7 +137,9 @@ class TeamTest(unittest.TestCase):
 
         # Ensure the list the team's learners shrunk by 1
         self.assertEqual(num_learners-1, len(team.learners))
-        
+
+        # Ensure the selected learner no longer appears in the aux_team's inLearners
+        self.assertNotIn(str(selected_learner.id), aux_team.inLearners)
 
         # Ensure the learner at the randomly selected index is no longer the selected learner
         if random_index_in_learners < len(team.learners): # If we deleted from the end of the list this assert would IndexError
@@ -150,13 +161,23 @@ class TeamTest(unittest.TestCase):
     Verify that removing all learners from a team does so, without 
     destroying the underlying learner objects
     '''
+    #@unittest.skip
     def test_remove_all_learner(self):
 
         # Create a team with a random number of learners
         num_learners = randint(0, 256)
         team, learners = create_dummy_team(num_learners)
+        aux_team, aux_learners = create_dummy_team()
+
+        # Point the first learner to the aux team and add it to the aux team's in learners
+        team.learners[0].actionObj.actionCode = None
+        team.learners[0].actionObj.teamAction = aux_team
+        aux_team.inLearners.append(str(team.learners[0].id))
 
         team.removeLearners()
+
+        # Ensure the aux_team's inLearners is empty
+        self.assertEqual(0, len(aux_team.inLearners))
 
         # Ensure learners were deleted
         self.assertEqual(0, len(team.learners))
@@ -166,6 +187,7 @@ class TeamTest(unittest.TestCase):
         for learner in learners:
             self.assertEqual(0, len(learner.inTeams))
 
+    #@unittest.skip
     def test_num_atomic_actions(self):
 
         # Create a team with a random number of learners
@@ -652,18 +674,41 @@ class TeamTest(unittest.TestCase):
 
         team, learners = create_dummy_team()
 
-        top_bid = -1
+        '''
+        The learner with the highest bid must be selected.
+        If the highest bid is produced by multiple learners any of them are 
+        valid selections.
+        '''
+
+        top_bid = None
         top_learner = None
+        valid_selection = list()
         for cursor in learners:
             bid = cursor.bid(state=state)
             print("learner: {} bid: {} action: {}".format(str(cursor.id), bid, cursor.actionObj.actionCode))
-            if top_bid <= bid:
+            if top_bid == None:
                 top_bid = bid
                 top_learner = cursor
+                valid_selection.append(cursor)
+                continue
 
-        action = team.act(state=state)
+            if top_bid < bid:
+                valid_selection = list() # Reset the selection list
+                top_bid = bid
+                top_learner = cursor
+                valid_selection.append(cursor)
+            
+            if top_bid == bid: # If the bid is equal to the top bid
+                valid_selection.append(cursor) # Add the learner to the list of valid selections
+        
+        
+        valid_actions = list()
+        for cursor in valid_selection:
+            valid_actions.append(team.act(state=state))
 
-        self.assertEqual(top_learner.getAction(state=state, visited=set()), action)
+        # Ensure the chosen action is in the list of valid actions
+        self.assertIn(top_learner.getAction(state=state, visited=set()), valid_actions)
+
 
     def test_recursive_act(self):
 
@@ -712,6 +757,7 @@ class TeamTest(unittest.TestCase):
     Test that, given some mutations, we correctly track the number of references
     between teams and learners.
     '''
+    #@unittest.skip
     def test_reference_tracking(self):
         # Setup pretty printer
         pp = pprint.PrettyPrinter(indent=4)
