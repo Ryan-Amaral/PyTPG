@@ -21,11 +21,16 @@ class ConfTeam:
     """
     Returns an action to use based on the current state. Team traversal.
     """
-    def act_def(self, state, visited=set(), actVars=None):
-        visited.add(str(self.id)) # track visited teams
+    def act_def(self, state, visited=list(), actVars=None):
+        visited.append(str(self.id)) # track visited teams
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
+
+        if not topLearner.isActionAtomic():
+            print("current team id: {}, top learner team id: {}".format(str(self.id), str(topLearner.getActionTeam().id)))
+            print(topLearner.getActionTeam() in visited)
+
         # Print the path taken to this atomic action
         if topLearner.isActionAtomic():
             path = ""
@@ -40,6 +45,7 @@ class ConfTeam:
             path += "-> " + str(topLearner.actionObj.actionCode)
 
             print("[{}][{}] {}".format(actVars['frameNum'], len(visited), path))
+
         return topLearner.getAction(state, visited=visited, actVars=actVars)
 
 

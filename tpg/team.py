@@ -92,6 +92,11 @@ class Team:
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
+
+        if not topLearner.isActionAtomic():
+            print("current team id: {}, top learner team id: {}".format(str(self.id), str(topLearner.getActionTeam().id)))
+            print(topLearner.getActionTeam() in visited)
+
         # Print the path taken to this atomic action
         if topLearner.isActionAtomic():
             path = ""
