@@ -16,11 +16,12 @@ class Team:
         self.learners = []
         self.outcomes = {} # scores at various tasks
         self.fitness = None
-        self.numLearnersReferencing = 0 # number of learners that reference this
         self.inLearners = [] # ids of learners referencing this team
         self.id = uuid.uuid4()
 
         self.genCreate = initParams["generation"]
+    
+
 
     '''
     A team is equal to another object if that object:
@@ -77,6 +78,12 @@ class Team:
     def __ne__(self, o: object) -> bool:
         return not self.__eq__(o)
 
+    '''
+    Returns the number of learners referencing this team
+    '''
+    def numLearnersReferencing(self):
+        return len(self.inLearners)
+
     """
     Returns an action to use based on the current state.
     """
@@ -85,6 +92,7 @@ class Team:
         topLearner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
+        print("top learner: " + str(topLearner.id))
 
         return topLearner.getAction(state, visited=visited, actVars=actVars)
 
