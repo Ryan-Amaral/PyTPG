@@ -289,7 +289,6 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            print("size of rTeams:{}".format(len(rTeams)))
             return [Agent(team, num=i, actVars=self.actVars)
                     for i,team in enumerate(rTeams)]
         else:

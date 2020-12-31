@@ -39,6 +39,13 @@ def getTeams(team, rec=True, visited=None, result=None):
         if len(visited) != len(result):
             print("Visited {} teams but got {} teans. Something is a miss!".format(len(visited), len(result)))
 
+            print("visited team ids:")
+            for cursor in visited:
+                print(cursor)
+
+            print("result learner id's")
+            for cursor in result:
+                print(cursor.id)
 
         return result
 
@@ -74,6 +81,14 @@ def getLearners(team, rec=True, tVisited=None, lVisited=None, result=None):
 
         if len(lVisited) != len(result):
             print("Visited {} learners but got {} learners. Something is a miss!".format(len(lVisited), len(result)))
+            
+            print("visited learner ids:")
+            for cursor in lVisited:
+                print(cursor)
+
+            print("result learner id's")
+            for cursor in result:
+                print(cursor.id)
 
         return result
 

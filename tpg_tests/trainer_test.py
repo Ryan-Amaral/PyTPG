@@ -1,6 +1,8 @@
 import unittest
+from tpg import trainer
 import xmlrunner
 from tpg.trainer import Trainer
+from tpg.trainer import loadTrainer
 
 class TrainerTest(unittest.TestCase):
 
@@ -296,6 +298,33 @@ class TrainerTest(unittest.TestCase):
                 with self.assertRaises(Exception) as expected:
                     trainer = Trainer(actions=self.dummy_actions,pInstMut=cursor[0])
                     self.assertIsNotNone(expected.exception)
+
+        trainer = Trainer(actions=self.dummy_actions)
+
+        # Ensure the right inital team pop size was created
+        self.assertEqual(trainer.teamPopSize, len(trainer.teams))
+        # Ensure there are learners
+        self.assertGreater(len(trainer.learners), 0)
+
+    def test_pickle(self):
+        
+        trainer = Trainer(actions = self.dummy_actions)
+
+        trainer.saveToFile("test_trainer_save")
+
+        loaded_trainer = loadTrainer("test_trainer_save")
+
+        '''
+        Ensure loaded trainer has all the same teams and learners
+        '''
+        self.assertEqual(len(trainer.teams), len(loaded_trainer.teams))
+        for cursor in trainer.teams:
+            self.assertIn(cursor, loaded_trainer.teams)
+
+        self.assertEqual(len(trainer.learners), len(loaded_trainer.learners))
+        for cursor in trainer.learners:
+            self.assertIn(cursor, loaded_trainer.learners)
+    
 
 
 if __name__ == '__main__':
