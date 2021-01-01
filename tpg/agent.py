@@ -20,7 +20,8 @@ class Agent:
     """
     def act(self, state):
         self.actVars["frameNum"] = random()
-        return self.team.act(state, actVars=self.actVars)
+        visited = list() #Create a new list to track visited team/learners each time
+        return self.team.act(state, visited=visited, actVars=self.actVars)
 
     """
     Give this agent/root team a reward for the given task

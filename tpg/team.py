@@ -86,33 +86,42 @@ class Team:
 
     """
     Returns an action to use based on the current state.
+    NOTE: Do not set visited = list() because that will only be
+    evaluated once, and thus won't create a new list every time.
     """
-    def act(self, state, visited=list(), actVars=None):
+    def act(self, state, visited, actVars=None):
+
+        # If we've already visited me, throw an exception
+        if str(self.id) in visited:
+            print("Visited:")
+            for i,cursor in enumerate(visited):
+                print("{}|{}".format(i, cursor))
+            raise(Exception("Already visited {}!".format(str(self.id))))
+
         visited.append(str(self.id)) # track visited teams
-        topLearner = max([lrnr for lrnr in self.learners
+
+
+        top_learner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
 
-        if not topLearner.isActionAtomic():
-            print("current team id: {}, top learner team id: {}".format(str(self.id), str(topLearner.getActionTeam().id)))
-            print(topLearner.getActionTeam() in visited)
 
         # Print the path taken to this atomic action
-        if topLearner.isActionAtomic():
-            path = ""
-            for i,cursor in enumerate(visited):
-                if i == 0:
-                    path += "("
-                else:
-                    path += "->("
+        # if top_learner.isActionAtomic():
+        #     path = ""
+        #     for i,cursor in enumerate(visited):
+        #         if i == 0:
+        #             path += "("
+        #         else:
+        #             path += "->("
                 
-                path += cursor + ")"
+        #         path += cursor + ")"
 
-            path += "-> " + str(topLearner.actionObj.actionCode)
+        #     path += "-> " + str(top_learner.actionObj.actionCode)
 
-            print("[{}][{}] {}".format(actVars['frameNum'], len(visited), path))
+        #     print("[{}][{}] {}".format(actVars['frameNum'], len(visited), path))
 
-        return topLearner.getAction(state, visited=visited, actVars=actVars)
+        return top_learner.getAction(state, visited=visited, actVars=actVars)
 
     """
     Adds learner to the team and updates number of references to that program.

@@ -1,4 +1,5 @@
 import io
+import uuid
 import xmlrunner
 import unittest
 import numpy as np
@@ -26,7 +27,7 @@ class ProgramTest(unittest.TestCase):
         program = Program(maxProgramLength=max_length, initParams=mutateParams)
 
         # Assert that, after creating a program the id count has been incremented
-        self.assertEqual(0, program.id)
+        self.assertTrue(isinstance(program.id, uuid.UUID))
 
         print(np.shape(program.instructions))
 
@@ -56,9 +57,8 @@ class ProgramTest(unittest.TestCase):
             with self.subTest():
                 p = Program(maxProgramLength=max_length, initParams=mutateParams)
                 self.assertLessEqual(np.shape(p.instructions)[0], max_length)
-
-        # Ensure programs have been created
-        self.assertEqual(num_attempts-1, p.id)
+                self.assertTrue(isinstance(p.id, uuid.UUID))
+        
 
     '''
     Checks if a program is still valid after numerous mutations are done.
