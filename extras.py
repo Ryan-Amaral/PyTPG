@@ -1,9 +1,11 @@
 import numpy as np
 import gym
 import multiprocessing as mp
+from multiprocessing import set_start_method
 import time
 from tpg.trainer import Trainer
 from tpg.utils import getTeams, getLearners, learnerInstructionStats
+import os
 
 """
 Transform visual input from ALE to flat vector.
@@ -25,50 +27,52 @@ Args:
     args: (TpgAgent, envName, scoreList, numEpisodes, numFrames)
 """
 def runAgentParallel(args):
-    agent = args[0] # the agent
-    envName = args[1] # name of OpenAI environment
-    scoreList = args[2] # track scores of all agents
-    numEpisodes = args[3] # number of times to repeat game
-    numFrames = args[4] # frames to play for
-    nRandFrames = args[5]
+    try:
+        agent = args[0] # the agent
+        envName = args[1] # name of OpenAI environment
+        scoreList = args[2] # track scores of all agents
+        numEpisodes = args[3] # number of times to repeat game
+        numFrames = args[4] # frames to play for
+        nRandFrames = args[5]
 
-    # skip if task already done by agent
-    if agent.taskDone(envName):
-        #print('Agent #' + str(agent.agentNum) + ' can skip.')
+        # skip if task already done by agent
+        if agent.taskDone(envName):
+            print('Agent #' + str(agent.agentNum) + ' can skip.')
+            scoreList.append((agent.team.id, agent.team.outcomes))
+            return
+
+        env = gym.make(envName)
+        valActs = range(env.action_space.n) # valid actions, some envs are less
+
+
+        scoreTotal = 0 # score accumulates over all episodes
+        for ep in range(numEpisodes): # episode loop
+            state = env.reset()
+            scoreEp = 0
+            for i in range(numFrames): # frame loop
+                if i < nRandFrames:
+                    env.step(env.action_space.sample())
+                    continue
+
+                act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
+
+                # feedback from env
+                state, reward, isDone, debug = env.step(act)
+                scoreEp += reward # accumulate reward in score
+                if isDone:
+                    break # end early if losing state
+
+            print('Agent #' + str(agent.agentNum) +
+                ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
+            scoreTotal += scoreEp
+
+        scoreTotal /= numEpisodes
+        env.close()
+        agent.reward(scoreTotal, envName)
         scoreList.append((agent.team.id, agent.team.outcomes))
-        return
-
-    env = gym.make(envName)
-    valActs = range(env.action_space.n) # valid actions, some envs are less
-
-    scoreTotal = 0 # score accumulates over all episodes
-    for ep in range(numEpisodes): # episode loop
-        state = env.reset()
-        scoreEp = 0
-
-        for i in range(numFrames): # frame loop
-            if i < nRandFrames:
-                env.step(env.action_space.sample())
-                continue
-
-            act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
-
-            # feedback from env
-            state, reward, isDone, debug = env.step(act)
-            scoreEp += reward # accumulate reward in score
-            if isDone:
-                break # end early if losing state
-
-        #print('Agent #' + str(agent.agentNum) +
-        #      ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
-        scoreTotal += scoreEp
-
-    scoreTotal /= numEpisodes
-    env.close()
-    print("Agent {} | {}".format(agent.agentNum,scoreTotal))
-    agent.reward(scoreTotal, envName)
-    scoreList.append((agent.team.id, agent.team.outcomes))
-
+    except Exception as playException:
+        print("Exception occured while Agent {} was playing {}".format(args[0].agentNum, args[1] ))
+        raise playException
 """
 Uses the runAgentParallel function to run a whole population of TPG agents
 for however many generations on the supplied environmental parameters.
@@ -78,6 +82,12 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         frames=18000, processes=4, nRandFrames=30, rootBasedPop=True,
         memType=None, operationSet="full", rampancy=(5,5,5), traversal="team"):
     tStart = time.time()
+
+    '''
+    Python really is something special if this works.
+    https://pythonspeed.com/articles/python-multiprocessing/
+    '''
+    set_start_method("spawn")
 
     print("creating atari environment")
     # get num actions
@@ -102,18 +112,32 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
 
         agents = trainer.getAgents() # swap out agents only at start of generation
 
-        print("got agents, mapping them now")
+        try:
+            
+            # run the agents
+            pool.map(runAgentParallel,
+                [(agent, envName, scoreList, reps, frames, nRandFrames)
+                for agent in agents],
+                chunksize=len(agents)//processes
+            )
 
-        # run the agents
-        pool.map(runAgentParallel,
-            [(agent, envName, scoreList, reps, frames, nRandFrames)
-            for agent in agents])
+            # run the agents
+            # pool.map(runAgentParallel,
+            #     [(agent, envName, scoreList, reps, frames, nRandFrames)
+            #     for agent in agents])
 
-        print("agents done")
+
+        except Exception as mpException:
+            print("Exception occured while running multiprocessing via pool.map!")
+            print(mpException)
+            raise mpException
 
         # prepare population for next gen
+        print("Applying gen {} scores to agents".format(gen))
         teams = trainer.applyScores(scoreList)
+        print("Getting champion")
         champ = trainer.getAgents(sortTasks=[envName])[0].team
+        print("Evolving population")
         trainer.evolve(tasks=[envName]) # go into next gen
 
         # track stats

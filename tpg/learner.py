@@ -99,6 +99,52 @@ class Learner:
         
         return True
 
+    def debugEq(self,o: object) -> bool:
+
+        # Object must be an instance of Learner
+        if not isinstance(o, Learner):
+            print("other object is not instance of Learner")
+            return False
+
+        # The object must have been created the same generation as us
+        if self.genCreate != o.genCreate:
+            print("other object has different genCreate")
+            return False
+
+        # The object's program must be equal to ours
+        if self.program != o.program:
+            print("other object has a different program")
+            return False
+
+        # The object's action object must be equal to ours
+        if self.actionObj != o.actionObj:
+            print("other object has a different action object")
+            return False
+
+        '''
+        The other object's inTeams must match our own, therefore:
+            - len(inTeams) must be equal
+            - every id that appears in our inTeams must appear in theirs (order doesn't matter)
+        '''
+        if len(self.inTeams) != len(o.inTeams):
+            print("other object has different number of inTeams")
+            return False
+
+        '''
+        Collection comparison via collection counters
+        https://www.journaldev.com/37089/how-to-compare-two-lists-in-python
+        '''
+        if collections.Counter(self.inTeams) != collections.Counter(o.inTeams):
+            print("other object has different inTeams")
+            return False
+
+        # The other object's id must be equal to ours
+        if self.id != o.id:
+            print("other object has different id")
+            return False
+        
+        return True
+
     '''
     Negation of __eq__
     '''

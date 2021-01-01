@@ -6,16 +6,20 @@ from tpg.trainer import Trainer
 from tpg.team import Team
 from tpg.learner import Learner
 
+
+
 #@unittest.skip
 class RunTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         # do a quick test run to get results
+
         cls.trainer, _ = runPopulationParallel(
-            envName="Boxing-v0", gens=50, popSize=25, reps=1,
-            frames=1000, processes=1, nRandFrames=5, rootBasedPop=True,
+            envName="Boxing-v0", gens=50, popSize=16, reps=1,
+            frames=1000, processes=16, nRandFrames=5, rootBasedPop=True,
             memType=None, operationSet="full", rampancy=(5,5,5), traversal="team")
+
 
     '''
     Runs tpg for a while measuring the reference counts on teams and learners,
@@ -31,7 +35,7 @@ class RunTest(unittest.TestCase):
                     refs += 1
 
             # ensure tracked amount and actual amount matches
-            self.assertEqual(refs, lrnr.numTeamsReferencing)
+            self.assertEqual(refs, lrnr.numTeamsReferencing())
 
         # iterate through all teams to see if any mistrack learners referencing
         for team in self.trainer.teams:
@@ -41,14 +45,14 @@ class RunTest(unittest.TestCase):
                     refs += 1
 
             # ensure tracked amount and actual amount matches
-            self.assertEqual(refs, team.numLearnersReferencing)
+            self.assertEqual(refs, team.numLearnersReferencing())
 
     '''
     Checks to make sure the team has at-least 2 learners and at-least one atomic
     action learner, and no learners self-reference the team after mutations.
     '''
-    def test_team_learner_constraints(self):
 
+    def test_team_learner_constraints(self):
         # make sure ever team in population follows these rules
         for team in self.trainer.teams:
             self.assertGreaterEqual(len(team.learners), 2)
@@ -76,4 +80,5 @@ class RunTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports'))

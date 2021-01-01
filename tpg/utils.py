@@ -37,13 +37,13 @@ def getTeams(team, rec=True, visited=None, result=None):
                 getTeams(lrnrTeam, rec=True, visited=visited, result=result)
 
         if len(visited) != len(result):
-            print("Visited {} teams but got {} teans. Something is a miss!".format(len(visited), len(result)))
+            print("[getTeams]Visited {} teams but got {} teans. Something is a miss!".format(len(visited), len(result)))
 
-            print("visited team ids:")
+            print("[getTeams]visited team ids:")
             for cursor in visited:
                 print(cursor)
 
-            print("result learner id's")
+            print("[getTeams]result team id's")
             for cursor in result:
                 print(cursor.id)
 
@@ -60,7 +60,7 @@ Returns the learners on this team, immediately or recursively.
 def getLearners(team, rec=True, tVisited=None, lVisited=None, result=None):
     if rec:
 
-        # track visited teams to not repeat
+        # track visited learners/teams to not repeat
         if tVisited is None:
             tVisited = set()
             lVisited = set()
@@ -73,23 +73,42 @@ def getLearners(team, rec=True, tVisited=None, lVisited=None, result=None):
             if cursor not in result:
                 result.append(cursor)
 
-        # get team count from each learner that has a team
+        # get learner count from each learner that has a team
         for lrnr in team.learners:
             lrnrTeam = lrnr.getActionTeam()
             if lrnrTeam is not None and str(lrnrTeam.id) not in tVisited:
                 getLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited, result=result)
 
         if len(lVisited) != len(result):
-            print("Visited {} learners but got {} learners. Something is a miss!".format(len(lVisited), len(result)))
+            print("[getLearners]Visited {} learners but got {} learners. Something is a miss!".format(len(lVisited), len(result)))
             
-            print("visited learner ids:")
+            print("[getLearners]visited learner ids:")
             for cursor in lVisited:
                 print(cursor)
 
-            print("result learner id's")
+            print("[getLearners]result learner id's")
+            freq = {}
             for cursor in result:
-                print(cursor.id)
+                if str(cursor.id) not in freq:
+                    freq[str(cursor.id)] = 1
+                else:
+                    freq[str(cursor.id)] = freq[str(cursor.id)] + 1
+    
+            print(freq)
 
+            for cursor in freq.items():
+                if cursor[1] > 1:
+                    first = None
+                    second = None
+                    for j in result:
+                        if str(j.id) == cursor[0]:
+                            if first == None:
+                                first = j
+                            else:
+                                second = j
+                                break 
+                    
+                    print("first == second? {}".format(first.debugEq(second)))
         return result
 
     else:
