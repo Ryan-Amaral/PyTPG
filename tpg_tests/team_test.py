@@ -33,7 +33,7 @@ class TeamTest(unittest.TestCase):
         mutation_samples = math.ceil(0.25*pow(z_a2/margin_of_error,2)) 
         return mutation_samples, margin_of_error
 
-    #@unittest.skip
+    @unittest.skip
     def test_create_team(self):
 
         # Create the team
@@ -51,7 +51,7 @@ class TeamTest(unittest.TestCase):
     '''
     Add a learner to a team
     '''
-    #@unittest.skip
+    @unittest.skip
     def test_add_learners(self):
 
         team = Team(dummy_init_params)
@@ -80,7 +80,7 @@ class TeamTest(unittest.TestCase):
     '''
     Verify that a team does not add a learner with the same program
     '''
-    #@unittest.skip
+    @unittest.skip
     def test_no_duplicate_learners(self):
 
         program = create_dummy_program()
@@ -101,7 +101,7 @@ class TeamTest(unittest.TestCase):
     '''
     Verify that the team removes a given learner
     '''
-    #@unittest.skip
+    @unittest.skip
     def test_remove_learner(self):
 
         # Create a team with a random number of learners
@@ -161,7 +161,7 @@ class TeamTest(unittest.TestCase):
     Verify that removing all learners from a team does so, without 
     destroying the underlying learner objects
     '''
-    #@unittest.skip
+    @unittest.skip
     def test_remove_all_learner(self):
 
         # Create a team with a random number of learners
@@ -187,7 +187,7 @@ class TeamTest(unittest.TestCase):
         for learner in learners:
             self.assertEqual(0, len(learner.inTeams))
 
-    #@unittest.skip
+    @unittest.skip
     def test_num_atomic_actions(self):
 
         # Create a team with a random number of learners
@@ -205,7 +205,7 @@ class TeamTest(unittest.TestCase):
         # Ensure the number of atomic actions reported by the team is the total - those we made non-atomic
         self.assertEqual(num_learners - random_subset_bound, team.numAtomicActions())
 
-    #@unittest.skip
+    @unittest.skip
     def test_mutation_delete(self):
 
         # Create a team with a random number of learners
@@ -348,7 +348,7 @@ class TeamTest(unittest.TestCase):
             print(acceptable_error)
             print(error_line)
     
-    #@unittest.skip
+    @unittest.skip
     def test_mutation_add(self):
 
         # Create several teams with random numbers of learners
@@ -449,7 +449,7 @@ class TeamTest(unittest.TestCase):
             print(acceptable_error)
             print(error_line)
 
-    #@unittest.skip
+    @unittest.skip
     def test_mutation_mutate(self):
 
         # Create a team with num_learners learners
@@ -550,7 +550,7 @@ class TeamTest(unittest.TestCase):
             print(actual_line)
             print(actual_freq_line)
 
-    #@unittest.skip
+    @unittest.skip
     def test_mutate(self):
 
         # Generate 4 teams for a mutation test
@@ -691,11 +691,11 @@ class TeamTest(unittest.TestCase):
                 print(inner_cursor)
 
         mutations_1, delta_1 = charlie_t.mutate(mutate_params_3, learner_pool, team_pool)
-        learner_pool += delta_1[0]['added_learners']
+        #learner_pool += delta_1[0]['added_learners']
         mutations_2, delta_2 = alpha_t.mutate(mutate_params_3, learner_pool, team_pool)
-        learner_pool += delta_2[0]['added_learners']
+        #learner_pool += delta_2[0]['added_learners']
         mutations_3, delta_3 = beta_t.mutate(mutate_params_3, learner_pool, team_pool)
-        learner_pool += delta_3[0]['added_learners']
+        #learner_pool += delta_3[0]['added_learners']
         mutations_4, delta_4 = delta_t.mutate(mutate_params_3, learner_pool, team_pool)
 
         
@@ -720,6 +720,9 @@ class TeamTest(unittest.TestCase):
 
         # For every inLearner mentioned in a team, ensure that learner exists and points to the team
         for cursor in all_teams:
+            print("These are duplicates:")
+            print([item for item, count in collections.Counter(cursor.inLearners).items() if count > 1])
+            print("-------")
             for inner_cursor in cursor.inLearners:
                 target_learners = [x for x in all_learners if str(x.id) == inner_cursor]
                 print("target learners: {}".format(len(target_learners)))
@@ -728,6 +731,10 @@ class TeamTest(unittest.TestCase):
                 target_learner = target_learners[0]
                 self.assertIsNotNone(target_learner)
                 self.assertIsNotNone(target_learner.actionObj.teamAction)
+
+                print("Expecting {} in learner {} action".format(str(cursor.id), str(target_learner.id)))
+                print("Got {}".format(str(target_learner.actionObj.teamAction.id)))
+
                 self.assertEqual(target_learner.actionObj.teamAction, cursor)
 
         # For every inTeam mentioned in a learner, ensure that team exists and has the learner in its list of learners

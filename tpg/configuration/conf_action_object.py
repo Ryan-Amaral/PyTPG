@@ -11,7 +11,8 @@ run if just a discrete action code.
 class ConfActionObject:
 
     def init_def(self, initParams=None, action = None):
-            
+
+
         '''
         Defer importing the Team class to avoid circular dependency.
         This may require refactoring to fix properly
@@ -24,12 +25,16 @@ class ConfActionObject:
         '''
         if isinstance(action, Team):
             self.teamAction = action
+            self.actionCode = None
+            print("chose team action")
+            return
     
 
         # The action is another action object
         if isinstance(action, ActionObject):
             self.actionCode = action.actionCode
             self.teamAction = action.teamAction
+            return
 
         # An int means the action is an index into the action codes in initParams
         if isinstance(action, int):
@@ -44,6 +49,8 @@ class ConfActionObject:
                 '''
                 TODO log index error
                 '''
+                print("Index error")
+            return
 
     def init_real(self, actionObj=None, program=None, actionIndex=None, teamAction=None,
             initParams=None):
@@ -144,14 +151,24 @@ class ConfActionObject:
             self.actionCode = random.choice(options)
 
             # If we previously pointed to a team, remove our learner from the list of learners who point to them
-            if self.teamAction is not None and not -1: # We use -1 in unit tests don't touch this
+            if self.teamAction is not None and self.teamAction is not -1: # We use -1 in unit tests don't touch this
                 self.teamAction.inLearners.remove(str(learner_id))
 
             self.teamAction = None
         else:
             # team action
-            self.teamAction = random.choice([t for t in teams
-                    if t is not self.teamAction and t is not parentTeam])
+            selection_pool = [t for t in teams
+                    if t is not self.teamAction and t is not parentTeam]
+
+            # if there are no valid choices do nothing
+            if len(selection_pool) == 0:
+                return self
+
+            # If we previously pointed to a team, remove our learner from the list of learners who point to them
+            if self.teamAction is not None and self.teamAction is not -1: # We use -1 in unit tests don't touch this
+                self.teamAction.inLearners.remove(str(learner_id))
+
+            self.teamAction = random.choice(selection_pool)
             # Add the learner to the team's in learers
             self.teamAction.inLearners.append(str(learner_id))
         

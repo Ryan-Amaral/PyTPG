@@ -84,7 +84,7 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     tStart = time.time()
 
     '''
-    Python really is something special if this works.
+    Python really is something special... sometimes it just deadlocks...¯\_(ツ)_/¯
     https://pythonspeed.com/articles/python-multiprocessing/
     '''
     set_start_method("spawn")
@@ -99,6 +99,8 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     trainer = Trainer(actions=acts, teamPopSize=popSize, rootBasedPop=rootBasedPop,
         memType=memType, operationSet=operationSet, rampancy=rampancy,
         traversal=traversal)
+    
+    trainer.dump_extra_graph_json()
 
     man = mp.Manager()
     pool = mp.Pool(processes=processes, maxtasksperchild=1)
@@ -117,14 +119,8 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
             # run the agents
             pool.map(runAgentParallel,
                 [(agent, envName, scoreList, reps, frames, nRandFrames)
-                for agent in agents],
-                chunksize=len(agents)//processes
+                for agent in agents]
             )
-
-            # run the agents
-            # pool.map(runAgentParallel,
-            #     [(agent, envName, scoreList, reps, frames, nRandFrames)
-            #     for agent in agents])
 
 
         except Exception as mpException:
@@ -153,7 +149,8 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
                 len(getTeams(champ)), len(getLearners(champ)), learnerInstructionStats(getLearners(champ), trainer.operations)))
 
         print(f"Gen: {gen}, Best Score: {scoreStats['max']}, Avg Score: {scoreStats['average']}, Time: {str((time.time() - tStart)/3600)}")
-
+        
+        trainer.dump_extra_graph_json()
 
     print('Time Taken (Hours): ' + str((time.time() - tStart)/3600))
     print('Results:\nMin, Max, Avg')

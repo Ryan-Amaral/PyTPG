@@ -101,7 +101,7 @@ class ConfTeam:
             # If that learner is pointed to by no other teams, remove it entirely
             if len(target_learner.inTeams) == 0:
                 # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
-                if target_learner.actionObj.teamAction != None and target_learner.actionObj.teamAction != -1:
+                if target_learner.actionObj.teamAction != None and target_learner.actionObj.teamAction != -1 and str(target_learner.id) in target_learner.actionObj.teamAction.inLearners:
                     target_learner.actionObj.teamAction.inLearners.remove(str(target_learner.id))
                 
             return
@@ -118,10 +118,10 @@ class ConfTeam:
     def removeLearners_def(self):
         for learner in self.learners:
             learner.inTeams.remove(str(self.id))
-            # If that learner is pointed to by no other teams, remove it entirely
-            if len(learner.inTeams) == 0:
-                # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
-                if learner.actionObj.teamAction != None and learner.actionObj.teamAction != -1:
+
+            if learner.numTeamsReferencing() == 0:
+                # if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
+                if learner.actionObj.teamAction != None and learner.actionObj.teamAction != -1 and str(learner.id) in learner.actionObj.teamAction.inLearners:
                     learner.actionObj.teamAction.inLearners.remove(str(learner.id))
                 
         del self.learners[:]

@@ -16,9 +16,9 @@ class RunTest(unittest.TestCase):
         # do a quick test run to get results
 
         cls.trainer, _ = runPopulationParallel(
-            envName="Boxing-v0", gens=50, popSize=16, reps=1,
+            envName="Boxing-v0", gens=100, popSize=2, reps=1,
             frames=1000, processes=16, nRandFrames=5, rootBasedPop=True,
-            memType=None, operationSet="full", rampancy=(5,5,5), traversal="team")
+            memType=None, operationSet="full", rampancy=(0,0,0), traversal="team")
 
 
     '''

@@ -18,8 +18,10 @@ class ConfLearner:
     action. Either requires a learner, or a program/action pair.
     """
     def init_def(self, initParams, program, actionObj, numRegisters):
-        self.program = copy.deepcopy(program) #Each learner should have their own copy of the program
-        self.actionObj = copy.deepcopy(actionObj) #Each learner should have their own copy of the action object
+        self.program = Program(
+            instructions=program.instructions
+        ) #Each learner should have their own copy of the program
+        self.actionObj = ActionObject(action=actionObj) #Each learner should have their own copy of the action object
         self.registers = np.zeros(numRegisters, dtype=float)
 
         self.ancestor = None #By default no ancestor

@@ -9,6 +9,7 @@ import random
 import numpy as np
 import pickle
 from collections import namedtuple
+import json
 
 """
 Functionality for actually growing TPG and evolving it to be functional.
@@ -228,6 +229,7 @@ class Trainer:
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
             a1,a2 = random.sample(range(len(self.actionCodes)), 2)
+            
 
             l1 = Learner(self.mutateParams,
                         program=Program(maxProgramLength=self.initMaxProgSize,
@@ -322,7 +324,7 @@ class Trainer:
         self.select() # select individuals to keep
         self.generate() # create new individuals from those kept
         self.nextEpoch() # set up for next generation
-
+        self.validate_graph() # validate the tpg (for debug only)
     """
     Assigns a fitness to each agent based on performance at the tasks. Assigns
     fitness values, or just returns sorted root teams.
@@ -461,9 +463,16 @@ class Trainer:
         # don't delete elites because they may not be root
         for team in [t for t in deleteTeams if t not in self.elites]:
             for learner in team.learners:
+                if str(team.id) not in learner.inTeams:
+                    raise Exception("Team {} did not appear in one of its learner's ({}) inTeams ".format(str(team.id), str(learner.id)))
+                
                 # delete learner from population if this is last team referencing
                 if learner.numTeamsReferencing() == 1 and str(team.id) in learner.inTeams:
+                    team.removeLearner(learner)
                     self.learners.remove(learner) # permanently remove
+                
+
+
 
             # remove learners from team and delete team from populations
             team.removeLearners()
@@ -510,11 +519,79 @@ class Trainer:
                     self.learners.append(learner)
 
             # maybe make root team
-            if team.numLearnersReferencing() == 0 or team in self.elites:
+            #if team.numLearnersReferencing() == 0 or team in self.elites:
+            if team.numLearnersReferencing() == 0:
                 self.rootTeams.append(team)
 
         self.generation += 1
+    
+    '''
+    Go through all teams and learners and make sure their inTeams/inLearners correspond with 
+    their team.learner/teamActions as expected.
+    '''
+    def validate_graph(self):
+        print("Validating graph")
 
+        print("Checking for broken learners")
+        for cursor in self.learners:
+            if cursor.isActionAtomic() and cursor.actionObj.actionCode == None:
+                print("{} is an action atomic learner with no actionCode!".format(str(cursor.id)))
+            if cursor.actionObj.teamAction == None and cursor.actionObj.actionCode == None:
+                print("{} has no action!".format(str(cursor.id)))
+
+        learner_map = {}
+        for cursor in self.learners:
+            if str(cursor.id) not in learner_map:
+                learner_map[str(cursor.id)] = cursor.inTeams
+            else:
+                raise Exception("Duplicate learner id in trainer!")
+        
+        '''
+        For every entry in the learner map check that the corresponding team has the learner 
+        in its learners 
+        '''
+        for i,cursor in enumerate(learner_map.items()):
+            for expected_team in cursor[1]:
+                found_team = False
+                for team in self.teams:
+                    if str(team.id) == expected_team:
+                        found_learner = 0
+                        for learner in team.learners:
+                            if str(learner.id) == cursor[0]:
+                                found_learner += 1
+                        if found_learner != 1:
+                            print("found_learner = {} for learner {} in team {}".format(found_learner, cursor[0], str(team.id)))
+                        found_team = True
+                        break
+                if found_team == False:
+                    print("Could not find expected team {} in trainer".format(expected_team))
+            print("learner {} inTeams valid [{}/{}]".format(cursor[0], i, len(learner_map.items())-1))
+
+        '''
+        Verify that for every inLearner in a team, the learner exists in the trainer, pointing to that team
+        '''
+        team_map = {}
+        for cursor in self.teams:
+            if str(cursor.id) not in team_map:
+                team_map[str(cursor.id)] = cursor.inLearners
+            else:
+                raise Exception("Duplicate team id in trainer!")
+
+        for i,cursor in enumerate(team_map.items()):
+            for expected_learner in cursor[1]:
+                found_learner = False
+                points_to_team = False
+                for learner in self.learners:
+                    if str(learner.id) == expected_learner:
+                        found_learner = True
+                        if str(learner.actionObj.teamAction.id) == cursor[0]:
+                            points_to_team = True
+                            break
+                if found_learner == False:
+                    print("Could not find learner {} from team {} inLearners in trainer.".format(expected_learner, cursor[0]))
+                if points_to_team == False:
+                    print("Learner {} does not point to team {}".format(expected_learner, cursor[0]))
+            print("team {} inLearners valid [{}/{}]".format(cursor[0], i, len(team_map.items())-1))
     """
     Get the number of root teams currently residing in the teams population.
     """
@@ -532,6 +609,168 @@ class Trainer:
     def saveToFile(self, fileName):
         pickle.dump(self, open(fileName, 'wb'))
 
+
+    def dump_alternate_graph(self):
+ 
+
+        result = {
+            "nodes":[],
+            "links":[]
+        }
+
+        # First add action codes as nodes
+        for actionCode in self.actionCodes:
+            result["nodes"].append(
+                {
+                    "id": actionCode,
+                    "name": "actionCode",
+                    "val": 1,
+                    "type": "action"
+                }
+            )
+        
+        # Then add teams as nodes
+        for team in self.teams:
+            result["nodes"].append(
+                {
+                    "id": str(team.id),
+                    "name": "team",
+                    "val": 2,
+                    "type": "rootTeam" if team in self.rootTeams else "team"
+                }
+            )
+
+        # Then add learners as links
+        for learner in self.learners:
+            for team in learner.inTeams:
+                result["links"].append({
+                    "source": team,
+                    "target": learner.actionObj.actionCode if learner.isActionAtomic() else str(learner.actionObj.teamAction.id)
+                })
+
+
+        with open("tpg_alt_{}.json".format(self.generation), 'w') as out_file:
+            json.dump(result, out_file)       
+
+    def dump_graph_json(self):
+
+
+        result = {
+            "nodes":[],
+            "links":[]
+        }
+
+        # First add action codes as nodes
+        for actionCode in self.actionCodes:
+            result["nodes"].append(
+                {
+                    "id": actionCode,
+                    "name": "actionCode",
+                    "val": 1,
+                    "type": "action"
+                }
+            )
+        
+        # Then add teams as nodes
+        for team in self.teams:
+            result["nodes"].append(
+                {
+                    "id": str(team.id),
+                    "name": "team",
+                    "val": 2,
+                    "type": "rootTeam" if team in self.rootTeams else "team"
+                }
+            )
+
+        # Then add learners as links
+        for team in self.teams:
+            for learner in team.learners:
+                result["links"].append(
+                    {
+                        "source": str(team.id),
+                        "target": learner.actionObj.actionCode if learner.isActionAtomic() else str(learner.actionObj.teamAction.id)
+                    }
+                )
+
+        with open("tpg_{}.json".format(self.generation), 'w') as out_file:
+            json.dump(result, out_file)
+
+    def dump_extra_graph_json(self):
+
+
+        result = {
+            "nodes":[],
+            "links":[]
+        }
+
+        # First add action codes as nodes
+        for actionCode in self.actionCodes:
+            result["nodes"].append(
+                {
+                    "id": actionCode,
+                    "name": "actionCode",
+                    "val": 1,
+                    "type": "action"
+                }
+            )
+        
+        # Then add teams as nodes
+        for team in self.teams:
+            result["nodes"].append(
+                {
+                    "id": str(team.id),
+                    "name": str(team.id),
+                    "val": 2,
+                    "type": "rootTeam" if team in self.rootTeams else "team"
+                }
+            )
+
+        # Then add learners as nodes
+        for learner in self.learners:
+            result["nodes"].append(
+                {
+                    "id": str(learner.id),
+                    "name": str(learner.id),
+                    "val": 1,
+                    "type": "learner"
+                }
+            )
+
+
+        # Then add links from learners to teams
+        for team in self.teams:
+            for learner in team.inLearners:
+                result["links"].append(
+                    {
+                        "source": learner,
+                        "target": str(team.id)
+                    }
+                )
+        
+        # Then add links from teams to learners
+        for learner in self.learners:
+            for team in learner.inTeams:
+                result["links"].append(
+                    {
+                        "source": team,
+                        "target": str(learner.id)
+                    }
+                )
+            
+            # Also add links to action codes
+            if learner.isActionAtomic():
+                result["links"].append(
+                    {
+                        "source": str(learner.id),
+                        "target": learner.actionObj.actionCode
+                    }
+                )
+
+        with open("tpg_{}.json".format(self.generation), 'w') as out_file:
+            json.dump(result, out_file)
+
+
+
     """
     Function to cleanup anything that may interfere with another trainer run in
     the same thread of execution. Currently just sets tpg module functions to defaults.
@@ -545,3 +784,4 @@ Load some trainer from the file, returning it and repopulate class values.
 def loadTrainer(fileName):
     trainer = pickle.load(open(fileName, 'rb'))
     return trainer
+

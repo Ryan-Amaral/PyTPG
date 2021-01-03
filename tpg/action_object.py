@@ -31,12 +31,14 @@ class ActionObject:
         '''
         if isinstance(action, Team):
             self.teamAction = action
+            return
     
 
         # The action is another action object
         if isinstance(action, ActionObject):
             self.actionCode = action.actionCode
             self.teamAction = action.teamAction
+            return
 
         # An int means the action is an index into the action codes in initParams
         if isinstance(action, int):
@@ -51,6 +53,7 @@ class ActionObject:
                 '''
                 TODO log index error
                 '''
+            return
 
 
     # def __init__(self, actionObj=None, actionIndex=None, teamAction=None,
@@ -126,8 +129,6 @@ class ActionObject:
     Change action to team or atomic action.
     """
     def mutate(self, mutateParams, parentTeam, teams, pActAtom, learner_id):
-
-
         # mutate action
         if flip(pActAtom):
             # atomic
@@ -142,14 +143,24 @@ class ActionObject:
             self.actionCode = random.choice(options)
 
             # If we previously pointed to a team, remove our learner from the list of learners who point to them
-            if self.teamAction is not None and not -1: # We use -1 in unit tests don't touch this
+            if self.teamAction is not None and self.teamAction is not -1: # We use -1 in unit tests don't touch this
                 self.teamAction.inLearners.remove(str(learner_id))
 
             self.teamAction = None
         else:
             # team action
-            self.teamAction = random.choice([t for t in teams
-                    if t is not self.teamAction and t is not parentTeam])
+            selection_pool = [t for t in teams
+                    if t is not self.teamAction and t is not parentTeam]
+
+            # if there are no valid choices do nothing
+            if len(selection_pool) == 0:
+                return self
+
+            # If we previously pointed to a team, remove our learner from the list of learners who point to them
+            if self.teamAction is not None and self.teamAction is not -1: # We use -1 in unit tests don't touch this
+                self.teamAction.inLearners.remove(str(learner_id))
+
+            self.teamAction = random.choice(selection_pool)
             # Add the learner to the team's in learers
             self.teamAction.inLearners.append(str(learner_id))
         

@@ -70,6 +70,10 @@ class Team:
         if collections.Counter(self.inLearners) != collections.Counter(o.inLearners):
             return False
 
+        # The other object's id must be equal to ours
+        if self.id != o.id:
+            return False
+
         return True
 
     '''
@@ -99,7 +103,7 @@ class Team:
             raise(Exception("Already visited {}!".format(str(self.id))))
 
         visited.append(str(self.id)) # track visited teams
-
+        
 
         top_learner = max([lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
@@ -138,7 +142,6 @@ class Team:
     Removes learner from the team and updates number of references to that program.
     """
     def removeLearner(self, learner):
-
         # only delete if actually in this team
         if learner in self.learners:
             '''
@@ -154,7 +157,7 @@ class Team:
             # If that learner is pointed to by no other teams, remove it entirely
             if len(target_learner.inTeams) == 0:
                 # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
-                if target_learner.actionObj.teamAction != None and target_learner.actionObj.teamAction != -1:
+                if target_learner.actionObj.teamAction != None and target_learner.actionObj.teamAction != -1 and str(target_learner.id) in target_learner.actionObj.teamAction.inLearners:
                     target_learner.actionObj.teamAction.inLearners.remove(str(target_learner.id))
                 
             return
@@ -171,10 +174,10 @@ class Team:
     def removeLearners(self):
         for learner in self.learners:
             learner.inTeams.remove(str(self.id))
-            # If that learner is pointed to by no other teams, remove it entirely
-            if len(learner.inTeams) == 0:
-                # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
-                if learner.actionObj.teamAction != None and learner.actionObj.teamAction != -1:
+
+            if learner.numTeamsReferencing() == 0:
+                # if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
+                if learner.actionObj.teamAction != None and learner.actionObj.teamAction != -1 and str(learner.id) in learner.actionObj.teamAction.inLearners:
                     learner.actionObj.teamAction.inLearners.remove(str(learner.id))
                 
         del self.learners[:]
@@ -221,7 +224,7 @@ class Team:
                 raise Exception("Less than one atomic action in team! This shouldn't happen", self)
 
 
-            deleted_learners = list()
+            deleted_learners = []
 
             # delete some learners
             while flip(probability) and len(self.learners) > 2: # must have >= 2 learners
@@ -268,9 +271,14 @@ class Team:
             # If this were true, we'd end up adding the entire selection pool
             raise Exception("pLrnAdd is greater than or equal to 1.0!")
 
-        added_learners = list()   
+        added_learners = []  
         while flip(probability):
+            # If no valid selections left, break out of the loop
+            if len(selection_pool) == 0:
+                break
+
             probability *= original_probability # decrease next chance
+
 
             learner = random.choice(selection_pool)
             added_learners.append(learner)
@@ -369,7 +377,7 @@ class Team:
             selection_pool = list(filter(lambda x: x not in self.learners, allLearners))
             
             # Filter out learners that point to this team
-            selection_pool = list(filter(lambda x: x not in self.inLearners, selection_pool))
+            selection_pool = list(filter(lambda x: str(x.id) not in self.inLearners, selection_pool))
 
             # Filter out learners we just deleted
             selection_pool = list(filter(lambda x: x not in deleted_learners, selection_pool))

@@ -14,8 +14,10 @@ produce the bid value for this learner's action.
 class Learner:
 
     def __init__(self, initParams, program, actionObj, numRegisters):
-        self.program = copy.deepcopy(program) #Each learner should have their own copy of the program
-        self.actionObj = copy.deepcopy(actionObj) #Each learner should have their own copy of the action object
+        self.program = Program(
+            instructions=program.instructions
+        ) #Each learner should have their own copy of the program
+        self.actionObj = ActionObject(action=actionObj) #Each learner should have their own copy of the action object
         self.registers = np.zeros(numRegisters, dtype=float)
 
         self.ancestor = None #By default no ancestor
@@ -128,6 +130,10 @@ class Learner:
         '''
         if len(self.inTeams) != len(o.inTeams):
             print("other object has different number of inTeams")
+            print("us:")
+            print(self)
+            print("other learner:")
+            print(o)
             return False
 
         '''
@@ -155,10 +161,26 @@ class Learner:
     String representation of a learner
     '''
     def __str__(self):
-        return (
-            "id: " + str(self.id) + 
-            " created_at_gen: " + str(self.genCreate)
+        
+        result = """id: {}
+created_at_gen: {}
+program_id: {}
+type: {}
+action: {}
+numTeamsReferencing: {}
+inTeams:\n""".format(
+                self.id,
+                self.genCreate,
+                self.program.id,
+                "actionCode" if self.isActionAtomic() else "teamAction",
+                self.actionObj.actionCode if self.isActionAtomic() else self.actionObj.teamAction.id,
+                self.numTeamsReferencing()
             )
+
+        for cursor in self.inTeams:
+            result += "\t{}\n".format(cursor)
+        
+        return result
 
     """
     Create a new learner, either copied from the original or from a program or
@@ -200,6 +222,7 @@ class Learner:
     """
     def isActionAtomic(self):
         return self.actionObj.isAtomic()
+
 
     """
     Mutates either the program or the action or both. 

@@ -57,27 +57,34 @@ def getTeams(team, rec=True, visited=None, result=None):
 """
 Returns the learners on this team, immediately or recursively.
 """
-def getLearners(team, rec=True, tVisited=None, lVisited=None, result=None):
+def getLearners(team, rec=True, tVisited=None, lVisited=None, result=None, map=None):
     if rec:
 
         # track visited learners/teams to not repeat
         if tVisited is None:
             tVisited = set()
             lVisited = set()
-            result = list()
+            result = []
+            map = {}
 
         tVisited.add(str(team.id))
         [lVisited.add(str(lrnr.id)) for lrnr in team.learners]
         
         for cursor in team.learners:
+            if str(team.id) not in map:
+                    map[str(team.id)] = [str(cursor.id)]
+            else:
+                map[str(team.id)].append(str(cursor.id))
+
             if cursor not in result:
                 result.append(cursor)
 
+                
         # get learner count from each learner that has a team
         for lrnr in team.learners:
             lrnrTeam = lrnr.getActionTeam()
             if lrnrTeam is not None and str(lrnrTeam.id) not in tVisited:
-                getLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited, result=result)
+                getLearners(lrnrTeam, rec=True, tVisited=tVisited, lVisited=lVisited, result=result, map=map)
 
         if len(lVisited) != len(result):
             print("[getLearners]Visited {} learners but got {} learners. Something is a miss!".format(len(lVisited), len(result)))
@@ -109,6 +116,11 @@ def getLearners(team, rec=True, tVisited=None, lVisited=None, result=None):
                                 break 
                     
                     print("first == second? {}".format(first.debugEq(second)))
+                    print("id appears in the following teams: ")
+                    for entry in map.items():
+                        if str(first.id) in entry[1]:
+                            print(entry[0])
+
         return result
 
     else:
