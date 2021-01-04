@@ -295,8 +295,15 @@ class Team:
     '''
     def mutation_mutate(self, probability, mutateParams, teams):
         mutated_learners = {}
+        '''
+         This original learners thing is important, otherwise may mutate learners that we just added through mutation. 
+         This breaks reference tracking because it results in 'ghost learners' that were created during mutation, added themselves 
+         to inLearners in the teams they pointed to, but them were mutated out before being tracked by the trainer. So you end up
+         with teams hold a record in their inLearners to a learner that doesn't exist
+        '''
+        original_learners = list(self.learners)
 
-        for learner in self.learners:
+        for learner in original_learners:
 
             if flip(probability):
 
@@ -307,6 +314,7 @@ class Team:
                     # Otherwise let there be a probability that the learner's action is atomic as defined in the mutate params
                     pActAtom0 = mutateParams['pActAtom']
 
+                print("Team {} creating learner".format(self.id))
                 # Create a new new learner 
                 newLearner = Learner(mutateParams, learner.program, learner.actionObj, len(learner.registers))
                 
@@ -314,11 +322,14 @@ class Team:
                 # Must add before mutate so that the new learner has this team in its inTeams
                 self.addLearner(newLearner)
 
+
                 # mutate it
                 newLearner.mutate(mutateParams, self, teams, pActAtom0)
 
                 # Remove the existing learner from the team
                 self.removeLearner(learner)
+
+                print("removing old learner {}".format(learner.id,len(self.learners)))
 
                 # Add the mutated learner to our list of mutations
                 mutated_learners[str(learner.id)] = str(newLearner.id)
@@ -357,7 +368,7 @@ class Team:
         mutation_delta = {}
 
         for i in range(rampantReps):
-            
+            print("i/rampant reps:  {}/{} ".format(i, rampantReps))
             # delete some learners
             '''
             TODO log mutation deltas...

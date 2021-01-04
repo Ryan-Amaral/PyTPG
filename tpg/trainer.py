@@ -561,10 +561,11 @@ class Trainer:
             # add any new learners to the population
             for learner in team.learners:
                 if learner not in self.learners:
+                    print("Adding {} to trainer learners".format(learner.id))
                     self.learners.append(learner)
 
             # maybe make root team
-            #if team.numLearnersReferencing() == 0 or team in self.elites:
+            #if team.numLearnersReferencing() == 0 or team in self.elites: TODO - ask ryan
             if team.numLearnersReferencing() == 0:
                 self.rootTeams.append(team)
 

@@ -49,6 +49,9 @@ class ConfLearner:
         if not self.isActionAtomic():
             self.actionObj.teamAction.inLearners.append(str(self.id))
 
+        print("Created learner {} [{}] -> {}".format(self.id, "atomic" if self.isActionAtomic() else "Team", self.actionObj.actionCode if self.isActionAtomic() else self.actionObj.teamAction.id))
+        
+
 
     """
     Get the bid value, highest gets its action selected.

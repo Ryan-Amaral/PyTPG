@@ -159,7 +159,7 @@ class ConfTeam:
         mutation_delta = {}
 
         for i in range(rampantReps):
-            
+            print("i/rampant reps:  {}/{} ".format(i, rampantReps))
             # delete some learners
             '''
             TODO log mutation deltas...
@@ -172,7 +172,7 @@ class ConfTeam:
             selection_pool = list(filter(lambda x: x not in self.learners, allLearners))
             
             # Filter out learners that point to this team
-            selection_pool = list(filter(lambda x: x not in self.inLearners, selection_pool))
+            selection_pool = list(filter(lambda x: str(x.id) not in self.inLearners, selection_pool))
 
             # Filter out learners we just deleted
             selection_pool = list(filter(lambda x: x not in deleted_learners, selection_pool))
