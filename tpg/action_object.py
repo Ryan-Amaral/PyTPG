@@ -140,29 +140,28 @@ class ActionObject:
                 options = list(filter(lambda code: code != self.actionCode,mutateParams["actionCodes"]))
             else:
                 options = mutateParams["actionCodes"]
-            self.actionCode = random.choice(options)
 
-            # If we previously pointed to a team, remove our learner from the list of learners who point to them
-            if self.teamAction is not None and self.teamAction is not -1: # We use -1 in unit tests don't touch this
+            # let our current team know we won't be pointing to them anymore
+            if not self.isAtomic():
                 self.teamAction.inLearners.remove(str(learner_id))
 
+            self.actionCode = random.choice(options)
             self.teamAction = None
         else:
             # team action
             selection_pool = [t for t in teams
                     if t is not self.teamAction and t is not parentTeam]
 
-            # if there are no valid choices do nothing
-            if len(selection_pool) == 0:
-                return self
+            # If we have a valid set of options choose from them
+            if len(selection_pool) > 0:
+                # let our current team know we won't be pointing to them anymore
+                if not self.isAtomic():
+                    self.teamAction.inLearners.remove(str(learner_id))
 
-            # If we previously pointed to a team, remove our learner from the list of learners who point to them
-            if self.teamAction is not None and self.teamAction is not -1: # We use -1 in unit tests don't touch this
-                self.teamAction.inLearners.remove(str(learner_id))
+                self.teamAction = random.choice(selection_pool)
+                # Let the new team know we're pointing to them
+                self.teamAction.inLearners.append(str(learner_id))
 
-            self.teamAction = random.choice(selection_pool)
-            # Add the learner to the team's in learers
-            self.teamAction.inLearners.append(str(learner_id))
         
         return self
             

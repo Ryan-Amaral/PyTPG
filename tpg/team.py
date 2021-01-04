@@ -1,4 +1,5 @@
 
+from os import curdir
 import uuid
 from tpg.utils import flip
 from tpg.learner import Learner
@@ -143,30 +144,27 @@ class Team:
     """
     def removeLearner(self, learner):
         # only delete if actually in this team
-        if learner in self.learners:
-            '''
-            Have to remove by index so we can update the inTeams accordingly.
-            Attempting to do self.learners.remove(learner) will fail with a ValueError 
-            because once we modify the inTeams it's no longer the same learner. 
-            '''
-            index = self.learners.index(learner)
-            target_learner = self.learners[index]
-            target_learner.inTeams.remove(str(self.id))
-            del self.learners[index]
-
-            # If that learner is pointed to by no other teams, remove it entirely
-            if len(target_learner.inTeams) == 0:
-                # in addition, if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
-                if target_learner.actionObj.teamAction != None and target_learner.actionObj.teamAction != -1 and str(target_learner.id) in target_learner.actionObj.teamAction.inLearners:
-                    target_learner.actionObj.teamAction.inLearners.remove(str(target_learner.id))
-                
-            return
-
         '''
         TODO log the attempt to remove a learner that doesn't appear in this team
         '''
-        print("learner not in team")
-        return
+        if learner not in self.learners:
+            raise Exception("Attempted to remove a learner ({}) not referenced by team {}".format(
+            str(learner.id), str(self.id)
+        ))
+
+        # Find the learner to remove
+        to_remove = [cursor for  cursor in self.learners if cursor == learner]
+        if len(to_remove) != 1:
+            raise Exception("Duplicate learner detected during team.removeLearner. {} duplicates".format(len(to_remove)))
+        to_remove = to_remove[0]
+
+        # Build a new list of learners containing only learners that are not the learner
+        self.learners = [cursor for cursor in self.learners if cursor != learner ]
+
+        # Remove our id from the learner's inTeams
+        # NOTE: Have to do this after removing the learner otherwise, removal will fail 
+        # since the learner's inTeams will not match 
+        to_remove.inTeams.remove(str(self.id))
 
     """
     Bulk removes learners from the team.
@@ -175,11 +173,6 @@ class Team:
         for learner in self.learners:
             learner.inTeams.remove(str(self.id))
 
-            if learner.numTeamsReferencing() == 0:
-                # if this learner was pointing to a team, make sure to delete the learner's id from that team's inLearners
-                if learner.actionObj.teamAction != None and learner.actionObj.teamAction != -1 and str(learner.id) in learner.actionObj.teamAction.inLearners:
-                    learner.actionObj.teamAction.inLearners.remove(str(learner.id))
-                
         del self.learners[:]
 
     """

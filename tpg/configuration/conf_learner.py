@@ -45,11 +45,9 @@ class ConfLearner:
         # Assign id from initParams counter
         self.id = uuid.uuid4()
 
-        # If we point to a team, ensure we're in that team's inLearners
-        if not self.actionObj.isAtomic():
-            if str(self.id) not in self.actionObj.teamAction.inLearners:
-                self.actionObj.teamAction.inLearners.append(str(self.id))
-            
+
+        if not self.isActionAtomic():
+            self.actionObj.teamAction.inLearners.append(str(self.id))
 
 
     """

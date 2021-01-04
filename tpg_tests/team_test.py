@@ -33,7 +33,7 @@ class TeamTest(unittest.TestCase):
         mutation_samples = math.ceil(0.25*pow(z_a2/margin_of_error,2)) 
         return mutation_samples, margin_of_error
 
-    @unittest.skip
+    #@unittest.skip
     def test_create_team(self):
 
         # Create the team
@@ -51,7 +51,7 @@ class TeamTest(unittest.TestCase):
     '''
     Add a learner to a team
     '''
-    @unittest.skip
+    #@unittest.skip
     def test_add_learners(self):
 
         team = Team(dummy_init_params)
@@ -80,7 +80,7 @@ class TeamTest(unittest.TestCase):
     '''
     Verify that a team does not add a learner with the same program
     '''
-    @unittest.skip
+    #@unittest.skip
     def test_no_duplicate_learners(self):
 
         program = create_dummy_program()
@@ -101,22 +101,17 @@ class TeamTest(unittest.TestCase):
     '''
     Verify that the team removes a given learner
     '''
-    @unittest.skip
+    #@unittest.skip
     def test_remove_learner(self):
 
         # Create a team with a random number of learners
-        num_learners = randint(0, 256)
+        num_learners = randint(2, 256)
         random_index_in_learners = randint(0, num_learners-1)
         team, learners = create_dummy_team(num_learners)
         aux_team, aux_learners = create_dummy_team()
 
         # Ensure the right number of learners appear in the team
         self.assertEqual(num_learners, len(team.learners))
-
-        # Point the randomly selected learner to the aux_team and add it to the aux_team's inLearners
-        team.learners[random_index_in_learners].actionObj.actionCode = None
-        team.learners[random_index_in_learners].actionObj.teamAction = aux_team
-        aux_team.inLearners.append(str(team.learners[random_index_in_learners].id))
 
         print("len(team.learners) before remove: {}".format(len(team.learners)))
 
@@ -138,16 +133,15 @@ class TeamTest(unittest.TestCase):
         # Ensure the list the team's learners shrunk by 1
         self.assertEqual(num_learners-1, len(team.learners))
 
-        # Ensure the selected learner no longer appears in the aux_team's inLearners
-        self.assertNotIn(str(selected_learner.id), aux_team.inLearners)
 
         # Ensure the learner at the randomly selected index is no longer the selected learner
         if random_index_in_learners < len(team.learners): # If we deleted from the end of the list this assert would IndexError
             self.assertNotEqual(selected_learner, team.learners[random_index_in_learners])
 
-        # Ensure nothing is removed if we ask to remove the same learner again
-        team.removeLearner(selected_learner)
-        self.assertEqual(num_learners - 1, len(team.learners))
+        # Ensure an exception is raised if we ask to remove the same learner again
+        with self.assertRaises(Exception) as expected:
+            team.removeLearner(selected_learner)
+            self.assertIsNotNone(expected.exception)
 
         # Ensure the referenced learner was not deleted outright
         print("removed learner: {}".format(reference_to_removed_learner))
@@ -161,7 +155,7 @@ class TeamTest(unittest.TestCase):
     Verify that removing all learners from a team does so, without 
     destroying the underlying learner objects
     '''
-    @unittest.skip
+    #@unittest.skip
     def test_remove_all_learner(self):
 
         # Create a team with a random number of learners
@@ -169,15 +163,7 @@ class TeamTest(unittest.TestCase):
         team, learners = create_dummy_team(num_learners)
         aux_team, aux_learners = create_dummy_team()
 
-        # Point the first learner to the aux team and add it to the aux team's in learners
-        team.learners[0].actionObj.actionCode = None
-        team.learners[0].actionObj.teamAction = aux_team
-        aux_team.inLearners.append(str(team.learners[0].id))
-
         team.removeLearners()
-
-        # Ensure the aux_team's inLearners is empty
-        self.assertEqual(0, len(aux_team.inLearners))
 
         # Ensure learners were deleted
         self.assertEqual(0, len(team.learners))
@@ -187,7 +173,7 @@ class TeamTest(unittest.TestCase):
         for learner in learners:
             self.assertEqual(0, len(learner.inTeams))
 
-    @unittest.skip
+    #@unittest.skip
     def test_num_atomic_actions(self):
 
         # Create a team with a random number of learners
@@ -205,7 +191,7 @@ class TeamTest(unittest.TestCase):
         # Ensure the number of atomic actions reported by the team is the total - those we made non-atomic
         self.assertEqual(num_learners - random_subset_bound, team.numAtomicActions())
 
-    @unittest.skip
+    #@unittest.skip
     def test_mutation_delete(self):
 
         # Create a team with a random number of learners
@@ -348,7 +334,7 @@ class TeamTest(unittest.TestCase):
             print(acceptable_error)
             print(error_line)
     
-    @unittest.skip
+    #@unittest.skip
     def test_mutation_add(self):
 
         # Create several teams with random numbers of learners
@@ -449,7 +435,7 @@ class TeamTest(unittest.TestCase):
             print(acceptable_error)
             print(error_line)
 
-    @unittest.skip
+    #@unittest.skip
     def test_mutation_mutate(self):
 
         # Create a team with num_learners learners
@@ -550,7 +536,7 @@ class TeamTest(unittest.TestCase):
             print(actual_line)
             print(actual_freq_line)
 
-    @unittest.skip
+    #@unittest.skip
     def test_mutate(self):
 
         # Generate 4 teams for a mutation test
