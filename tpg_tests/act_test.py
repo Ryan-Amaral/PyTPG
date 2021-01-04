@@ -54,7 +54,7 @@ class ActTest(unittest.TestCase):
         
         valid_actions = list()
         for cursor in valid_selection:
-            valid_actions.append(team.act(state=state, actVars=actVars))
+            valid_actions.append(team.act(state=state, actVars=actVars,visited=list()))
 
         # Ensure the chosen action is in the list of valid actions
         self.assertIn(top_learner.getAction(state=state, visited=list()), valid_actions)
