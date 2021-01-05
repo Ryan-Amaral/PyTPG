@@ -546,8 +546,31 @@ class Trainer:
             for learner in parent.learners:
                 child.addLearner(learner)
 
-            # then mutates
-            child.mutate(self.mutateParams, oLearners, oTeams)
+            '''
+            With rampant mutations every mutateParams["rampantGen"] generations we do X extra
+            iterations of mutation. Where X is a random integer between mutateParams["rampantMin"] 
+            and mutateParams["rampantMax"] (both inclusive).
+            '''
+            # Throw an error if rampantMin is undefined but 
+            # Throw an error if rampantMin > rampant Max
+            # TODO: I think this checking should be removed (already checked in trainer init)
+            if self.mutateParams['rampantGen'] != 0 and self.mutateParams['rampantMin'] > self.mutateParams['rampantMax']:
+                raise Exception("Min rampant iterations is greater than max rampant iterations!", self.mutateParams)
+            
+            if (self.mutateParams["rampantGen"] > 0 and # The rapantGen cannot be 0, as x mod 0 is undefined
+                    self.mutateParams["generation"] % self.mutateParams["rampantGen"] == 0 and # Determine if this is a rampant generation
+                    self.mutateParams["generation"] > self.mutateParams["rampantGen"]  # Rampant generations cannot occur before generation passes rampantGen
+                    ): 
+                # multiple repetitions of mutation
+                rampantReps = random.randint(self.mutateParams["rampantMin"], self.mutateParams["rampantMax"])
+            else:
+                # just regular single mutation attempt
+                rampantReps = 1
+
+            # mutate child rampantReps times
+            for i in range(rampantReps):
+                #print("i/rampant reps:  {}/{} ".format(i, rampantReps))
+                child.mutate(self.mutateParams, oLearners, oTeams)
 
             self.teams.append(child)
 

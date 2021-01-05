@@ -343,61 +343,36 @@ class Team:
     """
     def mutate(self, mutateParams, allLearners, teams):
 
-        
-        '''
-        With rampant mutations every mutateParams["rampantGen"] generations we do X extra
-        iterations of mutation. Where X is a random number between mutateParams["rampantMin"] 
-        and mutateParams["rampantMax"].
-        '''
-        # Throw an error if rampantMin is undefined but 
-
-        # Throw an error if rampantMin > rampant Max
-        if mutateParams['rampantGen'] != 0 and mutateParams['rampantMin'] > mutateParams['rampantMax']:
-            raise Exception("Min rampant iterations is greater than max rampant iterations!", mutateParams)
-        
-        if (mutateParams["rampantGen"] > 0 and # The rapantGen cannot be 0, as x mod 0 is undefined
-            mutateParams["generation"] % mutateParams["rampantGen"] == 0 and # Determine if this is a rampant generation
-            mutateParams["generation"] > mutateParams["rampantGen"]  # Rampant generations cannot occur before generation passes rampantGen
-            ): 
-            rampantReps = random.randrange(mutateParams["rampantMin"], mutateParams["rampantMax"]) if mutateParams['rampantMin'] < mutateParams['rampantMax'] else mutateParams['rampantMin']
-        else:
-            rampantReps = 1
-
-        # increase diversity by repeating mutations
-
         mutation_delta = {}
+        # delete some learners
+        '''
+        TODO log mutation deltas...
+        '''
+        deleted_learners = self.mutation_delete(mutateParams["pLrnDel"])
 
-        for i in range(rampantReps):
-            print("i/rampant reps:  {}/{} ".format(i, rampantReps))
-            # delete some learners
-            '''
-            TODO log mutation deltas...
-            '''
-            deleted_learners = self.mutation_delete(mutateParams["pLrnDel"])
+        # Create a selection pool from which to add learners to this team
+        
+        # Filter out learners that already belong to this team
+        selection_pool = list(filter(lambda x: x not in self.learners, allLearners))
+        
+        # Filter out learners that point to this team
+        selection_pool = list(filter(lambda x: str(x.id) not in self.inLearners, selection_pool))
 
-            # Create a selection pool from which to add learners to this team
-            
-            # Filter out learners that already belong to this team
-            selection_pool = list(filter(lambda x: x not in self.learners, allLearners))
-            
-            # Filter out learners that point to this team
-            selection_pool = list(filter(lambda x: str(x.id) not in self.inLearners, selection_pool))
+        # Filter out learners we just deleted
+        selection_pool = list(filter(lambda x: x not in deleted_learners, selection_pool))
+        
+        added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
 
-            # Filter out learners we just deleted
-            selection_pool = list(filter(lambda x: x not in deleted_learners, selection_pool))
-            
-            added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
+        # give chance to mutate all learners
+        mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
 
-            # give chance to mutate all learners
-            mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
-
-            # Compile mutation_delta for this iteration
-            mutation_delta[i] = {} 
-            mutation_delta[i]['deleted_learners'] = deleted_learners
-            mutation_delta[i]['added_learners'] = added_learners
-            mutation_delta[i]['mutated_learners'] = mutated_learners
+        # Compile mutation_delta for this iteration
+        mutation_delta = {} 
+        mutation_delta['deleted_learners'] = deleted_learners
+        mutation_delta['added_learners'] = added_learners
+        mutation_delta['mutated_learners'] = mutated_learners
 
         # return the number of iterations of mutation
-        return rampantReps, mutation_delta
+        return mutation_delta
 
     
