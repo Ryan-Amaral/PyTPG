@@ -142,7 +142,7 @@ class Team:
     """
     Removes learner from the team and updates number of references to that program.
     """
-    def removeLearner(self, learner):
+    def removeLearner(self, learner, gen=-1):
         # only delete if actually in this team
         '''
         TODO log the attempt to remove a learner that doesn't appear in this team
@@ -161,13 +161,18 @@ class Team:
         # Build a new list of learners containing only learners that are not the learner
         self.learners = [cursor for cursor in self.learners if cursor != learner ]
 
-        # Remove our id from the learner's inTeams
+        # Remove this team id from the learner's inTeams
         # NOTE: Have to do this after removing the learner otherwise, removal will fail 
         # since the learner's inTeams will not match 
         to_remove.inTeams.remove(str(self.id))
 
+        # remove learner from inLearners of it's actions team if applicable
+        if gen == to_remove.genCreate and not to_remove.isActionAtomic():
+            to_remove.getActionTeam().inLearners.remove(str(learner.id))
+
     """
     Bulk removes learners from the team.
+    TODO: This should probably make use of the removeLearner function.
     """
     def removeLearners(self):
         for learner in self.learners:
@@ -201,7 +206,7 @@ class Team:
           remaining learners.
         - Returns a list of learners removed from the team
     '''
-    def mutation_delete(self, probability):
+    def mutation_delete(self, probability, gen):
 
             original_probability = float(probability)
 
@@ -238,7 +243,7 @@ class Team:
                     learner = random.choice(valid_choices)
 
                 deleted_learners.append(learner)
-                self.removeLearner(learner)
+                self.removeLearner(learner, gen)
 
             return deleted_learners
 
@@ -293,7 +298,7 @@ class Team:
             - removed the target learner
             - records the target and it's mutated result in mutated_learners 
     '''
-    def mutation_mutate(self, probability, mutateParams, teams):
+    def mutation_mutate(self, probability, mutateParams, teams, gen):
         mutated_learners = {}
         '''
          This original learners thing is important, otherwise may mutate learners that we just added through mutation. 
@@ -327,7 +332,7 @@ class Team:
                 newLearner.mutate(mutateParams, self, teams, pActAtom0)
 
                 # Remove the existing learner from the team
-                self.removeLearner(learner)
+                self.removeLearner(learner, gen)
 
                 print("removing old learner {}".format(learner.id))
 
@@ -348,7 +353,7 @@ class Team:
         '''
         TODO log mutation deltas...
         '''
-        deleted_learners = self.mutation_delete(mutateParams["pLrnDel"])
+        deleted_learners = self.mutation_delete(mutateParams["pLrnDel"], mutateParams["generation"])
 
         # Create a selection pool from which to add learners to this team
         
@@ -364,7 +369,7 @@ class Team:
         added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
 
         # give chance to mutate all learners
-        mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
+        mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams, mutateParams["gen"])
 
         # Compile mutation_delta for this iteration
         mutation_delta = {} 

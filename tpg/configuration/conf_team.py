@@ -85,7 +85,7 @@ class ConfTeam:
     """
     Removes learner from the team and updates number of references to that program.
     """
-    def removeLearner_def(self, learner):
+    def removeLearner_def(self, learner, gen=-1):
         # only delete if actually in this team
         '''
         TODO log the attempt to remove a learner that doesn't appear in this team
@@ -104,10 +104,14 @@ class ConfTeam:
         # Build a new list of learners containing only learners that are not the learner
         self.learners = [cursor for cursor in self.learners if cursor != learner ]
 
-        # Remove our id from the learner's inTeams
+        # Remove this team id from the learner's inTeams
         # NOTE: Have to do this after removing the learner otherwise, removal will fail 
         # since the learner's inTeams will not match 
         to_remove.inTeams.remove(str(self.id))
+
+        # remove learner from inLearners of it's actions team if applicable
+        if gen == to_remove.genCreate and not to_remove.isActionAtomic():
+            to_remove.getActionTeam().inLearners.remove(str(learner.id))
 
     """
     Bulk removes learners from teams.
@@ -139,7 +143,7 @@ class ConfTeam:
         '''
         TODO log mutation deltas...
         '''
-        deleted_learners = self.mutation_delete(mutateParams["pLrnDel"])
+        deleted_learners = self.mutation_delete(mutateParams["pLrnDel"], mutateParams["generation"])
 
         # Create a selection pool from which to add learners to this team
         
@@ -155,7 +159,7 @@ class ConfTeam:
         added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
 
         # give chance to mutate all learners
-        mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
+        mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams, mutateParams["generation"])
 
         # Compile mutation_delta for this iteration
         mutation_delta = {} 
