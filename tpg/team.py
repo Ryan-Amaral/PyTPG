@@ -369,7 +369,7 @@ class Team:
         added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
 
         # give chance to mutate all learners
-        mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams, mutateParams["gen"])
+        mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams, mutateParams["generation"])
 
         # Compile mutation_delta for this iteration
         mutation_delta = {} 
