@@ -329,7 +329,7 @@ class Team:
                 # Remove the existing learner from the team
                 self.removeLearner(learner)
 
-                print("removing old learner {}".format(learner.id,len(self.learners)))
+                print("removing old learner {}".format(learner.id))
 
                 # Add the mutated learner to our list of mutations
                 mutated_learners[str(learner.id)] = str(newLearner.id)
