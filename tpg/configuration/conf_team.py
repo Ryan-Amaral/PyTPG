@@ -133,7 +133,6 @@ class ConfTeam:
     Mutates the learner set of this team.
     """
     def mutate_def(self, mutateParams, allLearners, teams):
-
         
         '''
         With rampant mutations every mutateParams["rampantGen"] generations we do X extra
@@ -157,6 +156,7 @@ class ConfTeam:
         # increase diversity by repeating mutations
 
         mutation_delta = {}
+        new_learners = []
 
         for i in range(rampantReps):
             print("i/rampant reps:  {}/{} ".format(i, rampantReps))
@@ -180,13 +180,22 @@ class ConfTeam:
             added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
 
             # give chance to mutate all learners
-            mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
+            mutated_learners, mutation_added_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
+            new_learners += mutation_added_learners
 
             # Compile mutation_delta for this iteration
             mutation_delta[i] = {} 
             mutation_delta[i]['deleted_learners'] = deleted_learners
             mutation_delta[i]['added_learners'] = added_learners
             mutation_delta[i]['mutated_learners'] = mutated_learners
+
+        for cursor in new_learners:
+            if cursor in self.learners:
+                new_learners.remove(cursor)
+
+        for cursor in new_learners:
+                if len(cursor.inTeams) == 0 and not cursor.isActionAtomic():
+                    cursor.actionObj.teamAction.inLearners.remove(str(cursor.id))
 
         # return the number of iterations of mutation
         return rampantReps, mutation_delta

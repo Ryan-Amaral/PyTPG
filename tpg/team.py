@@ -220,7 +220,7 @@ class Team:
             deleted_learners = []
 
             # delete some learners
-            while flip(probability) and len(self.learners) > 2: # must have >= 2 learners
+            if flip(probability) and len(self.learners) > 2: # must have >= 2 learners
                 probability *= original_probability # decrease next chance
 
 
@@ -265,10 +265,10 @@ class Team:
             raise Exception("pLrnAdd is greater than or equal to 1.0!")
 
         added_learners = []  
-        while flip(probability):
+        if flip(probability):
             # If no valid selections left, break out of the loop
-            if len(selection_pool) == 0:
-                break
+            #if len(selection_pool) == 0:
+                #break
 
             probability *= original_probability # decrease next chance
 
@@ -302,7 +302,7 @@ class Team:
          with teams hold a record in their inLearners to a learner that doesn't exist
         '''
         original_learners = list(self.learners)
-
+        new_learners = []
         for learner in original_learners:
 
             if flip(probability):
@@ -316,8 +316,8 @@ class Team:
 
                 print("Team {} creating learner".format(self.id))
                 # Create a new new learner 
-                newLearner = Learner(mutateParams, learner.program, learner.actionObj, len(learner.registers))
-                
+                newLearner = Learner(mutateParams, learner.program, learner.actionObj, len(learner.registers), learner.id)
+                new_learners.append(newLearner)
                 # Add the mutated learner to our learners
                 # Must add before mutate so that the new learner has this team in its inTeams
                 self.addLearner(newLearner)
@@ -334,9 +334,8 @@ class Team:
                 # Add the mutated learner to our list of mutations
                 mutated_learners[str(learner.id)] = str(newLearner.id)
 
-
       
-        return mutated_learners              
+        return mutated_learners, new_learners              
 
     """
     Mutates the learner set of this team.
@@ -366,6 +365,7 @@ class Team:
         # increase diversity by repeating mutations
 
         mutation_delta = {}
+        new_learners = []
 
         for i in range(rampantReps):
             print("i/rampant reps:  {}/{} ".format(i, rampantReps))
@@ -389,13 +389,22 @@ class Team:
             added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
 
             # give chance to mutate all learners
-            mutated_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
+            mutated_learners, mutation_added_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
+            new_learners += mutation_added_learners
 
             # Compile mutation_delta for this iteration
             mutation_delta[i] = {} 
             mutation_delta[i]['deleted_learners'] = deleted_learners
             mutation_delta[i]['added_learners'] = added_learners
             mutation_delta[i]['mutated_learners'] = mutated_learners
+
+        for cursor in new_learners:
+            if cursor in self.learners:
+                new_learners.remove(cursor)
+
+        for cursor in new_learners:
+                if len(cursor.inTeams) == 0 and not cursor.isActionAtomic():
+                    cursor.actionObj.teamAction.inLearners.remove(str(cursor.id))
 
         # return the number of iterations of mutation
         return rampantReps, mutation_delta

@@ -17,7 +17,7 @@ class ConfLearner:
     Create a new learner, either copied from the original or from a program or
     action. Either requires a learner, or a program/action pair.
     """
-    def init_def(self, initParams, program, actionObj, numRegisters):
+    def init_def(self, initParams, program, actionObj, numRegisters, learner_id=None):
         self.program = Program(
             instructions=program.instructions
         ) #Each learner should have their own copy of the program
@@ -49,9 +49,9 @@ class ConfLearner:
         if not self.isActionAtomic():
             self.actionObj.teamAction.inLearners.append(str(self.id))
 
+        print("Creating a brand new learner" if learner_id == None else "Creating a learner from {}".format(str(learner_id)))
         print("Created learner {} [{}] -> {}".format(self.id, "atomic" if self.isActionAtomic() else "Team", self.actionObj.actionCode if self.isActionAtomic() else self.actionObj.teamAction.id))
         
-
 
     """
     Get the bid value, highest gets its action selected.
