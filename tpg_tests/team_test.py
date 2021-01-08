@@ -498,7 +498,7 @@ class TeamTest(unittest.TestCase):
                 # Ensure the copy worked
                 self.assertEqual(team, team_template)
 
-                mutated_learners = team.mutation_mutate(i, dummy_mutate_params, team_pool)  
+                mutated_learners,__ = team.mutation_mutate(i, dummy_mutate_params, team_pool)  
 
                 # Record the number of mutations
                 results[str(i)][j] = len(mutated_learners.items())
