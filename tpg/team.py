@@ -220,7 +220,7 @@ class Team:
             deleted_learners = []
 
             # delete some learners
-            if flip(probability) and len(self.learners) > 2: # must have >= 2 learners
+            while flip(probability) and len(self.learners) > 2: # must have >= 2 learners
                 probability *= original_probability # decrease next chance
 
 
@@ -265,10 +265,10 @@ class Team:
             raise Exception("pLrnAdd is greater than or equal to 1.0!")
 
         added_learners = []  
-        if flip(probability):
+        while flip(probability):
             # If no valid selections left, break out of the loop
-            #if len(selection_pool) == 0:
-                #break
+            if len(selection_pool) == 0:
+                break
 
             probability *= original_probability # decrease next chance
 
