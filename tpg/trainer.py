@@ -656,49 +656,7 @@ class Trainer:
         pickle.dump(self, open(fileName, 'wb'))
 
 
-    def dump_alternate_graph(self):
- 
-
-        result = {
-            "nodes":[],
-            "links":[]
-        }
-
-        # First add action codes as nodes
-        for actionCode in self.actionCodes:
-            result["nodes"].append(
-                {
-                    "id": actionCode,
-                    "name": "actionCode",
-                    "val": 1,
-                    "type": "action"
-                }
-            )
-        
-        # Then add teams as nodes
-        for team in self.teams:
-            result["nodes"].append(
-                {
-                    "id": str(team.id),
-                    "name": "team",
-                    "val": 2,
-                    "type": "rootTeam" if team in self.rootTeams else "team"
-                }
-            )
-
-        # Then add learners as links
-        for learner in self.learners:
-            for team in learner.inTeams:
-                result["links"].append({
-                    "source": team,
-                    "target": learner.actionObj.actionCode if learner.isActionAtomic() else str(learner.actionObj.teamAction.id)
-                })
-
-
-        with open("tpg_alt_{}.json".format(self.generation), 'w') as out_file:
-            json.dump(result, out_file)       
-
-    def dump_graph_json(self):
+    def get_graph(self):
 
 
         result = {
@@ -712,7 +670,6 @@ class Trainer:
                 {
                     "id": actionCode,
                     "name": "actionCode",
-                    "val": 1,
                     "type": "action"
                 }
             )
@@ -722,51 +679,6 @@ class Trainer:
             result["nodes"].append(
                 {
                     "id": str(team.id),
-                    "name": "team",
-                    "val": 2,
-                    "type": "rootTeam" if team in self.rootTeams else "team"
-                }
-            )
-
-        # Then add learners as links
-        for team in self.teams:
-            for learner in team.learners:
-                result["links"].append(
-                    {
-                        "source": str(team.id),
-                        "target": learner.actionObj.actionCode if learner.isActionAtomic() else str(learner.actionObj.teamAction.id)
-                    }
-                )
-
-        with open("tpg_{}.json".format(self.generation), 'w') as out_file:
-            json.dump(result, out_file)
-
-    def dump_extra_graph_json(self):
-
-
-        result = {
-            "nodes":[],
-            "links":[]
-        }
-
-        # First add action codes as nodes
-        for actionCode in self.actionCodes:
-            result["nodes"].append(
-                {
-                    "id": actionCode,
-                    "name": "actionCode",
-                    "val": 1,
-                    "type": "action"
-                }
-            )
-        
-        # Then add teams as nodes
-        for team in self.teams:
-            result["nodes"].append(
-                {
-                    "id": str(team.id),
-                    "name": str(team.id),
-                    "val": 2,
                     "type": "rootTeam" if team in self.rootTeams else "team"
                 }
             )
@@ -776,8 +688,6 @@ class Trainer:
             result["nodes"].append(
                 {
                     "id": str(learner.id),
-                    "name": str(learner.id),
-                    "val": 1,
                     "type": "learner"
                 }
             )
@@ -812,9 +722,9 @@ class Trainer:
                     }
                 )
 
-        with open("tpg_{}.json".format(self.generation), 'w') as out_file:
-            json.dump(result, out_file)
-
+        # with open("tpg_{}.json".format(self.generation), 'w') as out_file:
+        #     json.dump(result, out_file)
+        return result
 
 
     """
