@@ -111,10 +111,10 @@ class ActionObject:
     """
     Returns the action code, and if applicable corresponding real action(s).
     """
-    def getAction(self, state, visited, actVars=None):
+    def getAction(self, state, visited, actVars=None, path_trace=None):
         if self.teamAction is not None:
             # action from team
-            return self.teamAction.act(state, visited, actVars=actVars)
+            return self.teamAction.act(state, visited, actVars=actVars, path_trace=path_trace)
         else:
             # atomic action
             return self.actionCode

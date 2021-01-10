@@ -208,8 +208,8 @@ inTeams:\n""".format(
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction(self, state, visited, actVars=None):
-        return self.actionObj.getAction(state, visited, actVars=actVars)
+    def getAction(self, state, visited, actVars=None, path_trace=None):
+        return self.actionObj.getAction(state, visited, actVars=actVars, path_trace=path_trace)
 
     """
     Gets the team that is the action of the learners action object.

@@ -94,7 +94,7 @@ class Team:
     NOTE: Do not set visited = list() because that will only be
     evaluated once, and thus won't create a new list every time.
     """
-    def act(self, state, visited, actVars=None):
+    def act(self, state, visited, actVars=None, path_trace=None):
 
         # If we've already visited me, throw an exception
         if str(self.id) in visited:
@@ -105,28 +105,41 @@ class Team:
 
         visited.append(str(self.id)) # track visited teams
         
+        # Compute valid learners
+        valid_learners = [lrnr for lrnr in self.learners
+                if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited]
 
-        top_learner = max([lrnr for lrnr in self.learners
-                if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited],
+
+        top_learner = max(valid_learners,
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))
+    
+        # If we're tracing this path
+        if path_trace != None:
+            
+            last_segment = path_trace[-1] if len(path_trace) != 0 else None
 
+            # Create our path segment
+            path_segment =  {
+                'team_id': str(self.id),
+                'top_learner': str(top_learner.id),
+                'top_bid': top_learner.bid(state, actVars=actVars),
+                'top_action': top_learner.actionObj.actionCode if top_learner.isActionAtomic() else str(top_learner.actionObj.teamAction.id),
+                'depth': last_segment['depth'] + 1 if last_segment != None else 0,# Record path depth
+                'bids': []
+            }
 
-        # Print the path taken to this atomic action
-        # if top_learner.isActionAtomic():
-        #     path = ""
-        #     for i,cursor in enumerate(visited):
-        #         if i == 0:
-        #             path += "("
-        #         else:
-        #             path += "->("
-                
-        #         path += cursor + ")"
+            # Populate bid values
+            for cursor in valid_learners:
+                path_segment['bids'].append({
+                    'learner_id': str(cursor.id),
+                    'bid': cursor.bid(state, actVars=actVars),
+                    'action': cursor.actionObj.actionCode if cursor.isActionAtomic() else str(cursor.actionObj.teamAction.id)
+                })
 
-        #     path += "-> " + str(top_learner.actionObj.actionCode)
+            # Append our path segment to the trace
+            path_trace.append(path_segment)
 
-        #     print("[{}][{}] {}".format(actVars['frameNum'], len(visited), path))
-
-        return top_learner.getAction(state, visited=visited, actVars=actVars)
+        return top_learner.getAction(state, visited=visited, actVars=actVars, path_trace=path_trace) 
 
     """
     Adds learner to the team and updates number of references to that program.

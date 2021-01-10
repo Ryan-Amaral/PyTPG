@@ -91,8 +91,9 @@ class ConfLearner:
     Returns the action of this learner, either atomic, or requests the action
     from the action team.
     """
-    def getAction_def(self, state, visited, actVars=None):
-        return self.actionObj.getAction(state, visited, actVars=actVars)
+    def getAction_def(self, state, visited, actVars=None, path_trace=None):
+        return self.actionObj.getAction(state, visited, actVars=actVars, path_trace=path_trace)
+
 
 
     """

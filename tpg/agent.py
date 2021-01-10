@@ -1,6 +1,7 @@
 from tpg.program import Program
 import pickle
 from random import random
+import time
 
 """
 Simplified wrapper around a (root) team for easier interface for user.
@@ -18,10 +19,31 @@ class Agent:
     """
     Gets an action from the root team of this agent / this agent.
     """
-    def act(self, state):
+    def act(self, state, path_trace=None):
+        start_execution_time = time.time()
         self.actVars["frameNum"] = random()
         visited = list() #Create a new list to track visited team/learners each time
-        return self.team.act(state, visited=visited, actVars=self.actVars)
+        
+        result = None
+        path = None
+        if path_trace != None:
+            path = list()
+            result = self.team.act(state, visited=visited, actVars=self.actVars, path_trace=path)
+        else:
+            result = self.team.act(state, visited=visited, actVars=self.actVars)
+
+        end_execution_time = time.time()
+        execution_time = end_execution_time - start_execution_time
+        if path_trace != None:
+
+            path_trace['execution_time'] = execution_time
+            path_trace['execution_time_units'] = 'seconds'
+            path_trace['root_team_id'] = str(self.team.id)
+            path_trace['final_action'] = result
+            path_trace['path'] = path 
+            path_trace['depth'] = len(path)
+            
+        return result
 
     """
     Give this agent/root team a reward for the given task
