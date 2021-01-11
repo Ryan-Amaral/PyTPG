@@ -20,7 +20,7 @@ class ConfAgent:
     Gets an action from the root team of this agent / this agent.
     """
     def act_def(self, state, path_trace=None):
-        start_execution_time = time.time()
+        start_execution_time = int(round(time.time() * 1000))
         self.actVars["frameNum"] = random()
         visited = list() #Create a new list to track visited team/learners each time
         
@@ -32,12 +32,12 @@ class ConfAgent:
         else:
             result = self.team.act(state, visited=visited, actVars=self.actVars)
 
-        end_execution_time = time.time()
+        end_execution_time = int(round(time.time() * 1000))
         execution_time = end_execution_time - start_execution_time
         if path_trace != None:
 
             path_trace['execution_time'] = execution_time
-            path_trace['execution_time_units'] = 'seconds'
+            path_trace['execution_time_units'] = 'milliseconds'
             path_trace['root_team_id'] = str(self.team.id)
             path_trace['final_action'] = result
             path_trace['path'] = path 
