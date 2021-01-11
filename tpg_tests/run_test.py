@@ -18,7 +18,7 @@ class RunTest(unittest.TestCase):
         cls.trainer, _ = runPopulationParallel(
             envName="Boxing-v0", gens=100, popSize=2, reps=1,
             frames=1000, processes=16, nRandFrames=5, rootBasedPop=True,
-            memType=None, operationSet="full", rampancy=(1,5,5), traversal="team")
+            memType=None, operationSet="full", rampancy=(1,5,5), traversal="learner")
 
 
     '''

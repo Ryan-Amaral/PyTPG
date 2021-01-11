@@ -34,6 +34,8 @@ def runAgentParallel(args):
         numEpisodes = args[3] # number of times to repeat game
         numFrames = args[4] # frames to play for
         nRandFrames = args[5]
+        agent.actVars['traversal'] = args[6] # set traversal
+
 
         # skip if task already done by agent
         if agent.taskDone(envName):
@@ -116,7 +118,7 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
             
             # run the agents
             pool.map(runAgentParallel,
-                [(agent, envName, scoreList, reps, frames, nRandFrames)
+                [(agent, envName, scoreList, reps, frames, nRandFrames, trainer.traversal)
                 for agent in agents]
             )
 

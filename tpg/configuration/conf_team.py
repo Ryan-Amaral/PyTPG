@@ -26,23 +26,55 @@ class ConfTeam:
     """
     def act_def(self, state, visited, actVars=None, path_trace=None):
 
+        # Handle team traversal
+        if actVars["traversal"] == "team":
+            print("Team traversal")
 
-        # If we've already visited me, throw an exception
-        if str(self.id) in visited:
-            print("Visited:")
-            for i,cursor in enumerate(visited):
-                print("{}|{}".format(i, cursor))
-            raise(Exception("Already visited {}!".format(str(self.id))))
+            # If we've already visited me, throw an exception
+            if str(self.id) in visited:
+                print("Visited:")
+                for i,cursor in enumerate(visited):
+                    print("{}|{}".format(i, cursor))
+                raise(Exception("Already visited team {}!".format(str(self.id))))
 
-        visited.append(str(self.id)) # track visited teams
-        
-        # Compute valid learners
-        valid_learners = [lrnr for lrnr in self.learners
-                if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited]
+            # Add this team's id to the list of visited ids
+            visited.append(str(self.id)) 
+            
+            '''
+            Valid learners are ones which:
+                * Are action atomic
+                * Whose team we have not yet visited
+            '''
+            valid_learners = [lrnr for lrnr in self.learners
+                    if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited]
 
 
-        top_learner = max(valid_learners,
-            key=lambda lrnr: lrnr.bid(state, actVars=actVars))
+            top_learner = max(valid_learners,
+                key=lambda lrnr: lrnr.bid(state, actVars=actVars))
+        else:
+            print("learner traversal")
+
+            '''
+            Valid learners are ones which:
+                * Are action atomic
+                * We have not yet visited
+            '''
+            valid_learners = [lrnr for lrnr in self.learners
+                if lrnr.isActionAtomic() or str(lrnr.id) not in visited]
+
+            top_learner = max(valid_learners,
+                key=lambda lrnr: lrnr.bid(state, actVars=actVars))
+
+            # If we've already visited this learner throw an exception
+            if str(top_learner.id) in visited:
+                print("Visited:")
+                for i,cursor in enumerate(visited):
+                    print("{}|{}".format(i, cursor))
+                raise(Exception("Already visited learner {}!".format(str(top_learner.id))))
+
+            # Add the top learner's id to the list of visited ids.
+            visited.append(str(top_learner.id))
+
     
         # If we're tracing this path
         if path_trace != None:
@@ -71,7 +103,6 @@ class ConfTeam:
             path_trace.append(path_segment)
 
         return top_learner.getAction(state, visited=visited, actVars=actVars, path_trace=path_trace) 
-
 
 
     """
