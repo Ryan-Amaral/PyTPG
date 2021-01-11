@@ -324,7 +324,7 @@ class Trainer:
         self.select() # select individuals to keep
         self.generate() # create new individuals from those kept
         self.nextEpoch() # set up for next generation
-        self.validate_graph() # validate the tpg (for debug only)
+        #self.validate_graph() # validate the tpg (for debug only)
     """
     Assigns a fitness to each agent based on performance at the tasks. Assigns
     fitness values, or just returns sorted root teams.

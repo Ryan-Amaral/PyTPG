@@ -98,7 +98,6 @@ class Team:
 
         # Handle team traversal
         if actVars["traversal"] == "team":
-            print("Team traversal")
 
             # If we've already visited me, throw an exception
             if str(self.id) in visited:
@@ -122,7 +121,6 @@ class Team:
             top_learner = max(valid_learners,
                 key=lambda lrnr: lrnr.bid(state, actVars=actVars))
         else:
-            print("learner traversal")
 
             '''
             Valid learners are ones which:
