@@ -668,7 +668,7 @@ class Trainer:
         for actionCode in self.actionCodes:
             result["nodes"].append(
                 {
-                    "id": actionCode,   
+                    "id": str(actionCode),   
                     "type": "action"
                 }
             )
