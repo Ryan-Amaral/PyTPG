@@ -141,7 +141,7 @@ class ConfTeam:
             # Append our path segment to the trace
             path_trace.append(path_segment)
 
-        visited.add(str(top_learner.id))
+        visited.append(str(top_learner.id))
         return top_learner.getAction(state, visited=visited, actVars=actVars, path_trace=path_trace)
 
     """
