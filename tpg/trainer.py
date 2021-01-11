@@ -717,7 +717,7 @@ class Trainer:
                 result["links"].append(
                     {
                         "source": str(learner.id),
-                        "target": learner.actionObj.actionCode
+                        "target": str(learner.actionObj.actionCode)
                     }
                 )
 
