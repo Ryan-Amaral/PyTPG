@@ -565,8 +565,7 @@ class Trainer:
                     self.learners.append(learner)
 
             # maybe make root team
-            #if team.numLearnersReferencing() == 0 or team in self.elites: TODO - ask ryan
-            if team.numLearnersReferencing() == 0:
+            if team.numLearnersReferencing() == 0 or team in self.elites:
                 self.rootTeams.append(team)
 
         self.generation += 1
