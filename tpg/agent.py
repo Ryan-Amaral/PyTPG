@@ -20,6 +20,7 @@ class Agent:
     Gets an action from the root team of this agent / this agent.
     """
     def act(self, state, path_trace=None):
+        #print("What the fuck is this dumb ass bullshit")
         start_execution_time = time.time()*1000.0
         self.actVars["frameNum"] = random()
         visited = list() #Create a new list to track visited team/learners each time
@@ -56,6 +57,13 @@ class Agent:
     """
     def taskDone(self, task):
         return task in self.team.outcomes
+
+    """
+    Should be called when the agent is loaded from a file or when loaded into 
+    another process/thread, to ensure proper function used in all classes.
+    """
+    def configSelf(self):
+        pass
 
     """
     Save the agent to the file, saving any relevant class values to the instance.

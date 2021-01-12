@@ -1,11 +1,15 @@
-import numpy as np
-import gym
+
 import multiprocessing as mp
-from multiprocessing import set_start_method
-import time
-from tpg.trainer import Trainer
-from tpg.utils import getTeams, getLearners, learnerInstructionStats
 import os
+import time
+from multiprocessing import set_start_method
+import inspect
+
+import gym
+import numpy as np
+
+from tpg.trainer import Trainer
+from tpg.utils import getLearners, getTeams, learnerInstructionStats
 
 """
 Transform visual input from ALE to flat vector.
@@ -34,7 +38,19 @@ def runAgentParallel(args):
         numEpisodes = args[3] # number of times to repeat game
         numFrames = args[4] # frames to play for
         nRandFrames = args[5]
-        agent.actVars['traversal'] = args[6] # set traversal
+        #agent.team.act = args[6] # set traversal
+
+        from tpg.configuration.conf_team import ConfTeam
+        from tpg.team import Team
+        Team.act = ConfTeam.act_def
+
+        #print("agent runner agent act")
+        #print(inspect.getsource(agent.act))
+
+        #team = agent.team
+        #print("agent runner team act")
+        #print(inspect.getsource(team.act))
+        #print(1/0)
 
 
         # skip if task already done by agent
@@ -113,12 +129,13 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         scoreList = man.list()
 
         agents = trainer.getAgents() # swap out agents only at start of generation
+        agent = agents[0]
 
         try:
             
             # run the agents
             pool.map(runAgentParallel,
-                [(agent, envName, scoreList, reps, frames, nRandFrames, trainer.traversal)
+                [(agent, envName, scoreList, reps, frames, nRandFrames)
                 for agent in agents]
             )
 
@@ -178,6 +195,11 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
                 break
 
             agent = agents.pop()
+            team = agent.team
+            #print("in runPopulation!")
+            #print(inspect.getsource(team.act))
+            #print(1/0)
+            
             if agent.taskDone(envName):
                 continue
 
@@ -219,3 +241,7 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         print(score[0],score[1],score[2])
 
     return trainer, allScores[-1]
+
+
+if __name__ == "__main__":
+    runPopulationParallel()

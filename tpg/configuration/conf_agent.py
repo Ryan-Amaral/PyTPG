@@ -20,6 +20,10 @@ class ConfAgent:
     Gets an action from the root team of this agent / this agent.
     """
     def act_def(self, state, path_trace=None):
+
+        #print("in agent.act_def!!!!!!!!!!")
+        #print(1/0)
+
         start_execution_time = time.time()*1000.0
         self.actVars["frameNum"] = random()
         visited = list() #Create a new list to track visited team/learners each time

@@ -184,6 +184,11 @@ class Trainer:
 
         self.generation = 0 # track this
 
+        # these are to be set by the configurer after
+        self.mutateParams = {}
+        self.actVars = {}
+        self.nOperations = None
+
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
             memType is not None, memType, self.doReal, operationSet, traversal)
@@ -648,12 +653,6 @@ class Trainer:
 
         return numRTeams
 
-    """
-    Save the trainer to the file, saving any class values to the instance.
-    """
-    def saveToFile(self, fileName):
-        pickle.dump(self, open(fileName, 'wb'))
-
 
     def get_graph(self):
 
@@ -731,6 +730,20 @@ class Trainer:
     """
     def cleanup(self):
         configurer.configureDefaults(self, Trainer, Agent, Team, Learner, ActionObject, Program)
+
+    """
+    Ensures proper functions are in place for all classes. Ran after loading from a file,
+    and may need to be ran in other cases such as multiprocessing (though in out typical use
+    that is done at the agent level).
+    """
+    def configSelf(self):
+        pass
+
+    """
+    Save the trainer to the file, saving any class values to the instance.
+    """
+    def saveToFile(self, fileName):
+        pickle.dump(self, open(fileName, 'wb'))
 
 """
 Load some trainer from the file, returning it and repopulate class values.
