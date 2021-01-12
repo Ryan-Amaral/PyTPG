@@ -184,14 +184,18 @@ class Trainer:
 
         self.generation = 0 # track this
 
-        # these are to be set by the configurer after
+        # these are to be filled in by the configurer after
         self.mutateParams = {}
         self.actVars = {}
         self.nOperations = None
+        self.configFunctions = {}
 
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
             memType is not None, memType, self.doReal, operationSet, traversal)
+
+        #print(self.configFunctions)
+        #print(1/0)
 
         self.initializePopulations()
 

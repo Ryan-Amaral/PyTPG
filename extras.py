@@ -98,7 +98,7 @@ On an OpenAI gym environment.
 """
 def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         frames=18000, processes=4, nRandFrames=30, rootBasedPop=True,
-        memType=None, operationSet="full", rampancy=(5,5,5), traversal="team"):
+        memType=None, operationSet="full", rampancy=(5,5,5), traversal="learner"):
     tStart = time.time()
 
     '''
