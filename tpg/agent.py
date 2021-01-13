@@ -11,8 +11,9 @@ class Agent:
     """
     Create an agent with a team.
     """
-    def __init__(self, team, num=1, actVars=None):
+    def __init__(self, team, functionsDict, num=1, actVars=None):
         self.team = team
+        self.functionsDict = functionsDict
         self.agentNum = num
         self.actVars = actVars
 
@@ -62,31 +63,26 @@ class Agent:
     Should be called when the agent is loaded from a file or when loaded into 
     another process/thread, to ensure proper function used in all classes.
     """
-    def configFunctions(self):
-
-        # first set functions for Agent
-        from tpg.configuration.conf_agent import ConfAgent
-
-        if self.functionsDict["init"] == "def":
-            Agent.__init__ = ConfAgent.init_def
-
-        if self.functionsDict["act"] == "def":
-            Agent.act = ConfAgent.act_def
-
-        if self.functionsDict["reward"] == "def":
-            Agent.reward = ConfAgent.reward_def
-
-        if self.functionsDict["taskDone"] == "def":
-            Agent.taskDone = ConfAgent.taskDone_def
-
-        if self.functionsDict["saveToFile"] == "def":
-            Agent.saveToFile = ConfAgent.saveToFile_def
-
-        # then set functions for other classes
+    def configFunctionsSelf(self):
+        from tpg.team import Team
+        from tpg.learner import Learner
         from tpg.action_object import ActionObject
         from tpg.program import Program
-        from tpg.learner import Learner
-        from tpg.team import Team
+
+        # first set up Agent functions
+        Agent.configFunctions(self.functionsDict["Agent"])
+
+        # set up Team functions
+        Team.configFunctions(self.functionsDict["Team"])
+
+        # set up Learner functions
+        Learner.configFunctions(self.functionsDict["Learner"])
+
+        # set up ActionObject functions
+        ActionObject.configFunctions(self.functionsDict["ActionObject"])
+
+        # set up Program functions
+        Program.configFunctions(self.functionsDict["Program"])
 
     """
     Ensures proper functions are used in this class as set up by configurer.

@@ -38,20 +38,8 @@ def runAgentParallel(args):
         numEpisodes = args[3] # number of times to repeat game
         numFrames = args[4] # frames to play for
         nRandFrames = args[5]
-        #agent.team.act = args[6] # set traversal
-
-        from tpg.configuration.conf_team import ConfTeam
-        from tpg.team import Team
-        Team.act = ConfTeam.act_def
-
-        #print("agent runner agent act")
-        #print(inspect.getsource(agent.act))
-
-        #team = agent.team
-        #print("agent runner team act")
-        #print(inspect.getsource(team.act))
-        #print(1/0)
-
+        
+        agent.configFunctionsSelf()
 
         # skip if task already done by agent
         if agent.taskDone(envName):
@@ -98,7 +86,7 @@ On an OpenAI gym environment.
 """
 def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         frames=18000, processes=4, nRandFrames=30, rootBasedPop=True,
-        memType=None, operationSet="full", rampancy=(5,5,5), traversal="learner"):
+        memType=None, operationSet="full", rampancy=(5,5,5), traversal="team"):
     tStart = time.time()
 
     '''
@@ -119,7 +107,7 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         traversal=traversal)
 
     trainer.configFunctions()
-    print(1/0)
+    #print(1/0)
 
     man = mp.Manager()
     pool = mp.Pool(processes=processes, maxtasksperchild=1)

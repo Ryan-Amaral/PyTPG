@@ -26,7 +26,7 @@ class ConfTeam:
     """
     def act_def(self, state, visited, actVars=None, path_trace=None):
 
-        #print("in team.act_def!!!!!!!!!!")
+        print("in team.act_def!!!!!!!!!!")
         #print(1/0)
 
         # Handle team traversal

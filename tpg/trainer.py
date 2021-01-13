@@ -300,13 +300,13 @@ class Trainer:
                         or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
-            return [Agent(team, num=i, actVars=self.actVars)
+            return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
                     for i,team in enumerate(rTeams)]
         else:
             # apply scores/fitness to root teams
             self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
             # return teams sorted by fitness
-            return [Agent(team, num=i, actVars=self.actVars)
+            return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
                     for i,team in enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 

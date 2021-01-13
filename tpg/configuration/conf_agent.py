@@ -11,8 +11,9 @@ class ConfAgent:
     """
     Create an agent with a team.
     """
-    def init_def(self, team, num=1, actVars=None):
+    def init_def(self, team, functionsDict, num=1, actVars=None):
         self.team = team
+        self.functionsDict = functionsDict
         self.agentNum = num
         self.actVars = actVars
 
