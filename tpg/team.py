@@ -95,9 +95,6 @@ class Team:
     evaluated once, and thus won't create a new list every time.
     """
     def act(self, state, visited, actVars=None, path_trace=None):
-
-        print("in default")
-
         # If we've already visited me, throw an exception
         if str(self.id) in visited:
             print("Visited:")
@@ -457,4 +454,4 @@ class Team:
             cls.numAtomicActions = ConfTeam.numAtomicActions_def
 
         if functionsDict["mutate"] == "def":
-            cls.mutate = ConfTeam.numAtomicActions_def
+            cls.mutate = ConfTeam.mutate_def

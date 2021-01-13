@@ -26,12 +26,6 @@ class ConfTeam:
     """
     def act_def(self, state, visited, actVars=None, path_trace=None):
 
-        print("in team.act_def!!!!!!!!!!")
-        #print(1/0)
-
-        # Handle team traversal
-        #print("Team traversal")
-
         # If we've already visited me, throw an exception
         if str(self.id) in visited:
             print("Visited:")
@@ -88,7 +82,6 @@ class ConfTeam:
     Returns an action to use based on the current state. Learner traversal.
     """
     def act_learnerTrav(self, state, visited, actVars=None, path_trace=None):
-        print("learner trav")
 
         valid_learners = [lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.id) not in visited]

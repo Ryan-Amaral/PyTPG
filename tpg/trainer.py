@@ -767,5 +767,6 @@ Load some trainer from the file, returning it and repopulate class values.
 """
 def loadTrainer(fileName):
     trainer = pickle.load(open(fileName, 'rb'))
+    trainer.configFunctions()
     return trainer
 

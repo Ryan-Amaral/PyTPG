@@ -12,7 +12,7 @@ import pprint
 
 from tpg.team import Team
 
-from numpy.testing._private.utils import assert_equal
+#from numpy.testing._private.utils import assert_equal
 import xmlrunner
 
 from tpg_tests.test_utils import create_dummy_program, create_dummy_team_action,getStateALE, dummy_init_params, dummy_mutate_params, create_dummy_learner, create_dummy_team, create_dummy_learners

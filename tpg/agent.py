@@ -21,7 +21,6 @@ class Agent:
     Gets an action from the root team of this agent / this agent.
     """
     def act(self, state, path_trace=None):
-        #print("What the fuck is this dumb ass bullshit")
         start_execution_time = time.time()*1000.0
         self.actVars["frameNum"] = random()
         visited = list() #Create a new list to track visited team/learners each time
@@ -116,4 +115,6 @@ class Agent:
 Load some agent from the file, returning it and repopulate class values.
 """
 def loadAgent(fileName):
-    return pickle.load(open(fileName, 'rb'))
+    agent = pickle.load(open(fileName, 'rb'))
+    agent.configFunctions()
+    return agent
