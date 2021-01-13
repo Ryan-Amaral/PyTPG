@@ -157,4 +157,31 @@ class Program:
 
 
 
-                
+    """
+    Ensures proper functions are used in this class as set up by configurer.
+    """
+    @classmethod
+    def configFunctions(cls, functionsDict):
+        from tpg.configuration.conf_program import ConfProgram
+
+        if functionsDict["init"] == "def":
+            cls.__init__ = ConfProgram.init_def
+
+        if functionsDict["execute"] == "def":
+            cls.execute = ConfProgram.execute_def
+        elif functionsDict["execute"] == "full":
+            cls.execute = ConfProgram.execute_full
+        elif functionsDict["execute"] == "mem":
+            cls.execute = ConfProgram.execute_mem
+        elif functionsDict["execute"] == "mem_full":
+            cls.execute = ConfProgram.execute_mem_full
+
+        if functionsDict["mutate"] == "def":
+            cls.mutate = ConfProgram.mutate_def
+        
+        if functionsDict["memWriteProbFunc"] == "def":
+            cls.memWriteProbFunc = ConfProgram.memWriteProb_def
+        elif functionsDict["memWriteProbFunc"] == "cauchy1":
+            cls.memWriteProbFunc = ConfProgram.memWriteProb_cauchy1
+        elif functionsDict["memWriteProbFunc"] == "cauchyHalf":
+            cls.memWriteProbFunc = ConfProgram.memWriteProb_cauchyHalf

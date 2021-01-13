@@ -97,14 +97,14 @@ def configureDefaults(trainer, Trainer, Agent, Team, Learner, ActionObject, Prog
 
     # let trainer know what functions are set for each one
     
-    trainer.configFunctions["Agent"] = {
+    trainer.functionsDict["Agent"] = {
         "init": "def",
-        "": "def",
-        "": "def",
-        "": "def",
-        "": "def"
+        "act": "def",
+        "reward": "def",
+        "taskDone": "def",
+        "saveToFile": "def"
     }
-    trainer.configFunctions["Team"] = {
+    trainer.functionsDict["Team"] = {
         "init": "def",
         "act": "def",
         "addLearner": "def",
@@ -113,7 +113,7 @@ def configureDefaults(trainer, Trainer, Agent, Team, Learner, ActionObject, Prog
         "numAtomicActions": "def",
         "mutate": "def"
     }
-    trainer.configFunctions["Learner"] = {
+    trainer.functionsDict["Learner"] = {
         "init": "def",
         "bid": "def",
         "getAction": "def",
@@ -121,14 +121,14 @@ def configureDefaults(trainer, Trainer, Agent, Team, Learner, ActionObject, Prog
         "isActionAtomic": "def",
         "mutate": "def"
     }
-    trainer.configFunctions["ActionObject"] = {
+    trainer.functionsDict["ActionObject"] = {
         "init": "def",
         "getAction": "def",
         "getRealAction": "None",
         "isAtomic": "def",
         "mutate": "def"
     }
-    trainer.configFunctions["Program"] = {
+    trainer.functionsDict["Program"] = {
         "init": "def",
         "execute": "def",
         "mutate": "def",
@@ -145,28 +145,28 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
         # default (reduced) or full operation set
         if operationSet == "def":
             Program.execute = ConfProgram.execute_mem
-            trainer.configFunctions["Program"]["execute"] = "mem"
+            trainer.functionsDict["Program"]["execute"] = "mem"
             trainer.nOperations = 7
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "MEM_READ", "MEM_WRITE"]
         elif operationSet == "full":
             Program.execute = ConfProgram.execute_mem_full
-            trainer.configFunctions["Program"]["execute"] = "mem_full"
+            trainer.functionsDict["Program"]["execute"] = "mem_full"
             trainer.nOperations = 10
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP", "MEM_READ", "MEM_WRITE"]
 
         # select appropriate memory write function
         if memType == "cauchy1":
             Program.memWriteProbFunc = ConfProgram.memWriteProb_cauchy1
-            trainer.configFunctions["Program"]["memWriteProbFunc"] = "cauchy1"
+            trainer.functionsDict["Program"]["memWriteProbFunc"] = "cauchy1"
         elif memType == "cauchyHalf":
             Program.memWriteProbFunc = ConfProgram.memWriteProb_cauchyHalf
-            trainer.configFunctions["Program"]["memWriteProbFunc"] = "cauchyHalf"
+            trainer.functionsDict["Program"]["memWriteProbFunc"] = "cauchyHalf"
         else:
             Program.memWriteProbFunc = ConfProgram.memWriteProb_def
 
         # change bid function to accomodate additional parameters needed for memory
         Learner.bid = ConfLearner.bid_mem
-        trainer.configFunctions["Learner"]["bid"] = "mem"
+        trainer.functionsDict["Learner"]["bid"] = "mem"
 
         # trainer needs to have memory
         trainer.memMatrix = np.zeros(shape=trainer.memMatrixShape)
@@ -178,17 +178,17 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
         # default (reduced) or full operation set
         if operationSet == "def":
             Program.execute = ConfProgram.execute_def
-            trainer.configFunctions["Program"]["execute"] = "def"
+            trainer.functionsDict["Program"]["execute"] = "def"
             trainer.nOperations = 5
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG"]
         elif operationSet == "full":
             Program.execute = ConfProgram.execute_full
-            trainer.configFunctions["Program"]["execute"] = "full"
+            trainer.functionsDict["Program"]["execute"] = "full"
             trainer.nOperations = 8
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP"]
 
         Learner.bid = ConfLearner.bid_def
-        trainer.configFunctions["Learner"]["bid"] = "def"
+        trainer.functionsDict["Learner"]["bid"] = "def"
 
     mutateParamKeys += ["nOperations"]
     mutateParamVals += [trainer.nOperations]
@@ -199,17 +199,17 @@ Make the appropriate changes needed to be able to use real actions.
 def configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals, doMemory):
     # change functions as needed
     ActionObject.__init__ = ConfActionObject.init_real
-    trainer.configFunctions["ActionObject"]["init"] = "real"
+    trainer.functionsDict["ActionObject"]["init"] = "real"
     ActionObject.getAction = ConfActionObject.getAction_real
-    trainer.configFunctions["ActionObject"]["getAction"] = "real"
+    trainer.functionsDict["ActionObject"]["getAction"] = "real"
     if doMemory:
         ActionObject.getRealAction = ConfActionObject.getRealAction_real_mem
-        trainer.configFunctions["ActionObject"]["getRealAction"] = "real_mem"
+        trainer.functionsDict["ActionObject"]["getRealAction"] = "real_mem"
     else:
         ActionObject.getRealAction = ConfActionObject.getRealAction_real
-        trainer.configFunctions["ActionObject"]["getRealAction"] = "real"
+        trainer.functionsDict["ActionObject"]["getRealAction"] = "real"
     ActionObject.mutate = ConfActionObject.mutate_real
-    trainer.configFunctions["ActionObject"]["mutate"] = "real"
+    trainer.functionsDict["ActionObject"]["mutate"] = "real"
 
     # mutateParams needs to have lengths of actions
     mutateParamKeys += ["actionLengths"]
@@ -220,4 +220,4 @@ Switch to learner traversal.
 """
 def configureLearnerTraversal(trainer, Agent, Team, actVarKeys, actVarVals):
     Team.act = ConfTeam.act_learnerTrav
-    trainer.configFunctions["Team"]["act"] = "learnerTrav"
+    trainer.functionsDict["Team"]["act"] = "learnerTrav"

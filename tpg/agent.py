@@ -62,8 +62,53 @@ class Agent:
     Should be called when the agent is loaded from a file or when loaded into 
     another process/thread, to ensure proper function used in all classes.
     """
-    def configSelf(self):
-        pass
+    def configFunctions(self):
+
+        # first set functions for Agent
+        from tpg.configuration.conf_agent import ConfAgent
+
+        if self.functionsDict["init"] == "def":
+            Agent.__init__ = ConfAgent.init_def
+
+        if self.functionsDict["act"] == "def":
+            Agent.act = ConfAgent.act_def
+
+        if self.functionsDict["reward"] == "def":
+            Agent.reward = ConfAgent.reward_def
+
+        if self.functionsDict["taskDone"] == "def":
+            Agent.taskDone = ConfAgent.taskDone_def
+
+        if self.functionsDict["saveToFile"] == "def":
+            Agent.saveToFile = ConfAgent.saveToFile_def
+
+        # then set functions for other classes
+        from tpg.action_object import ActionObject
+        from tpg.program import Program
+        from tpg.learner import Learner
+        from tpg.team import Team
+
+    """
+    Ensures proper functions are used in this class as set up by configurer.
+    """
+    @classmethod
+    def configFunctions(cls, functionsDict):
+        from tpg.configuration.conf_agent import ConfAgent
+
+        if functionsDict["init"] == "def":
+            cls.__init__ = ConfAgent.init_def
+
+        if functionsDict["act"] == "def":
+            cls.act = ConfAgent.act_def
+
+        if functionsDict["reward"] == "def":
+            cls.reward = ConfAgent.reward_def
+
+        if functionsDict["taskDone"] == "def":
+            cls.taskDone = ConfAgent.taskDone_def
+
+        if functionsDict["saveToFile"] == "def":
+            cls.saveToFile = ConfAgent.saveToFile_def
 
     """
     Save the agent to the file, saving any relevant class values to the instance.

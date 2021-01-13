@@ -118,6 +118,9 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         memType=memType, operationSet=operationSet, rampancy=rampancy,
         traversal=traversal)
 
+    trainer.configFunctions()
+    print(1/0)
+
     man = mp.Manager()
     pool = mp.Pool(processes=processes, maxtasksperchild=1)
 

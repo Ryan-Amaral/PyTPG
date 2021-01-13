@@ -188,13 +188,13 @@ class Trainer:
         self.mutateParams = {}
         self.actVars = {}
         self.nOperations = None
-        self.configFunctions = {}
+        self.functionsDict = {}
 
         # configure tpg functions and variable appropriately now
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
             memType is not None, memType, self.doReal, operationSet, traversal)
 
-        #print(self.configFunctions)
+        #print(self.functionsDict)
         #print(1/0)
 
         self.initializePopulations()
@@ -740,8 +740,21 @@ class Trainer:
     and may need to be ran in other cases such as multiprocessing (though in out typical use
     that is done at the agent level).
     """
-    def configSelf(self):
-        pass
+    def configFunctions(self):
+        # first set up Agent functions
+        Agent.configFunctions(self.functionsDict["Agent"])
+
+        # set up Team functions
+        Team.configFunctions(self.functionsDict["Team"])
+
+        # set up Learner functions
+        Learner.configFunctions(self.functionsDict["Learner"])
+
+        # set up ActionObject functions
+        ActionObject.configFunctions(self.functionsDict["ActionObject"])
+
+        # set up Program functions
+        Program.configFunctions(self.functionsDict["Program"])
 
     """
     Save the trainer to the file, saving any class values to the instance.

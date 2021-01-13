@@ -453,4 +453,32 @@ class Team:
         # return the number of iterations of mutation
         return rampantReps, mutation_delta
 
-    
+    """
+    Ensures proper functions are used in this class as set up by configurer.
+    """
+    @classmethod
+    def configFunctions(cls, functionsDict):
+        from tpg.configuration.conf_team import ConfTeam
+
+        if functionsDict["init"] == "def":
+            cls.__init__ = ConfTeam.init_def
+
+        if functionsDict["act"] == "def":
+            cls.__init__ = ConfTeam.act_def
+        elif functionsDict["act"] == "learnerTrav":
+            cls.act = ConfTeam.act_learnerTrav
+
+        if functionsDict["addLearner"] == "def":
+            cls.addLearner = ConfTeam.addLearner_def
+
+        if functionsDict["removeLearner"] == "def":
+            cls.removeLearner = ConfTeam.removeLearner_def
+
+        if functionsDict["removeLearners"] == "def":
+            cls.removeLearners = ConfTeam.removeLearners_def
+
+        if functionsDict["numAtomicActions"] == "def":
+            cls.numAtomicActions = ConfTeam.numAtomicActions_def
+
+        if functionsDict["mutate"] == "def":
+            cls.mutate = ConfTeam.numAtomicActions_def

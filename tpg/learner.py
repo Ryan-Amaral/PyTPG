@@ -248,3 +248,30 @@ inTeams:\n""".format(
                 self.actionObj.mutate(mutateParams, parentTeam, teams, pActAtom, learner_id=self.id)
 
         return self
+
+    """
+    Ensures proper functions are used in this class as set up by configurer.
+    """
+    @classmethod
+    def configFunctions(cls, functionsDict):
+        from tpg.configuration.conf_learner import ConfLearner
+
+        if functionsDict["init"] == "def":
+            cls.__init__ = ConfLearner.init_def
+
+        if functionsDict["bid"] == "def":
+            cls.bid = ConfLearner.bid_def
+        elif functionsDict["bid"] == "mem":
+            cls.bid = ConfLearner.bid_mem
+
+        if functionsDict["getAction"] == "def":
+            cls.getAction = ConfLearner.getAction_def
+
+        if functionsDict["getActionTeam"] == "def":
+            cls.getActionTeam = ConfLearner.getActionTeam_def
+
+        if functionsDict["isActionAtomic"] == "def":
+            cls.isActionAtomic = ConfLearner.isActionAtomic_def
+
+        if functionsDict["mutate"] == "def":
+            cls.mutate = ConfLearner.mutate_def

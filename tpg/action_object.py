@@ -170,3 +170,33 @@ class ActionObject:
         
         return self
             
+
+    """
+    Ensures proper functions are used in this class as set up by configurer.
+    """
+    @classmethod
+    def configFunctions(cls, functionsDict):
+        from tpg.configuration.conf_action_object import ConfActionObject
+
+        if functionsDict["init"] == "def":
+            cls.__init__ = ConfActionObject.init_def
+        elif functionsDict["init"] == "real":
+            cls.__init__ = ConfActionObject.init_real
+
+        if functionsDict["getAction"] == "def":
+            cls.getAction = ConfActionObject.getAction_def
+        elif functionsDict["getAction"] == "real":
+            cls.getAction = ConfActionObject.getAction_real
+        
+        if functionsDict["getRealAction"] == "real":
+            cls.getRealAction = ConfActionObject.getRealAction_real
+        elif functionsDict["getRealAction"] == "real_mem":
+            cls.getRealAction = ConfActionObject.getRealAction_real_mem
+
+        if functionsDict["isAtomic"] == "def":
+            cls.isAtomic = ConfActionObject.isAtomic_def
+
+        if functionsDict["mutate"] == "def":
+            cls.mutate = ConfActionObject.mutate_def
+        elif functionsDict["mutate"] == "real":
+            cls.mutate = ConfActionObject.mutate_real
