@@ -4,6 +4,7 @@ import os
 import time
 from multiprocessing import set_start_method
 import inspect
+import math
 
 import gym
 import numpy as np
@@ -61,6 +62,7 @@ def runAgentParallel(args):
                     continue
 
                 act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
+                #act = math.floor(act[1]) % 18
 
                 # feedback from env
                 state, reward, isDone, debug = env.step(act)

@@ -61,7 +61,8 @@ class Trainer:
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(0,0,0),
-        operationSet="def", traversal="team", prevPops=None, mutatePrevs=True):
+        operationSet="def", traversal="team", prevPops=None, mutatePrevs=True,
+        initMaxActProgSize=64):
 
         '''
         Validate inputs
@@ -175,6 +176,8 @@ class Trainer:
         self.operationSet = operationSet
 
         self.traversal = traversal
+
+        self.initMaxActProgSize = initMaxActProgSize
 
         # core components of TPG
         self.teams = []

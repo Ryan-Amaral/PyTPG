@@ -12,7 +12,6 @@ class ConfActionObject:
 
     def init_def(self, initParams=None, action = None):
 
-
         '''
         Defer importing the Team class to avoid circular dependency.
         This may require refactoring to fix properly
@@ -20,9 +19,6 @@ class ConfActionObject:
         from tpg.team import Team
 
         # The action is a team
-        '''
-        TODO handle team references somehow
-        '''
         if isinstance(action, Team):
             self.teamAction = action
             self.actionCode = None
@@ -52,34 +48,56 @@ class ConfActionObject:
                 print("Index error")
             return
 
-    def init_real(self, actionObj=None, program=None, actionIndex=None, teamAction=None,
-            initParams=None):
+    def init_real(self, initParams=None, action=None):
 
-        if actionObj is not None:
-            # clone the other action object
-            self.actionCode = actionObj.actionCode
-            self.actionLength = actionObj.actionLength
-            self.teamAction = actionObj.teamAction
-            self.program = Program(instructions=actionObj.program.instructions,
+        '''
+        Defer importing the Team class to avoid circular dependency.
+        This may require refactoring to fix properly
+        '''
+        from tpg.team import Team
+
+        
+        if isinstance(action, Team):
+            # The action is a team
+            self.actionCode = None
+            self.actionLength = None
+            self.teamAction = action
+            self.program = Program(initParams=initParams, 
+                    maxProgramLength=initParams["initMaxActProgSize"],
+                    nOperations=initParams["nOperations"],
+                    nDestinations=initParams["nDestinations"],
+                    inputSize=initParams["inputSize"])
+
+        elif isinstance(action, ActionObject):
+            # The action is another action object
+            self.actionCode = action.actionCode
+            self.actionLength = action.actionLength
+            self.teamAction = action.teamAction
+            self.program = Program(instructions=action.program.instructions,
                                     initParams=initParams)
-        else:
-            # no cloning
-            self.actionCode = initParams["actionCodes"][actionIndex]
-            self.actionLength = initParams["actionLengths"][actionIndex]
-            self.teamAction = teamAction
 
-            if program is None:
-                # create new program
-                self.program = Program(maxProgramLength=initParams["initMaxProgSize"])
-            else:
-                # copy program
-                self.program = Program(instructions=program.instructions)
+        elif isinstance(action, int):
+            # An int means the action is an index into the action codes in initParams
+            
+            if "actionCodes" not in initParams:
+                raise Exception('action codes not found in init params', initParams)
 
-        # increase references to team
-        if self.teamAction is not None:
-            self.teamAction.numLearnersReferencing += 1
+            try:
+                self.actionCode = initParams["actionCodes"][action]
+                self.actionLength = initParams["actionLengths"][action]
+                self.teamAction = None
+                self.program = Program(initParams=initParams, 
+                    maxProgramLength=initParams["initMaxActProgSize"],
+                    nOperations=initParams["nOperations"],
+                    nDestinations=initParams["nDestinations"],
+                    inputSize=initParams["inputSize"])
+            except IndexError as err:
+                '''
+                TODO log index error
+                '''
+                print("Index error")
 
-        self.registers = np.zeros(initParams["nDestinations"])
+        self.registers = np.zeros(self.actionLength)
 
     """
     Returns the action code, and if applicable corresponding real action.
@@ -95,10 +113,10 @@ class ConfActionObject:
     """
     Returns the action code, and if applicable corresponding real action(s).
     """
-    def getAction_real(self, state, visited, actVars=None):
+    def getAction_real(self, state, visited, actVars=None, path_trace=None):
         if self.teamAction is not None:
             # action from team
-            return self.teamAction.act(state, visited, actVars=actVars)
+            return self.teamAction.act(state, visited, actVars=actVars, path_trace=path_trace)
         else:
             # atomic action
             if self.actionLength == 0:
@@ -181,23 +199,50 @@ class ConfActionObject:
     """
     Change action to team or atomic action.
     """
-    def mutate_real(self, mutateParams, parentTeam, teams, pActAtom):
-        if self.actionLength > 0 and flip(0.5):
-            # mutate program
-            self.program.mutate(mutateParams)
-        else:
-            # dereference if old action is team
-            if self.teamAction is not None:
-                self.teamAction.numLearnersReferencing -= 1
+    def mutate_real(self, mutateParams, parentTeam, teams, pActAtom, learner_id):
 
-            # mutate action
-            if flip(mutateParams["pActAtom"]):
-                # atomic
-                self.actionCode = random.choice(mutateParams["actionCodes"])
-                self.actionLength = mutateParams["actionLengths"][self.actionCode]
-                self.teamAction = None
+        # first maybe mutate just program
+        if self.actionLength > 0 and flip(0.5):
+            self.program.mutate(mutateParams)
+
+        # mutate action
+        if flip(pActAtom):
+            # atomic
+            '''
+            If we already have an action code make sure not to pick the same one.
+            TODO handle case where there is only 1 action code.
+            '''
+            if self.actionCode is not None:
+                options = list(filter(lambda code: code != self.actionCode, mutateParams["actionCodes"]))
             else:
-                # team action
-                self.teamAction = random.choice([t for t in teams
-                        if t is not self.teamAction and t is not parentTeam])
-                self.teamAction.numLearnersReferencing += 1
+                options = mutateParams["actionCodes"]
+
+            # let our current team know we won't be pointing to them anymore
+            if not self.isAtomic():
+                print("Learner {} switching from Team {} to atomic action".format(learner_id, self.teamAction.id))
+                self.teamAction.inLearners.remove(str(learner_id))
+
+            self.actionCode = random.choice(options)
+            self.actionLength = mutateParams["actionLengths"][self.actionCode]
+            self.teamAction = None
+        else:
+            # team action
+            selection_pool = [t for t in teams
+                    if t is not self.teamAction and t is not parentTeam]
+
+            # If we have a valid set of options choose from them
+            if len(selection_pool) > 0:
+                # let our current team know we won't be pointing to them anymore
+                oldTeam = None
+                if not self.isAtomic():
+                    oldTeam = self.teamAction
+                    self.teamAction.inLearners.remove(str(learner_id))
+
+                self.teamAction = random.choice(selection_pool)
+                # Let the new team know we're pointing to them
+                self.teamAction.inLearners.append(str(learner_id))
+
+                if oldTeam != None:
+                    print("Learner {} switched from Team {} to Team {}".format(learner_id, oldTeam.id, self.teamAction.id))
+        
+        return self
