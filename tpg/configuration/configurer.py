@@ -212,8 +212,8 @@ def configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals,
     trainer.functionsDict["ActionObject"]["mutate"] = "real"
 
     # mutateParams needs to have lengths of actions and act program
-    mutateParamKeys += ["actionLengths", "initMaxActProgSize"]
-    mutateParamVals += [trainer.actionLengths, trainer.initMaxActProgSize]
+    mutateParamKeys += ["actionLengths", "initMaxActProgSize", "nActRegisters"]
+    mutateParamVals += [trainer.actionLengths, trainer.initMaxActProgSize, trainer.nActRegisters]
 
 """
 Switch to learner traversal.

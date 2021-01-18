@@ -39,6 +39,7 @@ def runAgentParallel(args):
         numEpisodes = args[3] # number of times to repeat game
         numFrames = args[4] # frames to play for
         nRandFrames = args[5]
+        do_real = args[6]
         
         agent.configFunctionsSelf()
 
@@ -50,34 +51,59 @@ def runAgentParallel(args):
 
         env = gym.make(envName)
         valActs = range(env.action_space.n) # valid actions, some envs are less
+        acts = env.action_space.n
 
 
         scoreTotal = 0 # score accumulates over all episodes
-        for ep in range(numEpisodes): # episode loop
-            state = env.reset()
-            scoreEp = 0
-            for i in range(numFrames): # frame loop
-                if i < nRandFrames:
-                    env.step(env.action_space.sample())
-                    continue
 
-                act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
-                #act = math.floor(act[1]) % 18
+        if do_real:
+            for ep in range(numEpisodes): # episode loop
+                state = env.reset()
+                scoreEp = 0
+                for i in range(numFrames): # frame loop
+                    if i < nRandFrames:
+                        env.step(env.action_space.sample())
+                        continue
 
-                # feedback from env
-                state, reward, isDone, debug = env.step(act)
-                scoreEp += reward # accumulate reward in score
-                if isDone:
-                    break # end early if losing state
+                    act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
+                    act = int(math.floor(act[1]) % acts)
+                    #print(act)
 
-            print('Agent #' + str(agent.agentNum) +
-                ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
-            scoreTotal += scoreEp
+                    # feedback from env
+                    state, reward, isDone, debug = env.step(act)
+                    scoreEp += reward # accumulate reward in score
+                    if isDone:
+                        break # end early if losing state
+
+                print('Agent #' + str(agent.agentNum) +
+                    ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
+                scoreTotal += scoreEp
+        else:
+            for ep in range(numEpisodes): # episode loop
+                state = env.reset()
+                scoreEp = 0
+                for i in range(numFrames): # frame loop
+                    if i < nRandFrames:
+                        env.step(env.action_space.sample())
+                        continue
+
+                    act = agent.act(getStateALE(np.array(state, dtype=np.int32)))
+
+                    # feedback from env
+                    state, reward, isDone, debug = env.step(act)
+                    scoreEp += reward # accumulate reward in score
+                    if isDone:
+                        break # end early if losing state
+
+                print('Agent #' + str(agent.agentNum) +
+                    ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
+                scoreTotal += scoreEp
 
         scoreTotal /= numEpisodes
         env.close()
         agent.reward(scoreTotal, envName)
         scoreList.append((agent.team.id, agent.team.outcomes))
+
     except Exception as playException:
         print("Exception occured while Agent {} was playing {}".format(args[0].agentNum, args[1] ))
         raise playException
@@ -88,7 +114,8 @@ On an OpenAI gym environment.
 """
 def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         frames=18000, processes=4, nRandFrames=30, rootBasedPop=True,
-        memType=None, operationSet="full", rampancy=(5,5,5), traversal="team"):
+        memType=None, operationSet="full", rampancy=(5,5,5), traversal="team",
+        do_real=False):
     tStart = time.time()
 
     '''
@@ -104,9 +131,14 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
     del env
 
     print("creating trainer")
-    trainer = Trainer(actions=acts, teamPopSize=popSize, rootBasedPop=rootBasedPop,
-        memType=memType, operationSet=operationSet, rampancy=rampancy,
-        traversal=traversal)
+    if do_real:
+        trainer = Trainer(actions=[1,1], teamPopSize=popSize, rootBasedPop=rootBasedPop,
+            memType=memType, operationSet=operationSet, rampancy=rampancy,
+            traversal=traversal)
+    else:
+        trainer = Trainer(actions=acts, teamPopSize=popSize, rootBasedPop=rootBasedPop,
+            memType=memType, operationSet=operationSet, rampancy=rampancy,
+            traversal=traversal)
 
     trainer.configFunctions()
     #print(1/0)
@@ -128,7 +160,7 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
             
             # run the agents
             pool.map(runAgentParallel,
-                [(agent, envName, scoreList, reps, frames, nRandFrames)
+                [(agent, envName, scoreList, reps, frames, nRandFrames, do_real)
                 for agent in agents]
             )
 
@@ -237,4 +269,4 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
 
 
 if __name__ == "__main__":
-    runPopulationParallel()
+    runPopulationParallel(do_real=False)

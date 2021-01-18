@@ -62,7 +62,7 @@ class Trainer:
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(0,0,0),
         operationSet="def", traversal="team", prevPops=None, mutatePrevs=True,
-        initMaxActProgSize=64):
+        initMaxActProgSize=64, nActRegisters=4):
 
         '''
         Validate inputs
@@ -178,6 +178,10 @@ class Trainer:
         self.traversal = traversal
 
         self.initMaxActProgSize = initMaxActProgSize
+        # ensure nActRegisters is larger than the largest action length
+        if self.doReal:
+            nActRegisters = max(max(self.actionLengths), nActRegisters)
+        self.nActRegisters = nActRegisters
 
         # core components of TPG
         self.teams = []
@@ -197,6 +201,7 @@ class Trainer:
         configurer.configure(self, Trainer, Agent, Team, Learner, ActionObject, Program,
             memType is not None, memType, self.doReal, operationSet, traversal)
 
+        #print(self.mutateParams)
         #print(self.functionsDict)
         #print(1/0)
 

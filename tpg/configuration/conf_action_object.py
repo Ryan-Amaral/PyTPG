@@ -97,7 +97,7 @@ class ConfActionObject:
                 '''
                 print("Index error")
 
-        self.registers = np.zeros(self.actionLength)
+        self.registers = np.zeros(initParams["nActRegisters"])
 
     """
     Returns the action code, and if applicable corresponding real action.

@@ -21,7 +21,7 @@ class ConfLearner:
         self.program = Program(
             instructions=program.instructions
         ) #Each learner should have their own copy of the program
-        self.actionObj = ActionObject(action=actionObj) #Each learner should have their own copy of the action object
+        self.actionObj = ActionObject(action=actionObj, initParams=initParams) #Each learner should have their own copy of the action object
         self.registers = np.zeros(numRegisters, dtype=float)
 
         self.ancestor = None #By default no ancestor
