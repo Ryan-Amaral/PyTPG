@@ -176,3 +176,49 @@ def learnerInstructionStats(learners, operations):
             results[op]["avg"] += opCount/len(learners)
 
     return results
+
+"""
+Returns a dictionary containing counts of each type of instruction and other basic
+stats relating to instructions in action programs.
+"learners" is a list of learners that you want the stats from. "operations" is a
+list of strings representing the current operation set, can be obtained from Program.
+"""
+def actionInstructionStats(learners, operations):
+
+    # stats tracked for each operation and overall
+    partialStats = {
+        "total": 0,
+        "min": float("inf"),
+        "max": 0,
+        "avg": 0
+    }
+
+    # dictionary that we put results in and return
+    results = {"overall": partialStats.copy()}
+    for op in operations:
+        results[op] = partialStats.copy()
+
+    results["numActPrograms"] = 0
+
+    # get instruction data from all provided real atomic action learners
+    for lrnr in learners:
+        if not lrnr.isActionAtomic() or lrnr.actionObj.actionLength == 0:
+            continue
+        
+        insts = lrnr.actionObj.program.instructions
+        
+        results["overall"]["total"] += len(insts)
+        results["overall"]["min"] = min(len(insts), results["overall"]["min"])
+        results["overall"]["max"] = max(len(insts), results["overall"]["max"])
+        results["overall"]["avg"] += len(insts)/len(learners)
+
+        for i, op in enumerate(operations):
+            opCount = np.count_nonzero(insts[:,1]==i)
+            results[op]["total"] += opCount
+            results[op]["min"] = min(opCount, results[op]["min"])
+            results[op]["max"] = max(opCount, results[op]["max"])
+            results[op]["avg"] += opCount/len(learners)
+
+        results["numActPrograms"] += 1
+
+    return results

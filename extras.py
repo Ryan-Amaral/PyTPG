@@ -10,7 +10,7 @@ import gym
 import numpy as np
 
 from tpg.trainer import Trainer
-from tpg.utils import getLearners, getTeams, learnerInstructionStats
+from tpg.utils import getLearners, getTeams, learnerInstructionStats, actionInstructionStats
 
 """
 Transform visual input from ALE to flat vector.
@@ -189,6 +189,8 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         print("teams: {}, rTeams: {}, learners: {}, Champ Teams: {}, Champ Learners: {}, Champ Instructions: {}."
             .format(len(trainer.teams), len(trainer.rootTeams), len(trainer.learners),
                 len(getTeams(champ)), len(getLearners(champ)), learnerInstructionStats(getLearners(champ), trainer.operations)))
+        print(actionInstructionStats(getLearners(champ), trainer.operations))
+        #print(1/0)
 
         print(f"Gen: {gen}, Best Score: {scoreStats['max']}, Avg Score: {scoreStats['average']}, Time: {str((time.time() - tStart)/3600)}")
         
@@ -269,4 +271,4 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
 
 
 if __name__ == "__main__":
-    runPopulationParallel(do_real=False)
+    runPopulationParallel(do_real=True, popSize=2)
