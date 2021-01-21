@@ -163,6 +163,7 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
             trainer.functionsDict["Program"]["memWriteProbFunc"] = "cauchyHalf"
         else:
             Program.memWriteProbFunc = ConfProgram.memWriteProb_def
+            trainer.functionsDict["Program"]["memWriteProbFunc"] = "def"
 
         # change bid function to accomodate additional parameters needed for memory
         Learner.bid = ConfLearner.bid_mem

@@ -271,4 +271,4 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
 
 
 if __name__ == "__main__":
-    runPopulationParallel(do_real=True, popSize=2)
+    runPopulationParallel(do_real=True, popSize=2, memType="def")
