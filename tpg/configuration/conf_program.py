@@ -115,6 +115,7 @@ class ConfProgram:
                 halfRows = int(memRows/2) # halfRows
                 for i in range(halfRows):
                     # probability to write (gets smaller as i increases)
+                    # TODO: swap out write prob func by passing in an array of values for that row.
                     writeProb = memWriteProbFunc(i)
                     # column to maybe write corresponding value into
                     for col in range(memCols):
@@ -232,6 +233,7 @@ class ConfProgram:
                 halfRows = int(memRows/2) # halfRows
                 for i in range(halfRows):
                     # probability to write (gets smaller as i increases)
+                    # TODO: swap out write prob func by passing in an array of values for that row.
                     writeProb = memWriteProbFunc(i)
                     # column to maybe write corresponding value into
                     for col in range(memCols):
