@@ -116,5 +116,5 @@ Load some agent from the file, returning it and repopulate class values.
 """
 def loadAgent(fileName):
     agent = pickle.load(open(fileName, 'rb'))
-    agent.configFunctions()
+    agent.configFunctionsSelf()
     return agent
