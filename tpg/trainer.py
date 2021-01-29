@@ -57,7 +57,7 @@ class Trainer:
     mutate the learners or
     """
     def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
-        inputSize=30720, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
+        inputSize=33600, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(0,0,0),
