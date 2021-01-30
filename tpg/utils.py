@@ -222,3 +222,25 @@ def actionInstructionStats(learners, operations):
         results["numActPrograms"] += 1
 
     return results
+
+"""
+Obtains the longest execution possible in the graph from the starting (root) team.
+"""
+def pathDepths(team, prevDepth=0, parents=[]):
+
+    # depth is one deeper than the last
+    myDepth = prevDepth + 1
+    depths = [myDepth]
+
+    # don't revisit this team again in this depth first recursion
+    parents.append(team.id)
+
+    # the teams to visit from the learners that have team actions
+    nextTeams = [lrn.getActionTeam() for lrn in team.learners 
+        if not lrn.isActionAtomic() and not lrn.getActionTeam().id in parents]
+
+    # obtain depths from each child team
+    for nTeam in nextTeams:
+        depths.extend(pathDepths(nTeam, myDepth, list(parents)))
+
+    return depths
