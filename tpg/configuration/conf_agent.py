@@ -22,6 +22,7 @@ class ConfAgent:
     def act_def(self, state, path_trace=None):
         start_execution_time = time.time()*1000.0
         self.actVars["frameNum"] = random()
+        self.actVars["executed_instructions"] = 0
         visited = list() #Create a new list to track visited team/learners each time
         
         result = None
@@ -42,6 +43,7 @@ class ConfAgent:
             path_trace['final_action'] = result
             path_trace['path'] = path 
             path_trace['depth'] = len(path)
+            path_trace['executed_instructions'] = self.actVars['executed_instructions']
             
         return result
     """

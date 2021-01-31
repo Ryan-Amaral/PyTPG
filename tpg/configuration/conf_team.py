@@ -20,15 +20,14 @@ class ConfTeam:
         self.genCreate = initParams["generation"]
 
     """
-    Returns an action to use based on the current state. Team traversal.
+    Returns an action to use based on the current state.
     NOTE: Do not set visited = list() because that will only be
     evaluated once, and thus won't create a new list every time.
     """
-    def act_def(self, state, visited, actVars=None, path_trace=None):
+    def act(self, state, visited, actVars=None, path_trace=None):
 
         # Handle team traversal
         if actVars["traversal"] == "team":
-            print("Team traversal")
 
             # If we've already visited me, throw an exception
             if str(self.id) in visited:
@@ -52,7 +51,6 @@ class ConfTeam:
             top_learner = max(valid_learners,
                 key=lambda lrnr: lrnr.bid(state, actVars=actVars))
         else:
-            print("learner traversal")
 
             '''
             Valid learners are ones which:
@@ -92,12 +90,16 @@ class ConfTeam:
             }
 
             # Populate bid values
+            executed_instructions = 0
             for cursor in valid_learners:
                 path_segment['bids'].append({
                     'learner_id': str(cursor.id),
                     'bid': cursor.bid(state, actVars=actVars),
                     'action': cursor.actionObj.actionCode if cursor.isActionAtomic() else str(cursor.actionObj.teamAction.id)
                 })
+                executed_instructions += len(cursor.program.instructions)
+
+            actVars['executed_instructions'] += executed_instructions
 
             # Append our path segment to the trace
             path_trace.append(path_segment)
@@ -131,12 +133,16 @@ class ConfTeam:
             }
 
             # Populate bid values
+            executed_instructions = 0
             for cursor in valid_learners:
                 path_segment['bids'].append({
                     'learner_id': str(cursor.id),
                     'bid': cursor.bid(state, actVars=actVars),
                     'action': cursor.actionObj.actionCode if cursor.isActionAtomic() else str(cursor.actionObj.teamAction.id)
                 })
+                executed_instructions += len(cursor.program.instructions)
+            
+            actVars['executed_instructions'] += executed_instructions
 
             # Append our path segment to the trace
             path_trace.append(path_segment)

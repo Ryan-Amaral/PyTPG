@@ -160,12 +160,16 @@ class Team:
             }
 
             # Populate bid values
+            executed_instructions = 0
             for cursor in valid_learners:
                 path_segment['bids'].append({
                     'learner_id': str(cursor.id),
                     'bid': cursor.bid(state, actVars=actVars),
                     'action': cursor.actionObj.actionCode if cursor.isActionAtomic() else str(cursor.actionObj.teamAction.id)
                 })
+                executed_instructions += len(cursor.program.instructions)
+
+            actVars['executed_instructions'] += executed_instructions
 
             # Append our path segment to the trace
             path_trace.append(path_segment)
