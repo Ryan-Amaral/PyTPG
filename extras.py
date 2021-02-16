@@ -95,8 +95,8 @@ def runAgentParallel(args):
                     if isDone:
                         break # end early if losing state
 
-                print('Agent #' + str(agent.agentNum) +
-                    ' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
+                #print('Agent #' + str(agent.agentNum) +
+                    #' | Ep #' + str(ep) + ' | Score: ' + str(scoreEp))
                 scoreTotal += scoreEp
 
         scoreTotal /= numEpisodes
@@ -189,7 +189,7 @@ def runPopulationParallel(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
         print("teams: {}, rTeams: {}, learners: {}, Champ Teams: {}, Champ Learners: {}, Champ Instructions: {}."
             .format(len(trainer.teams), len(trainer.rootTeams), len(trainer.learners),
                 len(getTeams(champ)), len(getLearners(champ)), learnerInstructionStats(getLearners(champ), trainer.operations)))
-        print(actionInstructionStats(getLearners(champ), trainer.operations))
+        #print(actionInstructionStats(getLearners(champ), trainer.operations))
         #print(1/0)
 
         print(f"Gen: {gen}, Best Score: {scoreStats['max']}, Avg Score: {scoreStats['average']}, Time: {str((time.time() - tStart)/3600)}")
@@ -273,4 +273,4 @@ def runPopulation(envName="Boxing-v0", gens=1000, popSize=360, reps=3,
 
 
 if __name__ == "__main__":
-    runPopulationParallel(do_real=True, popSize=100, memType=None, gens=50, reps=1, processes=10)
+    runPopulationParallel(envName="BankHeist-v0", do_real=False, popSize=360, memType=None, gens=1000, reps=5, processes=23)
