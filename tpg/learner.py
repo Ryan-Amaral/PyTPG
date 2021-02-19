@@ -45,8 +45,8 @@ class Learner:
         if not self.isActionAtomic():
             self.actionObj.teamAction.inLearners.append(str(self.id))
 
-        print("Creating a brand new learner" if learner_id == None else "Creating a learner from {}".format(str(learner_id)))
-        print("Created learner {} [{}] -> {}".format(self.id, "atomic" if self.isActionAtomic() else "Team", self.actionObj.actionCode if self.isActionAtomic() else self.actionObj.teamAction.id))
+        #print("Creating a brand new learner" if learner_id == None else "Creating a learner from {}".format(str(learner_id)))
+        #print("Created learner {} [{}] -> {}".format(self.id, "atomic" if self.isActionAtomic() else "Team", self.actionObj.actionCode if self.isActionAtomic() else self.actionObj.teamAction.id))
         
 
     def numTeamsReferencing(self):

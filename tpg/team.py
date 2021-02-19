@@ -331,9 +331,10 @@ class Team:
                     # Otherwise let there be a probability that the learner's action is atomic as defined in the mutate params
                     pActAtom0 = mutateParams['pActAtom']
 
-                print("Team {} creating learner".format(self.id))
+                #print("Team {} creating learner".format(self.id))
                 # Create a new new learner 
                 newLearner = Learner(mutateParams, learner.program, learner.actionObj, len(learner.registers), learner.id)
+                newLearner.subPopId = self.subPopId
                 new_learners.append(newLearner)
                 # Add the mutated learner to our learners
                 # Must add before mutate so that the new learner has this team in its inTeams
@@ -346,7 +347,7 @@ class Team:
                 # Remove the existing learner from the team
                 self.removeLearner(learner)
 
-                print("removing old learner {}".format(learner.id))
+                #print("removing old learner {}".format(learner.id))
 
                 # Add the mutated learner to our list of mutations
                 mutated_learners[str(learner.id)] = str(newLearner.id)
@@ -385,7 +386,7 @@ class Team:
         new_learners = []
 
         for i in range(rampantReps):
-            print("i/rampant reps:  {}/{} ".format(i, rampantReps))
+            #print("i/rampant reps:  {}/{} ".format(i, rampantReps))
             # delete some learners
             '''
             TODO log mutation deltas...

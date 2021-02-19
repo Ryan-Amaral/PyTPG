@@ -52,9 +52,15 @@ class Trainer:
     a dicitonary with the keys being the environment and the values being a list
     of root teams trained on that environment.
 
-    doMutate: Whether to continue mutating newly created root teams below the team
+    mutatePrevs: Whether to continue mutating newly created root teams below the team
     level. If true only mutates teams by changing up the learners, but doesn't
-    mutate the learners or
+    mutate the learners or.
+
+    nSubPops: Number of sub-populations, useful for multi-objective or multi-task
+    learning.
+
+    subPopObjChange: When to change the objectives on the subpopulations, every this
+    many generations.
     """
     def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
         inputSize=33600, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
@@ -62,7 +68,7 @@ class Trainer:
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(0,0,0),
         operationSet="def", traversal="team", prevPops=None, mutatePrevs=True,
-        initMaxActProgSize=64, nActRegisters=4):
+        initMaxActProgSize=64, nActRegisters=4, nSubPops=1, subPopObjChange=5):
 
         '''
         Validate inputs
@@ -205,6 +211,11 @@ class Trainer:
         #print(self.functionsDict)
         #print(1/0)
 
+        # all the stuff added for sub pops here
+        self.nSubPops = nSubPops
+        self.subPopObjectives = [i for i in range(nSubPops)]
+        self.subPopObjChange = subPopObjChange
+
         self.initializePopulations()
 
     '''
@@ -243,7 +254,12 @@ class Trainer:
     atomic actions.
     """
     def initializePopulations(self):
+        subPopId=-1
         for i in range(self.teamPopSize):
+            # increment population size when appropriate
+            if i % int(self.teamPopSize/self.nSubPops) == 0:
+                subPopId += 1
+
             # create 2 unique actions and learners
             a1,a2 = random.sample(range(len(self.actionCodes)), 2)
             
@@ -265,6 +281,9 @@ class Trainer:
                         actionObj=ActionObject(action=a2, initParams=self.mutateParams),
                         numRegisters=self.nRegisters)
 
+            l1.subPopId = subPopId
+            l2.subPopId = subPopId
+
             # save learner population
             self.learners.append(l1)
             self.learners.append(l2)
@@ -273,6 +292,7 @@ class Trainer:
             team = Team(initParams=self.mutateParams)
             team.addLearner(l1)
             team.addLearner(l2)
+            team.subPopId = subPopId
 
             # add more learners
             moreLearners = random.randint(0, self.initMaxTeamSize-2)
@@ -290,6 +310,8 @@ class Trainer:
                             actionObj=ActionObject(action=act, initParams=self.mutateParams),
                             numRegisters=self.nRegisters)
 
+                learner.subPopId = subPopId
+
                 team.addLearner(learner)
                 self.learners.append(learner)
 
@@ -301,7 +323,7 @@ class Trainer:
     Gets rootTeams/agents. Sorts decending by sortTasks, and skips individuals
     who don't have scores for all skipTasks.
     """
-    def getAgents(self, sortTasks=[], multiTaskType='min', skipTasks=[]):
+    def getAgents(self, sortTasks=[], multiTaskType='min', skipTasks=[], subPop=-1):
         # remove those that get skipped
         rTeams = [team for team in self.rootTeams
                 if len(skipTasks) == 0
@@ -346,7 +368,7 @@ class Trainer:
     Assigns a fitness to each agent based on performance at the tasks. Assigns
     fitness values, or just returns sorted root teams.
     """
-    def scoreIndividuals(self, tasks, multiTaskType='min', doElites=True):
+    def scoreIndividuals(self, tasks, multiTaskType='min', doElites=False):
         # handle generation of new elites, typically just done in evolution
         if doElites:
             # get the best agent at each task
@@ -358,6 +380,12 @@ class Trainer:
         if len(tasks) == 1: # single fitness
             for team in self.rootTeams:
                 team.fitness = team.outcomes[tasks[0]]
+
+        elif len(tasks) > 1 and self.nSubPops > 1:
+            for team in self.rootTeams:
+                print(team.outcomes, tasks, self.subPopObjectives, team.subPopId)
+                team.fitness = team.outcomes[tasks[self.subPopObjectives[team.subPopId]]]
+
         else: # multi fitness
             # assign fitness to each agent based on tasks and score type
             if 'pareto' not in multiTaskType or 'lexicase' not in multiTaskType:
@@ -472,31 +500,38 @@ class Trainer:
     Select a portion of the root team population to keep according to gap size.
     """
     def select(self):
-        rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
-        numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
-        deleteTeams = rankedTeams[numKeep:]
+        deleteTeams = []
+        for i in range(self.nSubPops):
+            subPopRoots = [rt for rt in self.rootTeams if rt.subPopId == i]
+            rankedTeams = sorted(subPopRoots, key=lambda rt: rt.fitness, reverse=True)
+            numKeep = len(subPopRoots) - int(len(subPopRoots)*self.gap)
+            deleteTeams.extend(rankedTeams[numKeep:])
 
-        print("BEFORE SELECTION:")        
+        #rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
+        #numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
+        #deleteTeams = rankedTeams[numKeep:]
+
+        #print("BEFORE SELECTION:")        
 
         pre_orphans = [learner for learner in self.learners if learner.numTeamsReferencing() == 0]
 
-        print("Number of orphans before selection: {}".format(len(pre_orphans)))
+        #print("Number of orphans before selection: {}".format(len(pre_orphans)))
 
         orphan_teams = [team for team in self.teams if len(team.inLearners) == 0 and team not in self.rootTeams]
-        print("Number of orphan teams before selection: {}".format(len(orphan_teams)))
+        #print("Number of orphan teams before selection: {}".format(len(orphan_teams)))
 
-        print("Learners:")
-        for cursor in self.learners:
-            print("Learner {} -> [{}]{} inTeams:".format( cursor.id, "Atomic" if cursor.isActionAtomic() else "Team", cursor.actionObj.actionCode if cursor.isActionAtomic() else cursor.actionObj.teamAction.id))
-            for t_id in cursor.inTeams:
-                print("\t{}".format(t_id ))
+        #print("Learners:")
+        #for cursor in self.learners:
+        #    print("Learner {} -> [{}]{} inTeams:".format( cursor.id, "Atomic" if cursor.isActionAtomic() else "Team", cursor.actionObj.actionCode if cursor.isActionAtomic() else cursor.actionObj.teamAction.id))
+        #    for t_id in cursor.inTeams:
+        #        print("\t{}".format(t_id ))
 
-        for cursor in self.teams:
-            print("Team: {} inLearners:".format(cursor.id))
-            for l_id in cursor.inLearners:
-                print("\t{}".format(l_id))
+        #for cursor in self.teams:
+        #    print("Team: {} inLearners:".format(cursor.id))
+        #    for l_id in cursor.inLearners:
+        #        print("\t{}".format(l_id))
 
-        print("-----------------------------------------------------")  
+        #print("-----------------------------------------------------")  
 
         # delete the team unless it is an elite (best at some task at-least)
         # don't delete elites because they may not be root - TODO: elaborate
@@ -508,27 +543,27 @@ class Trainer:
             self.teams.remove(team)
             self.rootTeams.remove(team)
 
-        print("AFTER SELECTION:")
+        #print("AFTER SELECTION:")
         # Find all learners that have no teams pointing to them
         orphans = [learner for learner in self.learners if learner.numTeamsReferencing() == 0]
-        print("Number of orphans after selection: {}".format(len(orphans)))
+        #print("Number of orphans after selection: {}".format(len(orphans)))
 
-        print("Orphans:")
-        for cursor in orphans:
-            print("\t{}".format(cursor.id))
+        #print("Orphans:")
+        #for cursor in orphans:
+        #    print("\t{}".format(cursor.id))
 
-        print("Learners:")
-        for cursor in self.learners:
-            print("Learner {} -> [{}]{} inTeams:".format( cursor.id, "Atomic" if cursor.isActionAtomic() else "Team", cursor.actionObj.actionCode if cursor.isActionAtomic() else cursor.actionObj.teamAction.id))
-            for t_id in cursor.inTeams:
-                print("\t{}".format(t_id ))
+        #print("Learners:")
+        #for cursor in self.learners:
+        #    print("Learner {} -> [{}]{} inTeams:".format( cursor.id, "Atomic" if cursor.isActionAtomic() else "Team", cursor.actionObj.actionCode if cursor.isActionAtomic() else cursor.actionObj.teamAction.id))
+        #    for t_id in cursor.inTeams:
+        #        print("\t{}".format(t_id ))
 
-        for cursor in self.teams:
-            print("Team: {} inLearners:".format(cursor.id))
-            for l_id in cursor.inLearners:
-                print("\t{}".format(l_id))
+        #for cursor in self.teams:
+        #    print("Team: {} inLearners:".format(cursor.id))
+        #    for l_id in cursor.inLearners:
+        #        print("\t{}".format(l_id))
 
-        print("-----------------------------------------------------")  
+        #print("-----------------------------------------------------")  
 
         # These learners will be removed, but before we can do that, we should remove 
         # their ids from any team's inLearners that the orphans are pointing to.
@@ -546,27 +581,31 @@ class Trainer:
     """
     def generate(self):
 
-        oLearners = list(self.learners)
-        oTeams = list(self.teams)
+        for i in range(self.nSubPops):
 
-        # update generation in mutateParams
-        self.mutateParams["generation"] = self.generation
+            oLearners = list([l for l in self.learners if l.subPopId == i])
+            oTeams = list([t for t in self.teams if t.subPopId == i])
 
-        # get all the current root teams to be parents
-        while (len(self.teams) < self.teamPopSize or
-                (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
-            # get parent root team, and child to be based on that
-            parent = random.choice(self.rootTeams)
-            child = Team(initParams=self.mutateParams)
+            # update generation in mutateParams
+            self.mutateParams["generation"] = self.generation
 
-            # child starts just like parent
-            for learner in parent.learners:
-                child.addLearner(learner)
+            # get all the current root teams to be parents
+            while (len([t for t in self.teams if t.subPopId == i]) < (self.teamPopSize / self.nSubPops) or
+                    (self.rootBasedPop and self.countRootTeams() < self.teamPopSize and 1/0 == 0)): # fail on root based
+                # get parent root team, and child to be based on that
+                parent = random.choice([rt for rt in self.rootTeams if rt.subPopId == i])
+                child = Team(initParams=self.mutateParams)
+                child.subPopId = i
 
-            # then mutates
-            child.mutate(self.mutateParams, oLearners, oTeams)
+                # child starts just like parent
+                for learner in parent.learners:
+                    child.addLearner(learner)
 
-            self.teams.append(child)
+                # then mutates
+                child.mutate(self.mutateParams, oLearners, oTeams)
+
+                self.teams.append(child)
+
 
     """
     Finalize populations and prepare for next generation/epoch.
@@ -578,7 +617,7 @@ class Trainer:
             # add any new learners to the population
             for learner in team.learners:
                 if learner not in self.learners:
-                    print("Adding {} to trainer learners".format(learner.id))
+                    #print("Adding {} to trainer learners".format(learner.id))
                     self.learners.append(learner)
 
             # maybe make root team
@@ -586,6 +625,26 @@ class Trainer:
                 self.rootTeams.append(team)
 
         self.generation += 1
+
+        # rotate objectives for subpops
+        if self.generation % self.subPopObjChange == 0:
+            for i in range(self.nSubPops):
+                # update the objective to use for this subpopulation
+                self.subPopObjectives[i] = (self.subPopObjectives[i] + 1) % self.nSubPops
+
+
+                # also clone champions to furthest population (back one)
+                subPopRoots = [rt for rt in self.rootTeams if rt.subPopId == i and rt.fitness is not None]
+                rankedTeams = sorted(subPopRoots, key=lambda rt: rt.fitness, reverse=True)
+                champ = rankedTeams[0]
+                champClone = Team(initParams=self.mutateParams)
+                champClone.subPopId = (i+1)%self.nSubPops
+
+                # make it all the same
+                for learner in champ.learners:
+                    champClone.addLearner(learner)
+
+                self.teams.append(champClone)
     
     '''
     Go through all teams and learners and make sure their inTeams/inLearners correspond with 
