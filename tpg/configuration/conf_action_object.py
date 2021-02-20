@@ -202,10 +202,6 @@ class ConfActionObject:
     """
     def mutate_real(self, mutateParams, parentTeam, teams, pActAtom, learner_id):
 
-        # first maybe mutate just program
-        if self.actionLength > 0 and flip(0.5):
-            self.program.mutate(mutateParams)
-
         # mutate action
         if flip(pActAtom):
             # atomic
@@ -226,6 +222,10 @@ class ConfActionObject:
             self.actionCode = random.choice(options)
             self.actionLength = mutateParams["actionLengths"][self.actionCode]
             self.teamAction = None
+
+            if self.actionLength > 0:
+                self.program.mutate(mutateParams)
+
         else:
             # team action
             selection_pool = [t for t in teams

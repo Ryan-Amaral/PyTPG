@@ -68,7 +68,8 @@ class Trainer:
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(0,0,0),
         operationSet="def", traversal="team", prevPops=None, mutatePrevs=True,
-        initMaxActProgSize=64, nActRegisters=4, nSubPops=1, subPopObjChange=5):
+        initMaxActProgSize=64, nActRegisters=4, nSubPops=1, subPopObjChange=5,
+        elitesAlwaysRoot=False):
 
         '''
         Validate inputs
@@ -215,6 +216,7 @@ class Trainer:
         self.nSubPops = nSubPops
         self.subPopObjectives = [i for i in range(nSubPops)]
         self.subPopObjChange = subPopObjChange
+        self.elitesAlwaysRoot = elitesAlwaysRoot
 
         self.initializePopulations()
 
@@ -340,6 +342,22 @@ class Trainer:
                     for i,team in enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 
+    """ 
+    Gets the single best team at the given task, regardless of if its root or not.
+    """
+    def getEliteAgent(self, task, subPopId=-1):
+        
+        # restrict team pool to subpop if necessary
+        if subPopId == -1:
+            teams = [t for t in self.teams if task in t.outcomes]
+        else:
+            teams = [t for t in self.teams if t.subPopId == subPopId and task in t.outcomes]
+
+        return Agent(max([tm for tm in teams],
+                        key=lambda t: t.outcomes[task]),
+                     self.functionsDict, num=0, actVars=self.actVars)
+    
+
     """
     Apply saved scores from list to the agents.
     """
@@ -383,7 +401,7 @@ class Trainer:
 
         elif len(tasks) > 1 and self.nSubPops > 1:
             for team in self.rootTeams:
-                print(team.outcomes, tasks, self.subPopObjectives, team.subPopId)
+                #print(team.outcomes, tasks, self.subPopObjectives, team.subPopId)
                 team.fitness = team.outcomes[tasks[self.subPopObjectives[team.subPopId]]]
 
         else: # multi fitness
@@ -500,12 +518,22 @@ class Trainer:
     Select a portion of the root team population to keep according to gap size.
     """
     def select(self):
+
+        # save 1 champ for each population
+        self.champs = [None for i in range(self.nSubPops)]
+
         deleteTeams = []
         for i in range(self.nSubPops):
             subPopRoots = [rt for rt in self.rootTeams if rt.subPopId == i]
             rankedTeams = sorted(subPopRoots, key=lambda rt: rt.fitness, reverse=True)
+            self.champs[i] = rankedTeams[0] # save champ team here
             numKeep = len(subPopRoots) - int(len(subPopRoots)*self.gap)
             deleteTeams.extend(rankedTeams[numKeep:])
+
+        # never delete elites, the best across the whole population
+        for elite in self.elites:
+            if elite in deleteTeams:
+                deleteTeams.remove(elite)
 
         #rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
         #numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
@@ -586,12 +614,23 @@ class Trainer:
             oLearners = list([l for l in self.learners if l.subPopId == i])
             oTeams = list([t for t in self.teams if t.subPopId == i])
 
+            # put in some champion mingling possibility
+            if self.generation+1 % self.subPopObjChange == 0:
+                oTeams.append(self.champs[(i+1)%self.nSubPops])
+
             # update generation in mutateParams
             self.mutateParams["generation"] = self.generation
 
+            # track new roots to ensure at-least this many always
+            newRootsMin = 5
+
             # get all the current root teams to be parents
-            while (len([t for t in self.teams if t.subPopId == i]) < (self.teamPopSize / self.nSubPops) or
-                    (self.rootBasedPop and self.countRootTeams() < self.teamPopSize and 1/0 == 0)): # fail on root based
+            while ((len([t for t in self.teams if t.subPopId == i]) < (self.teamPopSize / self.nSubPops) 
+                        or newRootsMin > 0) 
+                    or (self.rootBasedPop and self.countRootTeams() < self.teamPopSize and 1/0 == 0)): # fail on root based
+
+                newRootsMin -= 1
+
                 # get parent root team, and child to be based on that
                 parent = random.choice([rt for rt in self.rootTeams if rt.subPopId == i])
                 child = Team(initParams=self.mutateParams)
@@ -621,7 +660,7 @@ class Trainer:
                     self.learners.append(learner)
 
             # maybe make root team
-            if team.numLearnersReferencing() == 0 or team in self.elites:
+            if team.numLearnersReferencing() == 0 or (team in self.elites and self.elitesAlwaysRoot):
                 self.rootTeams.append(team)
 
         self.generation += 1
