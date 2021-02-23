@@ -295,6 +295,7 @@ class Trainer:
             team.addLearner(l1)
             team.addLearner(l2)
             team.subPopId = subPopId
+            team.regChild = True
 
             # add more learners
             moreLearners = random.randint(0, self.initMaxTeamSize-2)
@@ -635,6 +636,7 @@ class Trainer:
                 parent = random.choice([rt for rt in self.rootTeams if rt.subPopId == i])
                 child = Team(initParams=self.mutateParams)
                 child.subPopId = i
+                child.regChild = True
 
                 # child starts just like parent
                 for learner in parent.learners:
@@ -678,12 +680,14 @@ class Trainer:
                 champ = rankedTeams[0]
                 champClone = Team(initParams=self.mutateParams)
                 champClone.subPopId = (i+1)%self.nSubPops
+                champClone.regChild = False
 
                 # make it all the same
                 for learner in champ.learners:
                     champClone.addLearner(learner)
 
                 self.teams.append(champClone)
+                self.rootTeams.append(champClone)
     
     '''
     Go through all teams and learners and make sure their inTeams/inLearners correspond with 
