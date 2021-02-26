@@ -318,6 +318,17 @@ class Trainer:
                     for i,team in enumerate(sorted(rTeams,
                                     key=lambda tm: tm.fitness, reverse=True))]
 
+    """ 
+    Gets the single best team at the given task, regardless of if its root or not.
+    """
+    def getEliteAgent(self, task):
+        
+        teams = [t for t in self.teams if task in t.outcomes]
+
+        return Agent(max([tm for tm in teams],
+                        key=lambda t: t.outcomes[task]),
+                     self.functionsDict, num=0, actVars=self.actVars)
+
     """
     Apply saved scores from list to the agents.
     """
