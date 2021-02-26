@@ -99,7 +99,7 @@ class Trainer:
 
 
         # Validate Operation Set
-        valid_operation_sets = ["def", "full"]
+        valid_operation_sets = ["def", "full", "robo"]
         if operationSet not in valid_operation_sets:
             raise Exception("Invalid operation set")
 
@@ -476,27 +476,27 @@ class Trainer:
         numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
         deleteTeams = rankedTeams[numKeep:]
 
-        print("BEFORE SELECTION:")        
+        #print("BEFORE SELECTION:")        
 
         pre_orphans = [learner for learner in self.learners if learner.numTeamsReferencing() == 0]
 
-        print("Number of orphans before selection: {}".format(len(pre_orphans)))
+        #print("Number of orphans before selection: {}".format(len(pre_orphans)))
 
         orphan_teams = [team for team in self.teams if len(team.inLearners) == 0 and team not in self.rootTeams]
-        print("Number of orphan teams before selection: {}".format(len(orphan_teams)))
+        #print("Number of orphan teams before selection: {}".format(len(orphan_teams)))
 
-        print("Learners:")
-        for cursor in self.learners:
-            print("Learner {} -> [{}]{} inTeams:".format( cursor.id, "Atomic" if cursor.isActionAtomic() else "Team", cursor.actionObj.actionCode if cursor.isActionAtomic() else cursor.actionObj.teamAction.id))
-            for t_id in cursor.inTeams:
-                print("\t{}".format(t_id ))
+        #print("Learners:")
+        #for cursor in self.learners:
+        #   print("Learner {} -> [{}]{} inTeams:".format( cursor.id, "Atomic" if cursor.isActionAtomic() else "Team", cursor.actionObj.actionCode if cursor.isActionAtomic() else cursor.actionObj.teamAction.id))
+        #    for t_id in cursor.inTeams:
+        #        print("\t{}".format(t_id ))
 
-        for cursor in self.teams:
-            print("Team: {} inLearners:".format(cursor.id))
-            for l_id in cursor.inLearners:
-                print("\t{}".format(l_id))
+        #for cursor in self.teams:
+        #    print("Team: {} inLearners:".format(cursor.id))
+        #    for l_id in cursor.inLearners:
+        #        print("\t{}".format(l_id))
 
-        print("-----------------------------------------------------")  
+        #print("-----------------------------------------------------")  
 
         # delete the team unless it is an elite (best at some task at-least)
         # don't delete elites because they may not be root - TODO: elaborate
@@ -508,27 +508,27 @@ class Trainer:
             self.teams.remove(team)
             self.rootTeams.remove(team)
 
-        print("AFTER SELECTION:")
+        #print("AFTER SELECTION:")
         # Find all learners that have no teams pointing to them
         orphans = [learner for learner in self.learners if learner.numTeamsReferencing() == 0]
-        print("Number of orphans after selection: {}".format(len(orphans)))
+        #print("Number of orphans after selection: {}".format(len(orphans)))
 
-        print("Orphans:")
-        for cursor in orphans:
-            print("\t{}".format(cursor.id))
+        #print("Orphans:")
+        #for cursor in orphans:
+        #    print("\t{}".format(cursor.id))
 
-        print("Learners:")
-        for cursor in self.learners:
-            print("Learner {} -> [{}]{} inTeams:".format( cursor.id, "Atomic" if cursor.isActionAtomic() else "Team", cursor.actionObj.actionCode if cursor.isActionAtomic() else cursor.actionObj.teamAction.id))
-            for t_id in cursor.inTeams:
-                print("\t{}".format(t_id ))
+        #print("Learners:")
+        #for cursor in self.learners:
+        #    print("Learner {} -> [{}]{} inTeams:".format( cursor.id, "Atomic" if cursor.isActionAtomic() else "Team", cursor.actionObj.actionCode if cursor.isActionAtomic() else cursor.actionObj.teamAction.id))
+        #    for t_id in cursor.inTeams:
+        #        print("\t{}".format(t_id ))
 
-        for cursor in self.teams:
-            print("Team: {} inLearners:".format(cursor.id))
-            for l_id in cursor.inLearners:
-                print("\t{}".format(l_id))
+        #for cursor in self.teams:
+        #    print("Team: {} inLearners:".format(cursor.id))
+        #    for l_id in cursor.inLearners:
+        #        print("\t{}".format(l_id))
 
-        print("-----------------------------------------------------")  
+        #print("-----------------------------------------------------")  
 
         # These learners will be removed, but before we can do that, we should remove 
         # their ids from any team's inLearners that the orphans are pointing to.

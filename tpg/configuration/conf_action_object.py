@@ -22,7 +22,7 @@ class ConfActionObject:
         if isinstance(action, Team):
             self.teamAction = action
             self.actionCode = None
-            print("chose team action")
+            #print("chose team action")
             return
     
 
@@ -170,7 +170,7 @@ class ConfActionObject:
 
             # let our current team know we won't be pointing to them anymore
             if not self.isAtomic():
-                print("Learner {} switching from Team {} to atomic action".format(learner_id, self.teamAction.id))
+                #print("Learner {} switching from Team {} to atomic action".format(learner_id, self.teamAction.id))
                 self.teamAction.inLearners.remove(str(learner_id))
 
             self.actionCode = random.choice(options)
@@ -192,8 +192,8 @@ class ConfActionObject:
                 # Let the new team know we're pointing to them
                 self.teamAction.inLearners.append(str(learner_id))
 
-                if oldTeam != None:
-                    print("Learner {} switched from Team {} to Team {}".format(learner_id, oldTeam.id, self.teamAction.id))
+                #if oldTeam != None:
+                #    print("Learner {} switched from Team {} to Team {}".format(learner_id, oldTeam.id, self.teamAction.id))
         
         return self
 
@@ -220,7 +220,7 @@ class ConfActionObject:
 
             # let our current team know we won't be pointing to them anymore
             if not self.isAtomic():
-                print("Learner {} switching from Team {} to atomic action".format(learner_id, self.teamAction.id))
+                #print("Learner {} switching from Team {} to atomic action".format(learner_id, self.teamAction.id))
                 self.teamAction.inLearners.remove(str(learner_id))
 
             self.actionCode = random.choice(options)
@@ -243,7 +243,7 @@ class ConfActionObject:
                 # Let the new team know we're pointing to them
                 self.teamAction.inLearners.append(str(learner_id))
 
-                if oldTeam != None:
-                    print("Learner {} switched from Team {} to Team {}".format(learner_id, oldTeam.id, self.teamAction.id))
+                #if oldTeam != None:
+                #    print("Learner {} switched from Team {} to Team {}".format(learner_id, oldTeam.id, self.teamAction.id))
         
         return self

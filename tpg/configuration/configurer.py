@@ -187,6 +187,11 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
             trainer.functionsDict["Program"]["execute"] = "full"
             trainer.nOperations = 8
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP"]
+        elif operationSet == "robo":
+            Program.execute = ConfProgram.execute_robo
+            trainer.functionsDict["Program"]["execute"] = "robo"
+            trainer.nOperations = 6
+            trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS"]
 
         Learner.bid = ConfLearner.bid_def
         trainer.functionsDict["Learner"]["bid"] = "def"

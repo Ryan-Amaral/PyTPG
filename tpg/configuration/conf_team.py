@@ -205,7 +205,7 @@ class ConfTeam:
         new_learners = []
 
         for i in range(rampantReps):
-            print("i/rampant reps:  {}/{} ".format(i, rampantReps))
+            #print("i/rampant reps:  {}/{} ".format(i, rampantReps))
             # delete some learners
             '''
             TODO log mutation deltas...
