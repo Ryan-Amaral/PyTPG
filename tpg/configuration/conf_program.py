@@ -253,6 +253,50 @@ class ConfProgram:
             elif regs[dest] == NINF:
                 regs[dest] = finfo(float64).min
 
+
+    """
+    Executes the program which returns a single final value.
+    """
+    @njit
+    def execute_robo(inpt, regs, modes, ops, dsts, srcs):
+        regSize = len(regs)
+        inptLen = len(inpt)
+        for i in range(len(modes)):
+            # first get source
+            if modes[i] == 0:
+                src = regs[srcs[i]%regSize]
+            else:
+                src = inpt[srcs[i]%inptLen]
+
+            # get data for operation
+            op = ops[i]
+            x = regs[dsts[i]]
+            y = src
+            dest = dsts[i]%regSize
+
+            # do an operation
+            if op == 0:
+                regs[dest] = x+y
+            elif op == 1:
+                regs[dest] = x-y
+            elif op == 2:
+                regs[dest] = x*y
+            elif op == 3:
+                if y != 0:
+                    regs[dest] = x/y
+            elif op == 4:
+                if x < y:
+                    regs[dest] = x*(-1)
+            elif op == 5:
+                regs[dest] = cos(y)
+
+            if isnan(regs[dest]):
+                regs[dest] = 0
+            elif regs[dest] == inf:
+                regs[dest] = finfo(float64).max
+            elif regs[dest] == NINF:
+                regs[dest] = finfo(float64).min
+
     """
     Returns probability of write at given index using default distribution.
     """

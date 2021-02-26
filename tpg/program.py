@@ -175,6 +175,8 @@ class Program:
             cls.execute = ConfProgram.execute_mem
         elif functionsDict["execute"] == "mem_full":
             cls.execute = ConfProgram.execute_mem_full
+        elif functionsDict["execute"] == "robo":
+            cls.execute = ConfProgram.execute_robo
 
         if functionsDict["mutate"] == "def":
             cls.mutate = ConfProgram.mutate_def

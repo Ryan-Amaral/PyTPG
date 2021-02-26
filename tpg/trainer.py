@@ -106,7 +106,7 @@ class Trainer:
 
 
         # Validate Operation Set
-        valid_operation_sets = ["def", "full"]
+        valid_operation_sets = ["def", "full", "robo"]
         if operationSet not in valid_operation_sets:
             raise Exception("Invalid operation set")
 
