@@ -261,6 +261,7 @@ class Trainer:
             # increment population size when appropriate
             if i % int(self.teamPopSize/self.nSubPops) == 0:
                 subPopId += 1
+                subPopId = min(self.nSubPops-1, subPopId)
 
             # create 2 unique actions and learners
             a1,a2 = random.sample(range(len(self.actionCodes)), 2)
