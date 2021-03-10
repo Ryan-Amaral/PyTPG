@@ -526,11 +526,14 @@ class Trainer:
 
         deleteTeams = []
         for i in range(self.nSubPops):
-            subPopRoots = [rt for rt in self.rootTeams if rt.subPopId == i]
+            subPopRoots = [rt for rt in self.rootTeams if rt.subPopId == i and rt.numLearnersReferencing() == 0]
             rankedTeams = sorted(subPopRoots, key=lambda rt: rt.fitness, reverse=True)
             self.champs[i] = rankedTeams[0] # save champ team here
             numKeep = len(subPopRoots) - int(len(subPopRoots)*self.gap)
             deleteTeams.extend(rankedTeams[numKeep:])
+            if numKeep == 0:
+                print("ahhhhhh")
+                print(1/0)
 
         # never delete elites, the best across the whole population
         for elite in self.elites:
@@ -565,7 +568,10 @@ class Trainer:
 
         # delete the team unless it is an elite (best at some task at-least)
         # don't delete elites because they may not be root - TODO: elaborate
+        # we are deleting a team that should not be able to be deleted currently
         for team in [t for t in deleteTeams if t not in self.elites]:
+
+            print(team.numLearnersReferencing())
 
     
             # remove learners from team and delete team from populations
@@ -576,6 +582,7 @@ class Trainer:
         #print("AFTER SELECTION:")
         # Find all learners that have no teams pointing to them
         orphans = [learner for learner in self.learners if learner.numTeamsReferencing() == 0]
+        
         #print("Number of orphans after selection: {}".format(len(orphans)))
 
         #print("Orphans:")
@@ -689,6 +696,7 @@ class Trainer:
 
                 self.teams.append(champClone)
                 self.rootTeams.append(champClone)
+            
     
     '''
     Go through all teams and learners and make sure their inTeams/inLearners correspond with 
