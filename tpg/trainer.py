@@ -244,8 +244,7 @@ class Trainer:
     """
     def initializePopulations(self):
         for i in range(self.teamPopSize):
-            a1 = random.sample(range(len(self.actionCodes)), 1)
-            
+            a1 = 0
 
             l1 = Learner(self.mutateParams,
                         program=Program(maxProgramLength=self.initMaxProgSize,

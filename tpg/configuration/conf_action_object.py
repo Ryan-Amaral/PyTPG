@@ -56,6 +56,8 @@ class ConfActionObject:
         '''
         from tpg.team import Team
 
+        #print("creating thing")
+
         
         if isinstance(action, Team):
             # The action is a team
@@ -69,7 +71,7 @@ class ConfActionObject:
                     inputSize=initParams["inputSize"])
 
         elif isinstance(action, ActionObject):
-            print("creating froom Actin Object!!!")
+            #print("creating froom Actin Object!!!")
             # The action is another action object
             self.actionCode = action.actionCode
             self.actionLength = action.actionLength
@@ -80,23 +82,16 @@ class ConfActionObject:
         elif isinstance(action, int):
             # An int means the action is an index into the action codes in initParams
             
-            if "actionCodes" not in initParams:
-                raise Exception('action codes not found in init params', initParams)
-
-            try:
-                self.actionCode = initParams["actionCodes"][action]
-                self.actionLength = initParams["actionLengths"][action]
-                self.teamAction = None
-                self.program = Program(initParams=initParams, 
-                    maxProgramLength=initParams["initMaxActProgSize"],
-                    nOperations=initParams["nOperations"],
-                    nDestinations=initParams["nDestinations"],
-                    inputSize=initParams["inputSize"])
-            except IndexError as err:
-                '''
-                TODO log index error
-                '''
-                print("Index error")
+            
+            #print("creating int action object!!!")
+            self.actionCode = initParams["actionCodes"][action]
+            self.actionLength = initParams["actionLengths"][action]
+            self.teamAction = None
+            self.program = Program(initParams=initParams, 
+                maxProgramLength=initParams["initMaxActProgSize"],
+                nOperations=initParams["nOperations"],
+                nDestinations=initParams["nDestinations"],
+                inputSize=initParams["inputSize"])
 
         self.registers = np.zeros(initParams["nActRegisters"])
 
