@@ -69,6 +69,7 @@ class ConfActionObject:
                     inputSize=initParams["inputSize"])
 
         elif isinstance(action, ActionObject):
+            print("creating froom Actin Object!!!")
             # The action is another action object
             self.actionCode = action.actionCode
             self.actionLength = action.actionLength
@@ -202,48 +203,4 @@ class ConfActionObject:
     """
     def mutate_real(self, mutateParams, parentTeam, teams, pActAtom, learner_id):
 
-        # first maybe mutate just program
-        if self.actionLength > 0 and flip(0.5):
-            self.program.mutate(mutateParams)
-
-        # mutate action
-        if flip(pActAtom):
-            # atomic
-            '''
-            If we already have an action code make sure not to pick the same one.
-            TODO handle case where there is only 1 action code.
-            '''
-            if self.actionCode is not None:
-                options = list(filter(lambda code: code != self.actionCode, mutateParams["actionCodes"]))
-            else:
-                options = mutateParams["actionCodes"]
-
-            # let our current team know we won't be pointing to them anymore
-            if not self.isAtomic():
-                #print("Learner {} switching from Team {} to atomic action".format(learner_id, self.teamAction.id))
-                self.teamAction.inLearners.remove(str(learner_id))
-
-            self.actionCode = random.choice(options)
-            self.actionLength = mutateParams["actionLengths"][self.actionCode]
-            self.teamAction = None
-        else:
-            # team action
-            selection_pool = [t for t in teams
-                    if t is not self.teamAction and t is not parentTeam]
-
-            # If we have a valid set of options choose from them
-            if len(selection_pool) > 0:
-                # let our current team know we won't be pointing to them anymore
-                oldTeam = None
-                if not self.isAtomic():
-                    oldTeam = self.teamAction
-                    self.teamAction.inLearners.remove(str(learner_id))
-
-                self.teamAction = random.choice(selection_pool)
-                # Let the new team know we're pointing to them
-                self.teamAction.inLearners.append(str(learner_id))
-
-                #if oldTeam != None:
-                #    print("Learner {} switched from Team {} to Team {}".format(learner_id, oldTeam.id, self.teamAction.id))
-        
-        return self
+        self.program.mutate(mutateParams)

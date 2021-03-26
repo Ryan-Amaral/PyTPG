@@ -39,6 +39,7 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
             mutateParamKeys, mutateParamVals, doMemory, memType, operationSet)
 
     # configure stuff for using real valued actions
+    print("doin real?", doReal)
     if doReal:
         configureRealAction(trainer, ActionObject, mutateParamKeys, mutateParamVals,
                             doMemory)

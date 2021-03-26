@@ -220,44 +220,7 @@ class Team:
     '''
     def mutation_delete(self, probability):
 
-            original_probability = float(probability)
-
-            if probability == 0.0:
-                return []
-
-            if probability >= 1.0:
-                # If this were true we'd end up deleting every learner
-                raise Exception("pLrnDel is greater than or equal to 1.0!")
-
-            # Freak out if we don't have an atomic action
-            if self.numAtomicActions() < 1:
-                raise Exception("Less than one atomic action in team! This shouldn't happen", self)
-
-
-            deleted_learners = []
-
-            # delete some learners
-            while flip(probability) and len(self.learners) > 2: # must have >= 2 learners
-                probability *= original_probability # decrease next chance
-
-
-                # If we have more than one learner with an atomic action pick any learner to delete
-                if self.numAtomicActions() > 1:
-                    learner = random.choice(self.learners)
-                else: 
-                    # Otherwise if we only have one, filter it out and pick from the remaining learners
-                    '''
-                    Use filter() to filter a list. 
-                    Call filter(function, iterable) with iterable as a list to get an iterator containing only elements from iterable for which function returns True. 
-                    Call list(iterable) with iterable as the previous result to convert iterable to a list.
-                    '''
-                    valid_choices = list(filter(lambda x: not x.isActionAtomic(), self.learners))
-                    learner = random.choice(valid_choices)
-
-                deleted_learners.append(learner)
-                self.removeLearner(learner)
-
-            return deleted_learners
+            return []
 
     ''' 
     A learner is added from the provided selection pool with a given 
@@ -271,33 +234,7 @@ class Team:
           0.5 * (0.5)^2 * (0.5)^3 probability of 3 learners being added, and so on.
     '''
     def mutation_add(self, probability, selection_pool):
-        original_probability = float(probability)
-
-        # Zero chance to add anything, return right away
-        if probability == 0.0 or len(selection_pool) == 0:
-            return []
-        
-        if probability >= 1.0:
-            # If this were true, we'd end up adding the entire selection pool
-            raise Exception("pLrnAdd is greater than or equal to 1.0!")
-
-        added_learners = []  
-        while flip(probability):
-            # If no valid selections left, break out of the loop
-            if len(selection_pool) == 0:
-                break
-
-            probability *= original_probability # decrease next chance
-
-
-            learner = random.choice(selection_pool)
-            added_learners.append(learner)
-            self.addLearner(learner)
-
-            # Ensure we don't pick the same learner twice by filtering the learners we've added from the selection pool
-            selection_pool = list(filter(lambda x:x not in added_learners, selection_pool))
-
-        return added_learners
+        return []
 
     '''
     Iterates through  this team's learners and mutates them with a given probability.
@@ -322,34 +259,27 @@ class Team:
         new_learners = []
         for learner in original_learners:
 
-            if flip(probability):
+            pActAtom0 = 1.1 # Ensure their action remains atomic
 
-                # If we only have one learner with an atomic action and the current learner is it
-                if self.numAtomicActions() == 1 and learner.isActionAtomic():
-                    pActAtom0 = 1.1 # Ensure their action remains atomic
-                else:
-                    # Otherwise let there be a probability that the learner's action is atomic as defined in the mutate params
-                    pActAtom0 = mutateParams['pActAtom']
-
-                #print("Team {} creating learner".format(self.id))
-                # Create a new new learner 
-                newLearner = Learner(mutateParams, learner.program, learner.actionObj, len(learner.registers), learner.id)
-                new_learners.append(newLearner)
-                # Add the mutated learner to our learners
-                # Must add before mutate so that the new learner has this team in its inTeams
-                self.addLearner(newLearner)
+            #print("Team {} creating learner".format(self.id))
+            # Create a new new learner 
+            newLearner = Learner(mutateParams, learner.program, learner.actionObj, len(learner.registers), learner.id)
+            new_learners.append(newLearner)
+            # Add the mutated learner to our learners
+            # Must add before mutate so that the new learner has this team in its inTeams
+            self.addLearner(newLearner)
 
 
-                # mutate it
-                newLearner.mutate(mutateParams, self, teams, pActAtom0)
+            # mutate it
+            newLearner.mutate(mutateParams, self, teams, pActAtom0)
 
-                # Remove the existing learner from the team
-                self.removeLearner(learner)
+            # Remove the existing learner from the team
+            self.removeLearner(learner)
 
-                #print("removing old learner {}".format(learner.id))
+            #print("removing old learner {}".format(learner.id))
 
-                # Add the mutated learner to our list of mutations
-                mutated_learners[str(learner.id)] = str(newLearner.id)
+            # Add the mutated learner to our list of mutations
+            mutated_learners[str(learner.id)] = str(newLearner.id)
 
       
         return mutated_learners, new_learners              

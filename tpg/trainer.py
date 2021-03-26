@@ -244,8 +244,7 @@ class Trainer:
     """
     def initializePopulations(self):
         for i in range(self.teamPopSize):
-            # create 2 unique actions and learners
-            a1,a2 = random.sample(range(len(self.actionCodes)), 2)
+            a1 = random.sample(range(len(self.actionCodes)), 1)
             
 
             l1 = Learner(self.mutateParams,
@@ -256,42 +255,13 @@ class Trainer:
                                          initParams=self.mutateParams),
                         actionObj=ActionObject(action=a1, initParams=self.mutateParams),
                         numRegisters=self.nRegisters)
-            l2 = Learner(self.mutateParams,
-                        program=Program(maxProgramLength=self.initMaxProgSize,
-                                         nOperations=self.nOperations,
-                                         nDestinations=self.nRegisters,
-                                         inputSize=self.inputSize,
-                                         initParams=self.mutateParams),
-                        actionObj=ActionObject(action=a2, initParams=self.mutateParams),
-                        numRegisters=self.nRegisters)
 
             # save learner population
             self.learners.append(l1)
-            self.learners.append(l2)
 
             # create team and add initial learners
             team = Team(initParams=self.mutateParams)
             team.addLearner(l1)
-            team.addLearner(l2)
-
-            # add more learners
-            moreLearners = random.randint(0, self.initMaxTeamSize-2)
-            for i in range(moreLearners):
-                # select action
-                act = random.choice(range(len(self.actionCodes)))
-
-                # create new learner
-                learner = Learner(initParams=self.mutateParams,
-                            program=Program(maxProgramLength=self.initMaxProgSize,
-                                             nOperations=self.nOperations,
-                                             nDestinations=self.nRegisters,
-                                             inputSize=self.inputSize,
-                                             initParams=self.mutateParams),
-                            actionObj=ActionObject(action=act, initParams=self.mutateParams),
-                            numRegisters=self.nRegisters)
-
-                team.addLearner(learner)
-                self.learners.append(learner)
 
             # save to team populations
             self.teams.append(team)
