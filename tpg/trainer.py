@@ -189,20 +189,22 @@ class Trainer:
         self.learners = []
         self.elites = [] # save best at each task
 
-        self.generation = 0 # track this
+        self.generation = -1 # track this
 
         # new stuff added in lexicase branch
         
         # all of the teams scoring better than mean
         self.teamPool = []
+        # list of teams in teamPool that haven't been evaluated on the current task
+        self.teamPoolUnevaluated = []
         # all of the teams not in teamPool
         self.teamNonPool = []
         # pool mean for each start state
         self.teamPoolMeans = {}
         # list of start states
         self.startStates = []
-        # Number of new teams added one current start state set
-        self.teamPoolIteration = 0
+        # iteration number for each of the states evaluation
+        self.teamPoolIterations = {}
 
         # these are to be filled in by the configurer after
         self.mutateParams = {}
@@ -309,72 +311,124 @@ class Trainer:
             # save to team populations
             self.teams.append(team)
             self.rootTeams.append(team)
-            self.teamPool.append(team)
+
+    """
+    Return the next team in the teamPool as an agent, or None if no team left.
+    """
+    def getNextAgent(self):
+
+        if len(self.teamPool) == 0:
+            return None
+        else:
+            team = random.choice(self.teamPoolUnevaluated)
+            self.teamPoolUnevaluated.remove(team)
+            return Agent(team, self.functionsDict, num=0, actVars=self.actVars)
 
     """
     Updates the team pool mean scores with the scores of the new team and
     decides whether to put the team into the pool.
     """
-    def updateTeamPool(self, team):
+    def updateTeamPool(self, team, startState):
 
-        self.teamPoolIteration += 1
+        self.teamPoolIterations[startState] += 1
+
+        # update mean score for this state
+        self.teamPoolMeans[startState] = (self.teamPoolMeans[startState] + 
+            (team.outcomes[startState] - self.teamPoolMeans[startState]) /
+            self.teamPoolIterations[startState])
         
-        # if team is better than mean at all starts it is superior
-        # to be added to team pool
-        superior = True
-        for s in self.startStates:
-            # score must be better than current mean
-            if team.outcomes[s] <= self.teamPoolMeans:
-                superior = False
-
-            # update mean scores for this state
-            self.teamPoolMeans[s] = self.teamPoolMeans[s] + (team.outcomes[s] - self.teamPoolMeans[s])/self.teamPoolIteration
-
-        # add team to pool or not
-        if superior:
-            self.teamPool.append(team)
-        else:
+        # remove from pool if worse than mean
+        if team.outcomes[startState] <= self.teamPoolMeans[startState]:
+            self.teamPool.remove(team)
             self.teamNonPool.append(team)
 
     """
-    Like updateTeamPool, but with the entire team population at once.
-    Calculates mean scores, then adds teams to pool if superior.
+    Creates a new team by cloning an eligible team, replacing a lesser team 
+    (if possible), and mutating the new team.
     """
-    def bulkUpdateTeamPool(self):
+    def createNewTeam(self, parent):
 
-        # reset all means to zero to start
-        for s in self.startStates:
-            self.teamPoolMeans[s] = 0
+        # remove a random lesser root team (from teamNonPool) if possible
+        rmTeamPool = [t for t in self.teamNonPool if t.numLearnersReferencing() == 0]
+        if len(rmTeamPool) > 0:
+            # team do delete
+            rmTeam = random.choice(rmTeamPool)
 
-        # reset groups
-        self.teamPool = []
+            # remove from pop
+            rmTeam.removeLearners()
+            self.teams.remove(rmTeam)
+            self.rootTeams.remove(rmTeam)
+
+            # set learners straight
+            orphans = [learner for learner in self.learners if learner.numTeamsReferencing() == 0]
+            for cursor in orphans:
+                if not cursor.isActionAtomic():
+                    cursor.actionObj.teamAction.inLearners.remove(str(cursor.id))
+            self.learners = [learner for learner in self.learners if learner.numTeamsReferencing() > 0]
+
+
+        # create fixed list of teams and learners to deal with rampancy
+        oLearners = list(self.learners)
+        oTeams = list(self.teams)
+
+        # update generation in mutateParams
+        self.mutateParams["generation"] = self.generation
+
+        # clone from provided parent
+        child = Team(initParams=self.mutateParams)
+        # child starts just like parent
+        for learner in parent.learners:
+            child.addLearner(learner)
+
+        # then mutates
+        child.mutate(self.mutateParams, oLearners, oTeams)
+
+
+        # add to appropriate lists
+        self.teams.append(child)
+        self.teamPool.append(child)
+        self.teamPoolUnevaluated.append(child)
+
+        # update learners from new team
+        for learner in child.learners:
+            if learner not in self.learners:
+                self.learners.append(learner)
+
+
+        # re-assess roots
+        self.rootTeams = []
+        for team in self.teams:
+            if team.numLearnersReferencing() == 0:
+                self.rootTeams.append(team)
+
+    """
+    Starts the next generation. Different than a conventional generation. 
+    Resets all the stuff to do with lexicase, sets the new states, and clears 
+    team outcomes. Call at the start too.
+    """
+    def nextGeneration(self, startStates):
+
+        # reset all the lexicase related stuff
+
+        self.teamPool = list(self.teams)
+        self.teamPoolUnevaluated = list(self.teams)
         self.teamNonPool = []
 
-        nTeams = len(self.teams)
-        # get the mean for each start state
+        self.teamPoolMeans = {}
+        self.teamPoolIterations = {}
+
+        self.startStates = list(startStates)
+        for s in startStates:
+            self.teamPoolMeans[s] = 0
+            self.teamPoolIterations[s] = 0
+
+        # reset team outcomes
         for t in self.teams:
-            self.teamPoolMeans[s] += t.outcomes[s]/nTeams
+            t.outcomes = {}
 
-        # iterate through teams again to see if should be in teamPool
-        for t in self.teams:
-            superior = True
-            for s in self.startStates:
-                # score must be better than current mean
-                if t.outcomes[s] <= self.teamPoolMeans:
-                    superior = False
-
-            # add to appropriate group
-            if superior:
-                self.teamPool.append(t)
-            else:
-                self.teamNonPool.append(t)
-
-    """
-    Creates and returns a new agent team by cloning an eligible team, replacing
-    a lesser team (if possible), and mutating the new team.
-    """
-    def createNextAgent(self):
-        pass
+        self.generation += 1
+        # update generation in mutateParams
+        self.mutateParams["generation"] = self.generation
 
     """
     Gets rootTeams/agents. Sorts decending by sortTasks, and skips individuals
