@@ -422,7 +422,7 @@ class Trainer:
     Resets all the stuff to do with lexicase, sets the new states, and clears 
     team outcomes. Call at the start too.
     """
-    def nextGeneration(self, startStates, saveOutcome):
+    def nextGeneration(self, startStates, saveOutcome=None, resetOutcomes=False):
 
         # reset all the lexicase related stuff
 
@@ -439,9 +439,13 @@ class Trainer:
             self.teamPoolIterations[s] = 0
 
         # reset team outcomes
-        for t in self.teams:
-            saved = t.outcomes[saveOutcome]
-            t.outcomes = {saveOutcome: saved}
+        if resetOutcomes:
+            for t in self.teams:
+                if saveOutcome is not None:
+                    saved = t.outcomes[saveOutcome]
+                    t.outcomes = {saveOutcome: saved}
+                else:
+                    t.outcomes = {}
 
         self.generation += 1
         # update generation in mutateParams
