@@ -441,7 +441,7 @@ class Trainer:
         # reset team outcomes
         if resetOutcomes:
             for t in self.teams:
-                if saveOutcome is not None:
+                if saveOutcome is not None and saveOutcome in t.outcomes:
                     saved = t.outcomes[saveOutcome]
                     t.outcomes = {saveOutcome: saved}
                 else:
