@@ -83,6 +83,10 @@ class Team:
     def __ne__(self, o: object) -> bool:
         return not self.__eq__(o)
 
+    def zeroRegisters(self):
+        for learner in self.learners:
+            learner.zeroRegisters()
+
     '''
     Returns the number of learners referencing this team
     '''

@@ -313,6 +313,12 @@ class Trainer:
             self.rootTeams.append(team)
 
     """
+    Resets the "unevaluated" group to be equivalent to the team pool.
+    """
+    def resetSelectionPool(self):
+        self.teamPoolUnevaluated = list(self.teamPool)
+
+    """
     Return the next team in the teamPool as an agent, or None if no team left.
     """
     def getNextAgent(self):
@@ -325,8 +331,8 @@ class Trainer:
             return Agent(team, self.functionsDict, num=0, actVars=self.actVars)
 
     """
-    Updates the team pool mean scores with the scores of the new team and
-    decides whether to put the team into the pool.
+    Updates the team pool mean scores with the scores of this team and
+    decides whether to remove the team from the pool.
     """
     def updateTeamPool(self, team, startState):
 
@@ -348,11 +354,19 @@ class Trainer:
     """
     def createNewTeam(self, parent):
 
+        # for logging purposes return this data, -1 means none deleted
+        rmId = -1
+        rmGenCreate = -1
+        rmOutcomes = {}
+
         # remove a random lesser root team (from teamNonPool) if possible
         rmTeamPool = [t for t in self.teamNonPool if t.numLearnersReferencing() == 0]
         if len(rmTeamPool) > 0:
             # team do delete
             rmTeam = random.choice(rmTeamPool)
+            rmId = rmTeam.id
+            rmGenCreate = rmTeam.genCreate
+            rmOutcomes = dict(rmTeam.outcomes)
 
             # remove from pop
             rmTeam.removeLearners()
@@ -401,12 +415,14 @@ class Trainer:
             if team.numLearnersReferencing() == 0:
                 self.rootTeams.append(team)
 
+        return child, rmId, rmGenCreate, rmOutcomes
+
     """
     Starts the next generation. Different than a conventional generation. 
     Resets all the stuff to do with lexicase, sets the new states, and clears 
     team outcomes. Call at the start too.
     """
-    def nextGeneration(self, startStates):
+    def nextGeneration(self, startStates, saveOutcome):
 
         # reset all the lexicase related stuff
 
@@ -424,7 +440,8 @@ class Trainer:
 
         # reset team outcomes
         for t in self.teams:
-            t.outcomes = {}
+            saved = t.outcomes[saveOutcome]
+            t.outcomes = {saveOutcome: saved}
 
         self.generation += 1
         # update generation in mutateParams
@@ -432,13 +449,18 @@ class Trainer:
 
     """
     Gets rootTeams/agents. Sorts decending by sortTasks, and skips individuals
-    who don't have scores for all skipTasks.
+    who have scores for all skipTasks.
     """
-    def getAgents(self, sortTasks=[], multiTaskType='min', skipTasks=[]):
+    def getAgents(self, sortTasks=[], multiTaskType='min', skipTasks=[], rootOnly=True):
         # remove those that get skipped
-        rTeams = [team for team in self.rootTeams
-                if len(skipTasks) == 0
-                        or any(task not in team.outcomes for task in skipTasks)]
+        if rootOnly:
+            rTeams = [team for team in self.rootTeams
+                    if len(skipTasks) == 0
+                            or any(task not in team.outcomes for task in skipTasks)]
+        else:
+            rTeams = [team for team in self.teams
+                    if len(skipTasks) == 0
+                            or any(task not in team.outcomes for task in skipTasks)]
 
         if len(sortTasks) == 0: # just get all
             return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
@@ -599,10 +621,15 @@ class Trainer:
     """
     Gets stats on some task.
     """
-    def getTaskStats(self, task):
+    def getTaskStats(self, task, rootOnly=True):
         scores = []
-        for rt in self.rootTeams:
-            scores.append(rt.outcomes[task])
+        if rootOnly:
+            pool = self.rootTeams
+        else:
+            pool = self.teams
+
+        for t in pool:
+            scores.append(t.outcomes[task])
 
         scoreStats = {}
         scoreStats['scores'] = scores
