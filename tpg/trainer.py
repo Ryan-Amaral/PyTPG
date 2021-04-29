@@ -323,7 +323,7 @@ class Trainer:
     """
     def getNextAgent(self):
 
-        if len(self.teamPool) == 0:
+        if len(self.teamPoolUnevaluated) == 0:
             return None
         else:
             team = random.choice(self.teamPoolUnevaluated)
@@ -360,18 +360,21 @@ class Trainer:
         rmOutcomes = {}
 
         # remove a random lesser root team (from teamNonPool) if possible
-        rmTeamPool = [t for t in self.teamNonPool if t.numLearnersReferencing() == 0]
+        rmTeamPool = [t for t in self.teamNonPool if t.numLearnersReferencing() == 0 
+            and t.id != parent.id]
         if len(rmTeamPool) > 0:
             # team do delete
             rmTeam = random.choice(rmTeamPool)
+            self.teams.remove(rmTeam)
+            self.rootTeams.remove(rmTeam)
+            self.teamNonPool.remove(rmTeam)
+
             rmId = rmTeam.id
             rmGenCreate = rmTeam.genCreate
             rmOutcomes = dict(rmTeam.outcomes)
 
             # remove from pop
             rmTeam.removeLearners()
-            self.teams.remove(rmTeam)
-            self.rootTeams.remove(rmTeam)
 
             # set learners straight
             orphans = [learner for learner in self.learners if learner.numTeamsReferencing() == 0]
@@ -380,6 +383,8 @@ class Trainer:
                     cursor.actionObj.teamAction.inLearners.remove(str(cursor.id))
             self.learners = [learner for learner in self.learners if learner.numTeamsReferencing() > 0]
 
+        print("rmid")
+        print(rmId, parent.id)
 
         # create fixed list of teams and learners to deal with rampancy
         oLearners = list(self.learners)
