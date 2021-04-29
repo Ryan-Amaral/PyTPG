@@ -315,8 +315,29 @@ class Trainer:
     """
     Resets the "unevaluated" group to be equivalent to the team pool.
     """
-    def resetSelectionPool(self):
+    def resetUnevaluatedPool(self):
         self.teamPoolUnevaluated = list(self.teamPool)
+
+    """
+    Completely resets the agent/team pool to the whole population
+    """
+    def resetSelectionPool(self, startStates, rootOnly=False):
+        if rootOnly:
+            teams = self.rootTeams
+        else:
+            teams = self.teams
+
+        self.teamPool = list(teams)
+        self.teamPoolUnevaluated = list(teams)
+        self.teamNonPool = []
+
+        self.teamPoolMeans = {}
+        self.teamPoolIterations = {}
+
+        self.startStates = list(startStates)
+        for s in startStates:
+            self.teamPoolMeans[s] = 0
+            self.teamPoolIterations[s] = 0
 
     """
     Return the next team in the teamPool as an agent, or None if no team left.
@@ -383,9 +404,6 @@ class Trainer:
                     cursor.actionObj.teamAction.inLearners.remove(str(cursor.id))
             self.learners = [learner for learner in self.learners if learner.numTeamsReferencing() > 0]
 
-        print("rmid")
-        print(rmId, parent.id)
-
         # create fixed list of teams and learners to deal with rampancy
         oLearners = list(self.learners)
         oTeams = list(self.teams)
@@ -448,7 +466,13 @@ class Trainer:
             for t in self.teams:
                 if saveOutcome is not None and saveOutcome in t.outcomes:
                     saved = t.outcomes[saveOutcome]
-                    t.outcomes = {saveOutcome: saved}
+                    scores = t.outcomes.get("Scores", [-1])
+                    mean = t.outcomes.get("Mean", -1)
+                    std = t.outcomes.get("Std", -1)
+                    t.outcomes = {saveOutcome: saved,
+                                  "Scores": scores,
+                                  "Mean": mean,
+                                  "Std": std}
                 else:
                     t.outcomes = {}
 
@@ -496,12 +520,18 @@ class Trainer:
     """
     Apply saved scores from list to the agents.
     """
-    def applyScores(self, scores): # used when multiprocessing
+    def applyScores(self, scores, rootOnly=True): # used when multiprocessing
+
+        if rootOnly:
+            pool = self.rootTeams
+        else:
+            pool = self.teams
+
         for score in scores:
-            for rt in self.rootTeams:
-                if score[0] == rt.id:
+            for t in pool:
+                if score[0] == t.id:
                     for task, outcome in score[1].items():
-                        rt.outcomes[task] = outcome
+                        t.outcomes[task] = outcome
                     break # on to next score
 
         return self.rootTeams
