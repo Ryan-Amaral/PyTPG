@@ -380,9 +380,13 @@ class Trainer:
         rmGenCreate = -1
         rmOutcomes = {}
 
+        elites = []
+        for start in self.teamPoolIterations.keys():
+            elites.append(self.getEliteAgent(start).team)
+
         # remove a random lesser root team (from teamNonPool) if possible
         rmTeamPool = [t for t in self.teamNonPool if t.numLearnersReferencing() == 0 
-            and t.id != parent.id]
+            and t.id != parent.id and t not in elites]
         if len(rmTeamPool) > 0:
             # team do delete
             rmTeam = random.choice(rmTeamPool)
