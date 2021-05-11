@@ -615,8 +615,30 @@ class Trainer:
 
         self.generation += 1
 
-    def remove_hitchhikers(self):
-        pass
+    """
+    Removes hitchhikers, learners that are never used, except for the last atomic action on the team.
+    teamLearnerVisists is a dict with team keys and values represending the learners that are
+    actually visited on the team. Any learner on a team not in this list gets deleted.
+    """
+    def remove_hitchhikers(self, teamLearnerVisits):
+        learnersRemoved = []
+        teamsAffected = []
+
+        for team in teamLearnerVisits.keys():
+            affected = False
+            for learner in teams:
+                # only remove if non atomic, or atomic and team has > 1 atomic actions
+                if learner not in teamLearnerVisits[team] and (
+                        not learner.isActionAtomic() or 
+                            (learner.isActionAtomic() and team.numAtomicActions() > 1)):
+                    affected = True
+                    learnersRemoved.append(learner)
+                    team.removeLearner(learner)
+
+            if affected:
+                teamsAffected.append(team)
+
+        return learnersRemoved, teamsAffected
     
     '''
     Go through all teams and learners and make sure their inTeams/inLearners correspond with 
