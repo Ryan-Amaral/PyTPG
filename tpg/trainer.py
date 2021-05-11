@@ -557,11 +557,16 @@ class Trainer:
     """
     def generate(self, extraTeams=None):
 
+        # extras who are already part of the team population
+        protectedExtras = []
+
         # add extras into the population
         if extraTeams is not None:
             for team in extraTeams:
                 if team not in self.teams:
                     self.teams.append(team)
+                else:
+                    protectedExtras.append(team)
 
         oLearners = list(self.learners)
         oTeams = list(self.teams)
@@ -588,7 +593,7 @@ class Trainer:
         # remove unused extras
         if extraTeams is not None:
             for team in extraTeams:
-                if team.numLearnersReferencing() == 0:
+                if team.numLearnersReferencing() == 0 and team not in protectedExtras:
                     self.teams.remove(team)
 
     """
@@ -609,6 +614,9 @@ class Trainer:
                 self.rootTeams.append(team)
 
         self.generation += 1
+
+    def remove_hitchhikers(self):
+        pass
     
     '''
     Go through all teams and learners and make sure their inTeams/inLearners correspond with 
