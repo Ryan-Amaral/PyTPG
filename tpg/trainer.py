@@ -347,10 +347,10 @@ class Trainer:
     """
     def evolve(self, tasks=['task'], multiTaskType='min'):
         self.scoreIndividuals(tasks, multiTaskType=multiTaskType,
-                doElites=self.doElites) # assign scores to individuals
+                doElites=self.doElites, extraTeams=None, extraLearners=None) # assign scores to individuals
         self.saveFitnessStats() # save fitness stats
         self.select() # select individuals to keep
-        self.generate() # create new individuals from those kept
+        self.generate(extraTeams, extraLearners) # create new individuals from those kept
         self.nextEpoch() # set up for next generation
         #self.validate_graph() # validate the tpg (for debug only)
     """
@@ -555,7 +555,12 @@ class Trainer:
     """
     Generates new rootTeams based on existing teams.
     """
-    def generate(self):
+    def generate(self, extraTeams=None):
+
+        # add extras into the population
+        for team in extraTeams:
+            if team not in self.teams:
+                self.teams.append(team)
 
         oLearners = list(self.learners)
         oTeams = list(self.teams)
@@ -578,6 +583,11 @@ class Trainer:
             child.mutate(self.mutateParams, oLearners, oTeams)
 
             self.teams.append(child)
+
+        # remove unused extras
+        for team in extraTeams:
+            if team.numLearnersReferencing() == 0:
+                self.teams.remove(team)
 
     """
     Finalize populations and prepare for next generation/epoch.
