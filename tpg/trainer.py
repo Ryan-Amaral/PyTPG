@@ -558,9 +558,10 @@ class Trainer:
     def generate(self, extraTeams=None):
 
         # add extras into the population
-        for team in extraTeams:
-            if team not in self.teams:
-                self.teams.append(team)
+        if extraTeams is not None:
+            for team in extraTeams:
+                if team not in self.teams:
+                    self.teams.append(team)
 
         oLearners = list(self.learners)
         oTeams = list(self.teams)
@@ -585,9 +586,10 @@ class Trainer:
             self.teams.append(child)
 
         # remove unused extras
-        for team in extraTeams:
-            if team.numLearnersReferencing() == 0:
-                self.teams.remove(team)
+        if extraTeams is not None:
+            for team in extraTeams:
+                if team.numLearnersReferencing() == 0:
+                    self.teams.remove(team)
 
     """
     Finalize populations and prepare for next generation/epoch.
