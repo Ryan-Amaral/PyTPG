@@ -311,6 +311,10 @@ class Trainer:
             return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
                     for i,team in enumerate(rTeams)]
         else:
+
+            if len(sortTasks) == 1:
+                rTeams = [t for t in rTeams if sortTasks[0] in t.outcomes]
+
             # apply scores/fitness to root teams
             self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
             # return teams sorted by fitness
