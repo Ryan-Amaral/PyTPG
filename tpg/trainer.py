@@ -345,12 +345,12 @@ class Trainer:
     """
     Evolve the populations for improvements.
     """
-    def evolve(self, tasks=['task'], multiTaskType='min'):
+    def evolve(self, tasks=['task'], multiTaskType='min', extraTeams=None):
         self.scoreIndividuals(tasks, multiTaskType=multiTaskType,
                 doElites=self.doElites, extraTeams=None, extraLearners=None) # assign scores to individuals
         self.saveFitnessStats() # save fitness stats
         self.select() # select individuals to keep
-        self.generate(extraTeams, extraLearners) # create new individuals from those kept
+        self.generate(extraTeams) # create new individuals from those kept
         self.nextEpoch() # set up for next generation
         #self.validate_graph() # validate the tpg (for debug only)
     """
@@ -619,8 +619,9 @@ class Trainer:
     Removes hitchhikers, learners that are never used, except for the last atomic action on the team.
     teamLearnerVisists is a dict with team keys and values represending the learners that are
     actually visited on the team. Any learner on a team not in this list gets deleted.
+    Evolve should be called right after to properly remove the learners from the population.
     """
-    def remove_hitchhikers(self, teamLearnerVisits):
+    def removeHitchhikers(self, teamLearnerVisits):
         learnersRemoved = []
         teamsAffected = []
 
