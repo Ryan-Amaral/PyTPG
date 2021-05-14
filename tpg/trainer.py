@@ -631,7 +631,7 @@ class Trainer:
 
         for team in teamLearnerVisits.keys():
             affected = False
-            for learner in teams:
+            for learner in team.learners:
                 # only remove if non atomic, or atomic and team has > 1 atomic actions
                 if learner not in teamLearnerVisits[team] and (
                         not learner.isActionAtomic() or 
