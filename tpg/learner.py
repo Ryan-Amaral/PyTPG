@@ -48,6 +48,9 @@ class Learner:
         #print("Creating a brand new learner" if learner_id == None else "Creating a learner from {}".format(str(learner_id)))
         #print("Created learner {} [{}] -> {}".format(self.id, "atomic" if self.isActionAtomic() else "Team", self.actionObj.actionCode if self.isActionAtomic() else self.actionObj.teamAction.id))
         
+    def zeroRegisters(self):
+        self.registers = np.zeros(len(self.registers), dtype=float)
+        self.actionObj.zeroRegisters()
 
     def numTeamsReferencing(self):
         return len(self.inTeams)
