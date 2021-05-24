@@ -44,6 +44,16 @@ class ConfTeam:
         valid_learners = [lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited]
 
+        if len(valid_learners) == 0:
+            print("checking learner visiteds")
+            print("Visited: " + str(visited))
+            for learner in self.learners:
+                if learner.isActionAtomic():
+                    print("Atomic")
+                else:
+                    print("Team: " + str(learner.getActionTeam().id))
+            print("")
+
 
         top_learner = max(valid_learners,
             key=lambda lrnr: lrnr.bid(state, actVars=actVars))

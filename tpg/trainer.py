@@ -314,13 +314,18 @@ class Trainer:
 
             if len(sortTasks) == 1:
                 rTeams = [t for t in rTeams if sortTasks[0] in t.outcomes]
+                # return teams sorted by the outcome
+                return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
+                        for i,team in enumerate(sorted(rTeams,
+                                        key=lambda tm: tm.outcomes[sortTasks[0]], reverse=True))]
 
-            # apply scores/fitness to root teams
-            self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
-            # return teams sorted by fitness
-            return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
-                    for i,team in enumerate(sorted(rTeams,
-                                    key=lambda tm: tm.fitness, reverse=True))]
+            else:
+                # apply scores/fitness to root teams
+                self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
+                # return teams sorted by fitness
+                return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
+                        for i,team in enumerate(sorted(rTeams,
+                                        key=lambda tm: tm.fitness, reverse=True))]
 
     """ 
     Gets the single best team at the given task, regardless of if its root or not.
@@ -351,7 +356,7 @@ class Trainer:
     """
     def evolve(self, tasks=['task'], multiTaskType='min', extraTeams=None):
         self.scoreIndividuals(tasks, multiTaskType=multiTaskType,
-                doElites=self.doElites, extraTeams=None, extraLearners=None) # assign scores to individuals
+                doElites=self.doElites) # assign scores to individuals
         self.saveFitnessStats() # save fitness stats
         self.select() # select individuals to keep
         self.generate(extraTeams) # create new individuals from those kept
@@ -610,7 +615,7 @@ class Trainer:
             # add any new learners to the population
             for learner in team.learners:
                 if learner not in self.learners:
-                    print("Adding {} to trainer learners".format(learner.id))
+                    #print("Adding {} to trainer learners".format(learner.id))
                     self.learners.append(learner)
 
             # maybe make root team
@@ -625,15 +630,15 @@ class Trainer:
     actually visited on the team. Any learner on a team not in this list gets deleted.
     Evolve should be called right after to properly remove the learners from the population.
     """
-    def removeHitchhikers(self, teamLearnerVisits):
+    def removeHitchhikers(self, teams, visitedLearners):
         learnersRemoved = []
         teamsAffected = []
 
-        for team in teamLearnerVisits.keys():
+        for i, team in enumerate(teams):
             affected = False
             for learner in team.learners:
                 # only remove if non atomic, or atomic and team has > 1 atomic actions
-                if learner not in teamLearnerVisits[team] and (
+                if learner not in visitedLearners[i] and (
                         not learner.isActionAtomic() or 
                             (learner.isActionAtomic() and team.numAtomicActions() > 1)):
                     affected = True
