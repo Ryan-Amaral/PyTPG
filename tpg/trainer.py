@@ -360,7 +360,7 @@ class Trainer:
         self.scoreIndividuals(tasks, multiTaskType=multiTaskType,
                 doElites=self.doElites) # assign scores to individuals
         self.saveFitnessStats() # save fitness stats
-        self.select() # select individuals to keep
+        self.select(extraTeams) # select individuals to keep
         self.generate(extraTeams) # create new individuals from those kept
         self.nextEpoch() # set up for next generation
         #self.validate_graph() # validate the tpg (for debug only)
@@ -493,7 +493,8 @@ class Trainer:
     """
     Select a portion of the root team population to keep according to gap size.
     """
-    def select(self):
+    def select(self, extraTeams=None):
+
         rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
         numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
         deleteTeams = rankedTeams[numKeep:]
@@ -526,7 +527,8 @@ class Trainer:
 
     
             # remove learners from team and delete team from populations
-            team.removeLearners()
+            if extraTeams is None or team not in extraTeams:
+                team.removeLearners()
             self.teams.remove(team)
             self.rootTeams.remove(team)
 
