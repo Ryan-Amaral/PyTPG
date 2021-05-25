@@ -57,7 +57,7 @@ class Trainer:
     mutate the learners or
     """
     def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
-        inputSize=33600, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
+        inputSize=33600, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128, maxTeamSize=-1,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(0,0,0),
@@ -150,6 +150,9 @@ class Trainer:
         # params for initializing evolution
         self.initMaxTeamSize = initMaxTeamSize # size of team = # of learners
         self.initMaxProgSize = initMaxProgSize # size of program = # of instructions
+
+        # max team size possible throughout evolution
+        self.maxTeamSize = maxTeamSize
 
         # params for continued evolution
         self.pLrnDel = pLrnDel
@@ -246,7 +249,6 @@ class Trainer:
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
             a1,a2 = random.sample(range(len(self.actionCodes)), 2)
-            
 
             l1 = Learner(self.mutateParams,
                         program=Program(maxProgramLength=self.initMaxProgSize,

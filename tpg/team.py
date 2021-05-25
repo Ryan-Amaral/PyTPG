@@ -274,11 +274,12 @@ class Team:
           there is a 0.5 * (0.5)^2 probability of 2 learners being added. 
           0.5 * (0.5)^2 * (0.5)^3 probability of 3 learners being added, and so on.
     '''
-    def mutation_add(self, probability, selection_pool):
+    def mutation_add(self, probability, maxTeamSize, selection_pool):
+
         original_probability = float(probability)
 
         # Zero chance to add anything, return right away
-        if probability == 0.0 or len(selection_pool) == 0:
+        if probability == 0.0 or len(selection_pool) == 0 or (maxTeamSize > 0 and len(self.learners) >= maxTeamSize):
             return []
         
         if probability >= 1.0:
@@ -286,7 +287,7 @@ class Team:
             raise Exception("pLrnAdd is greater than or equal to 1.0!")
 
         added_learners = []  
-        while flip(probability):
+        while flip(probability) and len(self.learners) < maxTeamSize:
             # If no valid selections left, break out of the loop
             if len(selection_pool) == 0:
                 break

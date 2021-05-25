@@ -44,7 +44,7 @@ class ConfTeam:
         valid_learners = [lrnr for lrnr in self.learners
                 if lrnr.isActionAtomic() or str(lrnr.getActionTeam().id) not in visited]
 
-        if len(valid_learners) == 0:
+        """if len(valid_learners) == 0:
             print("checking learner visiteds")
             print("Visited: " + str(visited))
             for learner in self.learners:
@@ -52,7 +52,7 @@ class ConfTeam:
                     print("Atomic")
                 else:
                     print("Team: " + str(learner.getActionTeam().id))
-            print("")
+            print("")"""
 
 
         top_learner = max(valid_learners,
@@ -233,7 +233,7 @@ class ConfTeam:
             # Filter out learners we just deleted
             selection_pool = list(filter(lambda x: x not in deleted_learners, selection_pool))
             
-            added_learners = self.mutation_add(mutateParams["pLrnAdd"], selection_pool)
+            added_learners = self.mutation_add(mutateParams["pLrnAdd"], mutateParams["maxTeamSize"], selection_pool)
 
             # give chance to mutate all learners
             mutated_learners, mutation_added_learners = self.mutation_mutate(mutateParams["pLrnMut"], mutateParams, teams)
