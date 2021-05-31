@@ -572,12 +572,14 @@ class Trainer:
 
         # extras who are already part of the team population
         protectedExtras = []
+        extrasAdded = 0
 
         # add extras into the population
         if extraTeams is not None:
             for team in extraTeams:
                 if team not in self.teams:
                     self.teams.append(team)
+                    extrasAdded += 1
                 else:
                     protectedExtras.append(team)
 
@@ -588,7 +590,7 @@ class Trainer:
         self.mutateParams["generation"] = self.generation
 
         # get all the current root teams to be parents
-        while (len(self.teams) < self.teamPopSize or
+        while (len(self.teams) < self.teamPopSize + extrasAdded or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
             # get parent root team, and child to be based on that
             parent = random.choice(self.rootTeams)
