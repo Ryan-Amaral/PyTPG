@@ -287,7 +287,7 @@ class Team:
             raise Exception("pLrnAdd is greater than or equal to 1.0!")
 
         added_learners = []  
-        while flip(probability) and len(self.learners) < maxTeamSize:
+        while flip(probability) and (maxTeamSize <= 0 or len(self.learners) < maxTeamSize):
             # If no valid selections left, break out of the loop
             if len(selection_pool) == 0:
                 break
