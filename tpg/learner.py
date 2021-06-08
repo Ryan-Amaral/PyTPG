@@ -187,6 +187,9 @@ inTeams:\n""".format(
     action. Either requires a learner, or a program/action pair.
     """
 
+    def zeroRegisters(self):
+        self.registers = np.zeros(len(self.registers), dtype=float)
+        self.actionObj.zeroRegisters()
 
     """
     Get the bid value, highest gets its action selected.

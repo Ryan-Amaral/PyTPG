@@ -89,6 +89,10 @@ class Team:
     def numLearnersReferencing(self):
         return len(self.inLearners)
 
+    def zeroRegisters(self):
+        for learner in self.learners:
+            learner.zeroRegisters()
+
     """
     Returns an action to use based on the current state.
     NOTE: Do not set visited = list() because that will only be

@@ -17,6 +17,9 @@ class Agent:
         self.agentNum = num
         self.actVars = actVars
 
+    def zeroRegisters(self):
+        self.team.zeroRegisters()
+
     """
     Gets an action from the root team of this agent / this agent.
     """

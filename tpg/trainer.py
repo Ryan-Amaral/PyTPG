@@ -280,12 +280,20 @@ class Trainer:
             return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
                     for i,team in enumerate(rTeams)]
         else:
-            # apply scores/fitness to root teams
-            self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
-            # return teams sorted by fitness
-            return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
-                    for i,team in enumerate(sorted(rTeams,
-                                    key=lambda tm: tm.fitness, reverse=True))]
+            if len(sortTasks) == 1:
+                rTeams = [t for t in rTeams if sortTasks[0] in t.outcomes]
+                # return teams sorted by the outcome
+                return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
+                        for i,team in enumerate(sorted(rTeams,
+                                        key=lambda tm: tm.outcomes[sortTasks[0]], reverse=True))]
+
+            else:
+                # apply scores/fitness to root teams
+                self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
+                # return teams sorted by fitness
+                return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
+                        for i,team in enumerate(sorted(rTeams,
+                                        key=lambda tm: tm.fitness, reverse=True))]
 
     """ 
     Gets the single best team at the given task, regardless of if its root or not.
@@ -558,7 +566,7 @@ class Trainer:
             # add any new learners to the population
             for learner in team.learners:
                 if learner not in self.learners:
-                    print("Adding {} to trainer learners".format(learner.id))
+                    #print("Adding {} to trainer learners".format(learner.id))
                     self.learners.append(learner)
 
             # maybe make root team
