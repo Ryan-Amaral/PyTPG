@@ -300,7 +300,7 @@ class ConfProgram:
     Executes the program which returns a single final value.
     """
     @njit
-    def execute_robo_mem(inpt, regs, modes, ops, dsts, srcs,
+    def execute_mem_robo(inpt, regs, modes, ops, dsts, srcs,
             memMatrix, memRows, memCols, memWriteProbFunc):
         regSize = len(regs)
         inptLen = len(inpt)
