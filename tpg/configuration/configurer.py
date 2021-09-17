@@ -92,8 +92,6 @@ def configureDefaults(trainer, Trainer, Agent, Team, Learner, ActionObject, Prog
     Program.execute = ConfProgram.execute_def
     Program.mutate = ConfProgram.mutate_def
     Program.memWriteProbFunc = ConfProgram.memWriteProb_def
-    #No longer need this after refactorAndTest merge
-    #Program.mutateInstructions = ConfProgram.mutateInstructions_def
 
     # let trainer know what functions are set for each one
     
@@ -153,6 +151,11 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
             trainer.functionsDict["Program"]["execute"] = "mem_full"
             trainer.nOperations = 10
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP", "MEM_READ", "MEM_WRITE"]
+        elif operationSet == "robo":
+            Program.execute = ConfProgram.execute_robo
+            trainer.functionsDict["Program"]["execute"] = "robo"
+            trainer.nOperations = 6
+            trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "MEM_READ", "MEM_WRITE"]
 
         # select appropriate memory write function
         if memType == "cauchy1":

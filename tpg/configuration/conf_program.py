@@ -297,6 +297,72 @@ class ConfProgram:
                 regs[dest] = finfo(float64).min
 
     """
+    Executes the program which returns a single final value.
+    """
+    @njit
+    def execute_robo_mem(inpt, regs, modes, ops, dsts, srcs):
+        regSize = len(regs)
+        inptLen = len(inpt)
+        for i in range(len(modes)):
+            # first get source
+            if modes[i] == 0:
+                src = regs[srcs[i]%regSize]
+            else:
+                src = inpt[srcs[i]%inptLen]
+
+            # get data for operation
+            op = ops[i]
+            x = regs[dsts[i]]
+            y = src
+            dest = dsts[i]%regSize
+
+            # do an operation
+            if op == 0:
+                regs[dest] = x+y
+            elif op == 1:
+                regs[dest] = x-y
+            elif op == 2:
+                regs[dest] = x*y
+            elif op == 3:
+                if y != 0:
+                    regs[dest] = x/y
+            elif op == 4:
+                if x < y:
+                    regs[dest] = x*(-1)
+            elif op == 5:
+                regs[dest] = cos(y)
+            elif op == 6:
+                index = srcs[i]
+                index %= (memRows*memCols)
+                row = int(index / memRows)
+                col = index % memCols
+                regs[dest] = memMatrix[row, col]
+            elif op == 7:
+                # row offset (start from center, go to edges)
+                halfRows = int(memRows/2) # halfRows
+                for i in range(halfRows):
+                    # probability to write (gets smaller as i increases)
+                    # TODO: swap out write prob func by passing in an array of values for that row.
+                    writeProb = memWriteProbFunc(i)
+                    # column to maybe write corresponding value into
+                    for col in range(memCols):
+                        # try write to lower half
+                        if rand(1)[0] < writeProb:
+                            row = (halfRows - i) - 1
+                            memMatrix[row,col] = regs[col]
+                        # try write to upper half
+                        if rand(1)[0] < writeProb:
+                            row = halfRows + i
+                            memMatrix[row,col] = regs[col]
+
+            if isnan(regs[dest]):
+                regs[dest] = 0
+            elif regs[dest] == inf:
+                regs[dest] = finfo(float64).max
+            elif regs[dest] == NINF:
+                regs[dest] = finfo(float64).min
+
+    """
     Returns probability of write at given index using default distribution.
     """
     @njit
