@@ -154,7 +154,7 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
         elif operationSet == "robo":
             Program.execute = ConfProgram.execute_mem_robo
             trainer.functionsDict["Program"]["execute"] = "robo"
-            trainer.nOperations = 10
+            trainer.nOperations = 8
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "MEM_READ", "MEM_WRITE"]
 
         # select appropriate memory write function
