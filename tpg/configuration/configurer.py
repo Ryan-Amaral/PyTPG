@@ -153,7 +153,7 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP", "MEM_READ", "MEM_WRITE"]
         elif operationSet == "robo":
             Program.execute = ConfProgram.execute_mem_robo
-            trainer.functionsDict["Program"]["execute"] = "robo"
+            trainer.functionsDict["Program"]["execute"] = "mem_robo"
             trainer.nOperations = 8
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "MEM_READ", "MEM_WRITE"]
 
