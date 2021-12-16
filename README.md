@@ -1,6 +1,12 @@
 # tpg-python
 A python implementation of Tangled Program Graphs. A graph based genetic programming algorithm.
 
+## Todo
+- Implement a cleaner replacement for the "configuration" method of swapping out functions.
+- Implement CI tests with GitHub Actions.
+- De-spaghetify code. Lots was added without refactoring throughout degrees, so some parts are messy.
+- Potentially fully re-implement in parallel with the C++ version if that picks up again.
+
 ## Setup
 
 ### Requirements (automatically installed with with PyTPG)
@@ -84,4 +90,5 @@ The test files and `extras.py` file shows more examples, those files are used fo
 ## Aknowledgements
 - Dr. Malcolm Heywood: My undergrad and Masters research supervisor.
 - Robert Smith: Provided an initial Java implementation of TPG, whiched I based this version on.
+- Alexandru Ianta: Conducted a major overhaul of PyTPG, including testing.
 - [Richard Wardin](https://github.com/Shalmezad): Helped fix a few bugs in early development.

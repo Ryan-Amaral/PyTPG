@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='PyTPG',
-    version='0.96',
+    version='0.97',
     packages=['tpg', 'tpg.configuration'],
     install_requires=['numba','numpy', 'unittest-xml-reporting','scipy'],
     license='MIT',
