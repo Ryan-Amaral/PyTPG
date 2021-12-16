@@ -18,11 +18,11 @@ def configure(trainer, Trainer, Agent, Team, Learner, ActionObject, Program,
 
     # keys and values used in key value pairs for suplementary function args
     # for mutation and creation
-    mutateParamKeys = ["generation", "pLrnDel", "pLrnAdd", "pLrnMut",
+    mutateParamKeys = ["generation", "maxTeamSize", "pLrnDel", "pLrnAdd", "pLrnMut",
         "pProgMut", "pActMut", "pActAtom", "pInstDel", "pInstAdd", "pInstSwp", "pInstMut",
         "actionCodes", "nDestinations", "inputSize", "initMaxProgSize",
         "rampantGen", "rampantMin", "rampantMax", "idCountTeam", "idCountLearner", "idCountProgram"]
-    mutateParamVals = [trainer.generation, trainer.pLrnDel, trainer.pLrnAdd, trainer.pLrnMut,
+    mutateParamVals = [trainer.generation, trainer.maxTeamSize, trainer.pLrnDel, trainer.pLrnAdd, trainer.pLrnMut,
         trainer.pProgMut, trainer.pActMut, trainer.pActAtom, trainer.pInstDel, trainer.pInstAdd, trainer.pInstSwp, trainer.pInstMut,
         trainer.actionCodes, trainer.nRegisters, trainer.inputSize, trainer.initMaxProgSize,
         trainer.rampancy[0], trainer.rampancy[1], trainer.rampancy[2], 0, 0, 0]
@@ -92,8 +92,6 @@ def configureDefaults(trainer, Trainer, Agent, Team, Learner, ActionObject, Prog
     Program.execute = ConfProgram.execute_def
     Program.mutate = ConfProgram.mutate_def
     Program.memWriteProbFunc = ConfProgram.memWriteProb_def
-    #No longer need this after refactorAndTest merge
-    #Program.mutateInstructions = ConfProgram.mutateInstructions_def
 
     # let trainer know what functions are set for each one
     
@@ -153,6 +151,11 @@ def configureProgram(trainer, Learner, Program, actVarKeys, actVarVals,
             trainer.functionsDict["Program"]["execute"] = "mem_full"
             trainer.nOperations = 10
             trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "LOG", "EXP", "MEM_READ", "MEM_WRITE"]
+        elif operationSet == "robo":
+            Program.execute = ConfProgram.execute_mem_robo
+            trainer.functionsDict["Program"]["execute"] = "mem_robo"
+            trainer.nOperations = 8
+            trainer.operations = ["ADD", "SUB", "MULT", "DIV", "NEG", "COS", "MEM_READ", "MEM_WRITE"]
 
         # select appropriate memory write function
         if memType == "cauchy1":

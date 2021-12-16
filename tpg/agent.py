@@ -58,6 +58,9 @@ class Agent:
     def taskDone(self, task):
         return task in self.team.outcomes
 
+    def zeroRegisters(self):
+        self.team.zeroRegisters()
+
     """
     Should be called when the agent is loaded from a file or when loaded into 
     another process/thread, to ensure proper function used in all classes.

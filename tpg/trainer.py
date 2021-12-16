@@ -57,7 +57,7 @@ class Trainer:
     mutate the learners or
     """
     def __init__(self, actions, teamPopSize=360, rootBasedPop=True, gap=0.5,
-        inputSize=33600, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128,
+        inputSize=33600, nRegisters=8, initMaxTeamSize=5, initMaxProgSize=128, maxTeamSize=-1,
         pLrnDel=0.7, pLrnAdd=0.7, pLrnMut=0.3, pProgMut=0.66, pActMut=0.33,
         pActAtom=0.5, pInstDel=0.5, pInstAdd=0.5, pInstSwp=1.0, pInstMut=1.0,
         doElites=True, memType=None, memMatrixShape=(100,8), rampancy=(0,0,0),
@@ -150,6 +150,9 @@ class Trainer:
         # params for initializing evolution
         self.initMaxTeamSize = initMaxTeamSize # size of team = # of learners
         self.initMaxProgSize = initMaxProgSize # size of program = # of instructions
+
+        # max team size possible throughout evolution
+        self.maxTeamSize = maxTeamSize
 
         # params for continued evolution
         self.pLrnDel = pLrnDel
@@ -246,7 +249,6 @@ class Trainer:
         for i in range(self.teamPopSize):
             # create 2 unique actions and learners
             a1,a2 = random.sample(range(len(self.actionCodes)), 2)
-            
 
             l1 = Learner(self.mutateParams,
                         program=Program(maxProgramLength=self.initMaxProgSize,
@@ -311,12 +313,21 @@ class Trainer:
             return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
                     for i,team in enumerate(rTeams)]
         else:
-            # apply scores/fitness to root teams
-            self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
-            # return teams sorted by fitness
-            return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
-                    for i,team in enumerate(sorted(rTeams,
-                                    key=lambda tm: tm.fitness, reverse=True))]
+
+            if len(sortTasks) == 1:
+                rTeams = [t for t in rTeams if sortTasks[0] in t.outcomes]
+                # return teams sorted by the outcome
+                return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
+                        for i,team in enumerate(sorted(rTeams,
+                                        key=lambda tm: tm.outcomes[sortTasks[0]], reverse=True))]
+
+            else:
+                # apply scores/fitness to root teams
+                self.scoreIndividuals(sortTasks, multiTaskType=multiTaskType, doElites=False)
+                # return teams sorted by fitness
+                return [Agent(team, self.functionsDict, num=i, actVars=self.actVars)
+                        for i,team in enumerate(sorted(rTeams,
+                                        key=lambda tm: tm.fitness, reverse=True))]
 
     """ 
     Gets the single best team at the given task, regardless of if its root or not.
@@ -345,12 +356,12 @@ class Trainer:
     """
     Evolve the populations for improvements.
     """
-    def evolve(self, tasks=['task'], multiTaskType='min'):
+    def evolve(self, tasks=['task'], multiTaskType='min', extraTeams=None):
         self.scoreIndividuals(tasks, multiTaskType=multiTaskType,
                 doElites=self.doElites) # assign scores to individuals
         self.saveFitnessStats() # save fitness stats
-        self.select() # select individuals to keep
-        self.generate() # create new individuals from those kept
+        self.select(extraTeams) # select individuals to keep
+        self.generate(extraTeams) # create new individuals from those kept
         self.nextEpoch() # set up for next generation
         #self.validate_graph() # validate the tpg (for debug only)
     """
@@ -482,7 +493,8 @@ class Trainer:
     """
     Select a portion of the root team population to keep according to gap size.
     """
-    def select(self):
+    def select(self, extraTeams=None):
+
         rankedTeams = sorted(self.rootTeams, key=lambda rt: rt.fitness, reverse=True)
         numKeep = len(self.rootTeams) - int(len(self.rootTeams)*self.gap)
         deleteTeams = rankedTeams[numKeep:]
@@ -515,7 +527,8 @@ class Trainer:
 
     
             # remove learners from team and delete team from populations
-            team.removeLearners()
+            if extraTeams is None or team not in extraTeams:
+                team.removeLearners()
             self.teams.remove(team)
             self.rootTeams.remove(team)
 
@@ -555,7 +568,20 @@ class Trainer:
     """
     Generates new rootTeams based on existing teams.
     """
-    def generate(self):
+    def generate(self, extraTeams=None):
+
+        # extras who are already part of the team population
+        protectedExtras = []
+        extrasAdded = 0
+
+        # add extras into the population
+        if extraTeams is not None:
+            for team in extraTeams:
+                if team not in self.teams:
+                    self.teams.append(team)
+                    extrasAdded += 1
+                else:
+                    protectedExtras.append(team)
 
         oLearners = list(self.learners)
         oTeams = list(self.teams)
@@ -564,7 +590,7 @@ class Trainer:
         self.mutateParams["generation"] = self.generation
 
         # get all the current root teams to be parents
-        while (len(self.teams) < self.teamPopSize or
+        while (len(self.teams) < self.teamPopSize + extrasAdded or
                 (self.rootBasedPop and self.countRootTeams() < self.teamPopSize)):
             # get parent root team, and child to be based on that
             parent = random.choice(self.rootTeams)
@@ -579,6 +605,12 @@ class Trainer:
 
             self.teams.append(child)
 
+        # remove unused extras
+        if extraTeams is not None:
+            for team in extraTeams:
+                if team.numLearnersReferencing() == 0 and team not in protectedExtras:
+                    self.teams.remove(team)
+
     """
     Finalize populations and prepare for next generation/epoch.
     """
@@ -589,7 +621,7 @@ class Trainer:
             # add any new learners to the population
             for learner in team.learners:
                 if learner not in self.learners:
-                    print("Adding {} to trainer learners".format(learner.id))
+                    #print("Adding {} to trainer learners".format(learner.id))
                     self.learners.append(learner)
 
             # maybe make root team
@@ -597,6 +629,32 @@ class Trainer:
                 self.rootTeams.append(team)
 
         self.generation += 1
+
+    """
+    Removes hitchhikers, learners that are never used, except for the last atomic action on the team.
+    teamLearnerVisists is a dict with team keys and values represending the learners that are
+    actually visited on the team. Any learner on a team not in this list gets deleted.
+    Evolve should be called right after to properly remove the learners from the population.
+    """
+    def removeHitchhikers(self, teams, visitedLearners):
+        learnersRemoved = []
+        teamsAffected = []
+
+        for i, team in enumerate(teams):
+            affected = False
+            for learner in team.learners:
+                # only remove if non atomic, or atomic and team has > 1 atomic actions
+                if learner not in visitedLearners[i] and (
+                        not learner.isActionAtomic() or 
+                            (learner.isActionAtomic() and team.numAtomicActions() > 1)):
+                    affected = True
+                    learnersRemoved.append(learner)
+                    team.removeLearner(learner)
+
+            if affected:
+                teamsAffected.append(team)
+
+        return learnersRemoved, teamsAffected
     
     '''
     Go through all teams and learners and make sure their inTeams/inLearners correspond with 

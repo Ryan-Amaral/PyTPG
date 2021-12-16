@@ -108,6 +108,12 @@ class ActionObject:
             self.actionCode if self.actionCode is not None else 'None'
         )
 
+    def zeroRegisters(self):
+        try:
+            self.registers = np.zeros(len(self.registers), dtype=float)
+        except:
+            pass
+
     """
     Returns the action code, and if applicable corresponding real action(s).
     """
